@@ -1,0 +1,125 @@
+---
+interface Props {
+  slug: string;
+  title: string;
+  period: string;
+  description: string;
+  tags: string[];
+  badge?: string;
+  badgeColor?: 'green' | 'yellow' | 'purple';
+}
+
+const { slug, title, period, description, tags, badge, badgeColor = 'green' } = Astro.props;
+
+const badgeStyles: Record<string, string> = {
+  green: 'background:var(--accent-dim);color:var(--accent);border-color:var(--accent-mid);',
+  yellow: 'background:rgba(251,191,36,0.1);color:#fbbf24;border-color:rgba(251,191,36,0.2);',
+  purple: 'background:rgba(168,85,247,0.1);color:#a855f7;border-color:rgba(168,85,247,0.2);',
+};
+---
+
+<a href={`/projects/${slug}/`} class="project-card">
+  <div class="card-top">
+    <span class="card-period">{period}</span>
+    {badge && <span class="card-badge" style={badgeStyles[badgeColor]}>{badge}</span>}
+  </div>
+  <h3>{title}</h3>
+  <p class="card-desc">{description}</p>
+  <div class="card-tags">
+    {tags.map(tag => <span>{tag}</span>)}
+  </div>
+  <span class="card-arrow">↗</span>
+</a>
+
+<style>
+  .project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .project-card:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .project-card:hover::before { transform: scaleX(1); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+  }
+  .card-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  h3 {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .card-desc {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+  }
+  .card-tags span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.55rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .card-arrow {
+    position: absolute;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    color: var(--text-tertiary);
+    font-size: 1rem;
+    transition: all 0.25s;
+  }
+  .project-card:hover .card-arrow {
+    color: var(--accent);
+    transform: translate(3px, -3px);
+  }
+</style>

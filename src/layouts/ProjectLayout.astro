@@ -1,0 +1,245 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  period: string;
+  role: string;
+  team?: string;
+  tags: string[];
+  links?: { label: string; url: string }[];
+  badge?: string;
+}
+
+import BaseLayout from './BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
+---
+
+<BaseLayout title={`${title} — 백환기`}>
+  <Nav showBackLink={true} />
+
+  <article class="project-detail">
+    <div class="container">
+
+      <!-- HEADER -->
+      <header class="detail-header">
+        <div class="detail-meta">
+          <span class="detail-period">{period}</span>
+          {badge && <span class="detail-badge">{badge}</span>}
+        </div>
+        <h1>{title}</h1>
+        <p class="detail-subtitle">{subtitle}</p>
+
+        <div class="detail-info">
+          <div class="info-item">
+            <span class="info-label">역할</span>
+            <span class="info-value">{role}</span>
+          </div>
+          {team && (
+            <div class="info-item">
+              <span class="info-label">팀</span>
+              <span class="info-value">{team}</span>
+            </div>
+          )}
+          <div class="info-item">
+            <span class="info-label">스택</span>
+            <div class="info-tags">
+              {tags.map(t => <span>{t}</span>)}
+            </div>
+          </div>
+          {links && links.length > 0 && (
+            <div class="info-item">
+              <span class="info-label">링크</span>
+              <div class="info-links">
+                {links.map(l => <a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <!-- CONTENT (slot) -->
+      <div class="detail-content">
+        <slot />
+      </div>
+
+    </div>
+  </article>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .project-detail {
+    padding-top: calc(56px + 4rem);
+    padding-bottom: 4rem;
+  }
+
+  .detail-header {
+    margin-bottom: 4rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-meta {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+  .detail-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+  }
+  .detail-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-mid);
+  }
+
+  .detail-header h1 {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  .detail-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 640px;
+  }
+
+  .detail-info {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .info-item {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+  }
+  .info-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    min-width: 3rem;
+    flex-shrink: 0;
+  }
+  .info-value {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+  }
+  .info-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .info-tags span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.55rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .info-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .info-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .info-links a:hover { opacity: 0.7; }
+
+  /* CONTENT AREA */
+  .detail-content {
+    max-width: 720px;
+  }
+  .detail-content :global(h2) {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+  .detail-content :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .detail-content :global(p) {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-weight: 300;
+    margin-bottom: 1rem;
+  }
+  .detail-content :global(ul) {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+  }
+  .detail-content :global(li) {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    font-weight: 300;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .detail-content :global(li::before) {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--text-tertiary);
+  }
+  .detail-content :global(code) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+  }
+  .detail-content :global(img) {
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+  .detail-content :global(.media-placeholder) {
+    background: var(--bg-card);
+    border: 1px dashed var(--border-hover);
+    border-radius: 8px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 1.5rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .info-item { flex-direction: column; gap: 0.25rem; }
+    .info-label { min-width: auto; }
+  }
+</style>

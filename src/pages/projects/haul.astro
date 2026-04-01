@@ -1,0 +1,49 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+---
+
+<ProjectLayout
+  title="HAUL — 2D PvPvE Extraction Game"
+  subtitle="네오 서울 배경의 멀티플레이어 게임. 기획, 아키텍처, 클라이언트, 서버를 1인 설계·구현 중."
+  period="2025.10 — 현재"
+  role="기획 · 설계 · 클라이언트 · 서버 (1인)"
+  tags={['Godot 4.6', 'C#', 'GDScript', 'ASP.NET Core 9', 'MagicOnion (gRPC)', 'LiteNetLib (UDP)', 'Supabase', 'MessagePack']}
+  links={[
+    { label: 'GitHub', url: 'https://github.com/pulppixel' },
+  ]}
+  badge="IN PROGRESS"
+>
+
+<h2>개요</h2>
+<p>
+  Gabriel Gambetta의 Fast-Paced Multiplayer 아키텍처를 기반으로 한
+  Server-authoritative 멀티플레이어 게임입니다.
+</p>
+
+<div class="media-placeholder">🎥 플레이 영상 / GIF (추가 예정)</div>
+
+<h2>네트워크</h2>
+<ul>
+  <li>Server-authoritative 구조 — 서버와 클라이언트가 동일한 Godot 물리 엔진을 사용하여 misprediction 최소화</li>
+  <li>Client-side prediction + Server reconciliation 적용</li>
+  <li>Snapshot interpolation — 3프레임 버퍼, 150ms. 네트워크 환경별 테스트를 거쳐 버퍼 크기 결정</li>
+</ul>
+
+<h2>AI · 게임플레이</h2>
+<ul>
+  <li>NPC AI는 fake InputCmd 패턴 — 플레이어와 동일한 물리 파이프라인을 공유하여 코드 변경 없이 NPC 추가 가능</li>
+  <li>시민·청소부·방역반 등 Human NPC를 7-state FSM으로 구현</li>
+</ul>
+
+<h2>진행도</h2>
+<ul>
+  <li>✅ 인증, 매칭, 이동 동기화</li>
+  <li>✅ 전투, NPC AI</li>
+  <li>✅ 추출 시스템</li>
+  <li>✅ 영속 DB (6테이블), 평판 시스템</li>
+  <li>🔲 인벤토리 · 루팅</li>
+  <li>🔲 맵 확장 · 레벨 디자인</li>
+  <li>🔲 사운드 · 연출</li>
+</ul>
+
+</ProjectLayout>

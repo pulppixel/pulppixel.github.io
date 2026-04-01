@@ -1,0 +1,94 @@
+/* ===== THEME VARIABLES ===== */
+:root {
+  --bg-primary: #0a0a0b;
+  --bg-secondary: #111113;
+  --bg-card: #161618;
+  --bg-card-hover: #1c1c1f;
+  --border: #222225;
+  --border-hover: #333338;
+  --text-primary: #e8e8ec;
+  --text-secondary: #8f8f9a;
+  --text-tertiary: #5a5a66;
+  --accent: #6ee7b7;
+  --accent-dim: rgba(110, 231, 183, 0.1);
+  --accent-mid: rgba(110, 231, 183, 0.2);
+  --tag-bg: #1a1a1f;
+  --tag-border: #2a2a30;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+[data-theme="light"] {
+  --bg-primary: #fafaf9;
+  --bg-secondary: #f3f3f1;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f7f5;
+  --border: #e5e5e0;
+  --border-hover: #d0d0ca;
+  --text-primary: #1a1a1e;
+  --text-secondary: #6b6b76;
+  --text-tertiary: #9b9ba6;
+  --accent: #059669;
+  --accent-dim: rgba(5, 150, 105, 0.06);
+  --accent-mid: rgba(5, 150, 105, 0.12);
+  --tag-bg: #f0f0ed;
+  --tag-border: #e0e0db;
+  --shadow: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: 'Noto Sans KR', 'Outfit', -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+/* ===== LAYOUT ===== */
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+section { padding: 5rem 0; }
+
+/* ===== TYPOGRAPHY ===== */
+.section-header { margin-bottom: 3rem; }
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .container { padding: 0 1.25rem; }
+  section { padding: 3.5rem 0; }
+}

@@ -1,0 +1,327 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Footer from '../components/Footer.astro';
+
+const projects = [
+  {
+    slug: 'eterna',
+    title: 'ETERNA — 아고라 시스템',
+    period: '2025.11 — 2026.04',
+    description: '디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. Service/Repository/State 3계층 아키텍처 직접 설계.',
+    tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers'],
+    badge: 'LEAD',
+    badgeColor: 'green' as const,
+  },
+  {
+    slug: 'reiw',
+    title: 'REIW — 3D 메타버스',
+    period: '2025.06 — 2025.11',
+    description: 'Tencent IM 기반 채팅·친구 시스템 재설계, 하우징 프로토타입, NPC 퀘스트 구현. ETERNA 아키텍처의 토대.',
+    tags: ['Unity', 'C#', 'R3', 'UniTask', 'DOTween'],
+  },
+  {
+    slug: 'iw-zombie',
+    title: 'IW Zombie — 팀 서바이벌',
+    period: '2025.02 — 2025.06',
+    description: '5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입. 3D 사운드 풀링, 전투 로직, AI NPC, 범용 디버그 치트 시스템.',
+    tags: ['Unity', 'C#', 'Tencent IM', 'DOTween'],
+  },
+  {
+    slug: 'stelsi-wallet',
+    title: 'STELSI Wallet',
+    period: '2023.02 — 2023.08',
+    description: 'Unity → Flutter 스택 전환을 주도하고 1인 개발. Web3.js + 스마트 컨트랙트 연동, App Store / Google Play 출시.',
+    tags: ['Flutter', 'Dart', 'Web3.js', 'ABI'],
+    badge: 'SOLO',
+    badgeColor: 'green' as const,
+  },
+  {
+    slug: 'haul',
+    title: 'HAUL — 2D PvPvE Extraction',
+    period: '2025.10 — 현재',
+    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계·구현.',
+    tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],
+    badge: 'IN PROGRESS',
+    badgeColor: 'yellow' as const,
+  },
+  {
+    slug: 'nomads-planet',
+    title: 'Nomads Planet',
+    period: '2023.06 — 2023.09',
+    description: 'Unity Netcode + Vivox 기반 멀티플레이어 메타버스. K-메타버스 경진대회 장려상 수상.',
+    tags: ['Unity', 'C#', 'Netcode', 'Vivox'],
+    badge: '수상',
+    badgeColor: 'purple' as const,
+  },
+];
+
+const timeline = [
+  {
+    company: '주식회사 보이저',
+    role: 'Unity Client Engineer · 서브 리드',
+    period: '2025.02 — 2026.04 · 1년 3개월',
+    projects: [
+      'ETERNA — 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
+      'REIW — 3D 메타버스 (채팅 재설계, 하우징)',
+      'IW Zombie — 팀 서바이벌 (게임 루프 전반)',
+    ],
+    current: true,
+  },
+  {
+    company: '버들 주식회사 (구 벌스)',
+    role: 'Unity Client Developer',
+    period: '2022.08 — 2024.12 · 2년 5개월',
+    projects: [
+      'STELSI Wallet — 이더리움 지갑 앱 (Flutter, 1인)',
+      'Nine to Six — 텔레그램 미니 게임 (WebGL)',
+      'STELSI — UE5 메타버스 (Bink2, 외주 관리)',
+    ],
+  },
+  {
+    company: '주식회사 매쓰마스터',
+    role: 'Unity Client Developer',
+    period: '2021.06 — 2022.06 · 1년 1개월',
+    projects: ['일프로연산 — 초등 수학 스테이지 (SKT ZEM 선정)'],
+  },
+  {
+    company: '주식회사 브이브이알',
+    role: 'Unity Client Developer · 초기 1인',
+    period: '2020.01 — 2021.06 · 1년 6개월',
+    projects: ['스포디 — XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)'],
+  },
+];
+---
+
+<BaseLayout title="백환기 — Unity Client Engineer">
+  <Nav />
+  <Hero />
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Selected Projects</div>
+        <h2 class="section-title">프로젝트</h2>
+      </div>
+      <div class="project-grid">
+        {projects.map(p => <ProjectCard {...p} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- CAREER -->
+  <section id="career">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Career</div>
+        <h2 class="section-title">경력</h2>
+      </div>
+      <div class="timeline">
+        {timeline.map((item, i) => (
+          <div class={`timeline-item ${i === 0 ? 'current' : ''}`}>
+            <div class="timeline-company">{item.company}</div>
+            <div class="timeline-role">{item.role}</div>
+            <div class="timeline-period">{item.period}</div>
+            <div class="timeline-projects">
+              {item.projects.map(p => <span>{p}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Tech Stack</div>
+        <h2 class="section-title">기술</h2>
+      </div>
+      <div class="skills-grid">
+        <div class="skill-group">
+          <h4>Engine & Language</h4>
+          <ul>
+            <li>Unity 6년+ (C#)</li>
+            <li>Unreal Engine 5 (C++)</li>
+            <li>Godot 4 (.NET / GDScript)</li>
+            <li>Flutter (Dart)</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>Architecture & Network</h4>
+          <ul>
+            <li>Service / Repository / State</li>
+            <li>R3 / UniRx Reactive</li>
+            <li>Unity Netcode, Tencent IM SDK</li>
+            <li>FlatBuffers, gRPC (MagicOnion)</li>
+            <li>LiteNetLib (UDP)</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>Tools & Workflow</h4>
+          <ul>
+            <li>Git (Flow, Submodule)</li>
+            <li>Jira, Confluence, Notion</li>
+            <li>Android/iOS 네이티브 연동</li>
+            <li>WebGL, UaaL</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div class="section-label" style="margin-bottom:0.75rem;">Contact</div>
+      <h2 class="section-title">연락처</h2>
+      <p>새로운 기회에 열려 있습니다.</p>
+      <div class="contact-links">
+        <a href="mailto:hwankee@naver.com">Email</a>
+        <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub</a>
+        <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://envys.me" target="_blank" rel="noopener">Blog</a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* PROJECT GRID */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 3px; top: 8px; bottom: 8px;
+    width: 1px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    padding-bottom: 2.5rem;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem; top: 8px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border-hover);
+    border: 2px solid var(--bg-primary);
+  }
+  .timeline-item.current::before { background: var(--accent); }
+  .timeline-company {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+  }
+  .timeline-role {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.1rem;
+  }
+  .timeline-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    margin-bottom: 0.75rem;
+  }
+  .timeline-projects {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .timeline-projects span {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .timeline-projects span::before {
+    content: '→ ';
+    color: var(--text-tertiary);
+  }
+
+  /* SKILLS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .skill-group h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .skill-group ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .skill-group li {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  /* CONTACT */
+  .contact-section {
+    text-align: center;
+    padding: 6rem 0;
+  }
+  .contact-section p {
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 2rem;
+  }
+  .contact-links {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .contact-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.6rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .contact-links a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  @media (max-width: 768px) {
+    .project-grid { grid-template-columns: 1fr; }
+    .skills-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+  @media (max-width: 480px) {
+    .contact-links { flex-direction: column; align-items: center; }
+  }
+</style>

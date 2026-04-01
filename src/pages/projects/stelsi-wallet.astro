@@ -1,0 +1,39 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+---
+
+<ProjectLayout
+  title="STELSI Wallet"
+  subtitle="기획안을 분석하고 Unity → Flutter로 스택 전환을 주도. Web3 지갑 앱을 1인 개발하여 양대 스토어에 출시."
+  period="2023.02 — 2023.08"
+  role="스택 전환 판단 · 설계 · 구현 · 출시 (1인)"
+  tags={['Flutter', 'Dart', 'Web3.js', '스마트 컨트랙트 (ABI)']}
+  badge="SOLO"
+>
+
+<h2>배경</h2>
+<p>
+  기획안을 분석해 보니 Realtime Rendering이 필요없는 일반 앱이었습니다.
+  Unity로 만들 이유가 없다고 판단하고, 대안을 찾아 스택을 전환했습니다.
+</p>
+
+<h2>스택 전환</h2>
+<p>
+  .NET MAUI와 Flutter를 각각 MVP로 만들어 비교한 뒤, Flutter를 선택했습니다.
+  시니어에게 두 결과물을 시연해서 설득했고, 리스크 대비 폴백 플랜도 함께 제시했습니다.
+</p>
+
+<h2>구현</h2>
+<ul>
+  <li>Web3.js + 스마트 컨트랙트(ABI)를 연동하여 코인·토큰·NFT 조회 및 송수신 기능 구현</li>
+  <li>App Store와 Google Play에 직접 등록·배포</li>
+  <li>모든 작업 과정을 Confluence에 문서화</li>
+</ul>
+
+<div class="media-placeholder">🎥 트랜잭션 영상 (추가 예정)</div>
+
+<p>
+  이후 회사 방향이 메타버스 월드 쪽으로 무게가 실리면서 추가 개발이 중단되었습니다.
+</p>
+
+</ProjectLayout>

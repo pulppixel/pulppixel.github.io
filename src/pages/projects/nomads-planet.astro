@@ -1,0 +1,51 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+---
+
+<ProjectLayout
+  title="Nomads Planet"
+  subtitle="Unity Netcode + Vivox 기반 멀티플레이어 차량 메타버스. 2023 K-메타버스 경진대회 장려상 수상."
+  period="2023.06 — 2023.09"
+  role="기획 · 개발 총괄 (1인)"
+  tags={['Unity', 'C#', 'Unity Netcode (NGO)', 'Vivox', 'Addressable', 'URP']}
+  links={[
+    { label: 'GitHub', url: 'https://github.com/pulppixel' },
+    { label: 'YouTube', url: 'https://youtube.com/playlist?list=PLUkUNnTP7B0JmUN6L3dE0iYC4oIBOwWSL' },
+  ]}
+  badge="수상"
+>
+
+<h2>배경</h2>
+<p>
+  2023 K-메타버스 경진대회 출품을 위해 1인 개발한 프로젝트입니다.
+  멀티플레이어 네트워킹에 초점을 맞추고, 크로스플랫폼(PC, Mac, Android, iOS)을 지원하며
+  Dedicated Server(Linux)로 운영하는 구조를 만들었습니다.
+</p>
+
+<div class="media-placeholder">📸 게임 화면 스크린샷 (추가 예정)</div>
+
+<h2>네트워킹</h2>
+<ul>
+  <li>Unity Netcode 활용 매치메이킹, 호스팅-조인 시스템 구축</li>
+  <li>RPC 호출을 통한 차량·캐릭터 동기화</li>
+  <li>캐릭터 표정, 외형 정보를 서버에서 관리하여 일관된 경험 제공</li>
+</ul>
+
+<h2>주요 기능</h2>
+<ul>
+  <li>Vivox 기반 텍스트·보이스 채팅</li>
+  <li>캐릭터·차량 선택 (마지막 선택 기억)</li>
+  <li>범퍼카 콘텐츠 — 코인 수집, 부스터 존, 실시간 랭킹, 미니맵</li>
+  <li>Addressable System 도입으로 모바일 초기 앱 사이즈 경량화</li>
+  <li>AI 보이스 + 영어/한글 로컬라이징</li>
+</ul>
+
+<h2>성과</h2>
+<p>
+  2023 K-메타버스 경진대회 장려상(버넥트 대표상, 과학기술정보통신부) 수상.
+  MacOS, Android, iOS, Linux(Dedicated Server) 크로스플랫폼 시연 완료.
+</p>
+
+<div class="media-placeholder">🎥 시연 영상 (추가 예정)</div>
+
+</ProjectLayout>

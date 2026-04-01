@@ -1,0 +1,82 @@
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-label">Unity Client Engineer · 6년차</div>
+      <h1>소셜 시스템을 설계하고,<br>다음 사람이 이어받을 수 있는<br>구조를 만듭니다.</h1>
+      <p>채팅 도메인을 세 번 재설계하며 아키텍처를 개선했고,
+         현재는 Server-authoritative 멀티플레이어 게임을 1인 설계·구현 중입니다.</p>
+      <div class="hero-links">
+        <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:hwankee@naver.com">Email</a>
+        <a href="https://envys.me" target="_blank" rel="noopener">Blog</a>
+        <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-top: 56px;
+  }
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+  .hero h1 {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.35s;
+  }
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 580px;
+    line-height: 1.8;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.5s;
+  }
+  .hero-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.65s;
+  }
+  .hero-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .hero-links a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  @media (max-width: 480px) {
+    .hero-links { flex-direction: column; }
+    .hero-links a { text-align: center; }
+  }
+</style>

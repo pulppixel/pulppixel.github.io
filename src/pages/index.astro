@@ -56,12 +56,21 @@ const projects = [
     badge: '수상',
     badgeColor: 'purple' as const,
   },
+  {
+    slug: 'ruby-adventure',
+    title: '루비의 모험',
+    period: '2019.09 — 2019.11',
+    description: '1인 개발 3D 액션 RPG. 콤보·스킬 전투, BT 기반 몬스터 AI, 2페이즈 보스, Timeline 연출. 졸업전시 우수상.',
+    tags: ['Unity', 'C#', 'NavMesh', 'Timeline'],
+    badge: '우수상',
+    badgeColor: 'purple' as const,
+  },
 ];
 
 const timeline = [
   {
     company: '주식회사 보이저',
-    role: 'Unity Client Engineer · 서브 리드',
+    role: 'Game Client Engineer · 서브 리드',
     period: '2025.02 — 2026.04 · 1년 3개월',
     projects: [
       'ETERNA — 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
@@ -71,7 +80,7 @@ const timeline = [
     current: true,
   },
   {
-    company: '버들 주식회사 (구 벌스)',
+    company: 'VERS.',
     role: 'Unity Client Developer',
     period: '2022.08 — 2024.12 · 2년 5개월',
     projects: [
@@ -93,9 +102,23 @@ const timeline = [
     projects: ['스포디 — XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)'],
   },
 ];
+
+const education = [
+  {
+    school: '홍익대학교 (세종)',
+    major: '게임소프트웨어학과',
+    period: '2014 — 2020',
+  },
+];
+
+const awards = [
+  { title: '정보처리기사', org: '한국산업인력공단', year: '2022' },
+  { title: 'K-메타버스 경진대회 장려상', org: '과학기술정보통신부', year: '2023' },
+  { title: '졸업작품전시 우수상', org: '홍익대학교 게임학부', year: '2019' },
+];
 ---
 
-<BaseLayout title="백환기 — Unity Client Engineer">
+<BaseLayout title="Pulppixel Portfolio">
   <Nav />
   <Hero />
 
@@ -174,17 +197,53 @@ const timeline = [
     </div>
   </section>
 
+  <!-- EDUCATION & AWARDS -->
+  <section id="education">
+    <div class="container">
+      <div class="two-col">
+        <div>
+          <div class="section-header">
+            <div class="section-label">Education</div>
+            <h2 class="section-title">학력</h2>
+          </div>
+          {education.map(e => (
+            <div class="edu-item">
+              <div class="edu-school">{e.school}</div>
+              <div class="edu-major">{e.major}</div>
+              <div class="edu-period">{e.period}</div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div class="section-header">
+            <div class="section-label">Awards & Cert</div>
+            <h2 class="section-title">수상 · 자격</h2>
+          </div>
+          <div class="awards-list">
+            {awards.map(a => (
+              <div class="award-item">
+                <span class="award-year">{a.year}</span>
+                <div>
+                  <div class="award-title">{a.title}</div>
+                  <div class="award-org">{a.org}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section id="contact" class="contact-section">
     <div class="container">
       <div class="section-label" style="margin-bottom:0.75rem;">Contact</div>
-      <h2 class="section-title">연락처</h2>
-      <p>새로운 기회에 열려 있습니다.</p>
+      <h2 class="section-title">devenvy100@gmail.com</h2>
       <div class="contact-links">
-        <a href="mailto:hwankee@naver.com">Email</a>
+        <a href="mailto:devenvy100@gmail.com">Email</a>
         <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub</a>
-        <a href="#" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://envys.me" target="_blank" rel="noopener">Blog</a>
+        <a href="https://www.linkedin.com/in/hwankee-baik-272948266/" target="_blank" rel="noopener">LinkedIn</a>
       </div>
     </div>
   </section>
@@ -285,14 +344,66 @@ const timeline = [
     font-weight: 300;
   }
 
+  /* EDUCATION & AWARDS */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+  .edu-item { margin-bottom: 1rem; }
+  .edu-school {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .edu-major {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .edu-period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    margin-top: 0.2rem;
+  }
+  .awards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .award-item {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+  }
+  .award-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    min-width: 2.5rem;
+  }
+  .award-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .award-org {
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    font-weight: 300;
+  }
+
   /* CONTACT */
   .contact-section {
     text-align: center;
     padding: 6rem 0;
   }
-  .contact-section p {
-    color: var(--text-secondary);
-    font-weight: 300;
+  .contact-section .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 500;
+    letter-spacing: -0.01em;
     margin-bottom: 2rem;
   }
   .contact-links {
@@ -320,6 +431,7 @@ const timeline = [
   @media (max-width: 768px) {
     .project-grid { grid-template-columns: 1fr; }
     .skills-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .two-col { grid-template-columns: 1fr; gap: 2.5rem; }
   }
   @media (max-width: 480px) {
     .contact-links { flex-direction: column; align-items: center; }

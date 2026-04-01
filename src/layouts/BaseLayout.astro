@@ -4,7 +4,8 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Pulppixel — Unity Client Engineer Portfolio' } = Astro.props;
+const { title, description = 'Pulppixel — Game Client Engineer Portfolio' } = Astro.props;
+const ogImage = 'https://pulppixel.github.io/og.png';
 ---
 
 <!DOCTYPE html>
@@ -14,11 +15,23 @@ const { title, description = 'Pulppixel — Unity Client Engineer Portfolio' } =
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content={description} />
   <title>{title}</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- OG -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pulppixel.github.io" />
+  <meta name="twitter:card" content="summary_large_image" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Restore theme before paint to prevent flash -->
+  <!-- Restore theme before paint -->
   <script is:inline>
     const saved = localStorage.getItem('theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
@@ -34,6 +47,19 @@ const { title, description = 'Pulppixel — Unity Client Engineer Portfolio' } =
       html.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
     }
+
+    // Scroll fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    });
   </script>
 </body>
 </html>

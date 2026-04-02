@@ -89,10 +89,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
   // ── ZONE DECORATIONS ──
   // ═══════════════════════════════════════
 
-  // VOYAGER — Portal + mini avatars + controller
+  // 2025-2026 — Portal + mini avatars + controller
   _zIdx = 0;
   {
-    const cx = 0, cz = -12, c = 0xa78bfa;
+    const cx = 0, cz = -8, c = 0xa78bfa;
     const portal = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.06, 8, 32), new THREE.MeshStandardMaterial({ color: 0x111115, emissive: c, emissiveIntensity: 0.8, metalness: 0.9, roughness: 0.2 }));
     portal.position.set(cx + 5, 2.5, cz); portal.rotation.y = 0.4; scene.add(portal);
     za({ mesh: portal, type: 'spin', axis: 'z', speed: 0.3, baseY: 2.5, float: 0.3 });
@@ -120,10 +120,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     za({ mesh: ctrl, type: 'float', baseY: 1.8, range: 0.2, speed: 1.2, phase: 1 });
   }
 
-  // VERS. — Hexagons + chain links + mini buildings
+  // 2023 — Hexagons + chain links + mini buildings
   _zIdx = 1;
   {
-    const cx = 14, cz = 7, c = 0x6ee7b7;
+    const cx = 13, cz = -16, c = 0x6ee7b7;
     for (let i = 0; i < 4; i++) {
       const hex = mkWire(new THREE.CylinderGeometry(0.3 + i * 0.1, 0.3 + i * 0.1, 0.05, 6), c, 0.35);
       const angle = (i / 4) * Math.PI * 2;
@@ -150,10 +150,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     });
   }
 
-  // SIDE — Ammo crates + danger markers + crosshair
+  // 2026 — Ammo crates + danger markers + crosshair
   _zIdx = 2;
   {
-    const cx = -14, cz = 7, c = 0xfbbf24;
+    const cx = -13, cz = -16, c = 0xfbbf24;
     for (let i = 0; i < 3; i++) {
       const crate = mkGlow(new THREE.BoxGeometry(0.35, 0.25, 0.3), c, 0.4);
       const angle = Math.PI * 1.2 + i * 0.7;
@@ -176,15 +176,15 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     za({ mesh: crossG, type: 'spin', axis: 'z', speed: 0.5, baseY: 2, float: 0.3 });
   }
 
-  // EARLY — Bouncing spheres + math symbols + sword
+  // 2019-2022 — Bouncing spheres + math symbols + sword
   _zIdx = 3;
   {
-    const cx = 0, cz = 16, c = 0xff6b9d;
+    const cx = 0, cz = -24, c = 0xff6b9d;
     const ballColors = [0xff6b9d, 0x6ee7b7, 0xa78bfa, 0xfbbf24];
     for (let i = 0; i < 5; i++) {
       const ball = new THREE.Mesh(
-        new THREE.SphereGeometry(0.12 + Math.random() * 0.08, 12, 12),
-        new THREE.MeshStandardMaterial({ color: 0x111115, emissive: ballColors[i % 4], emissiveIntensity: 0.8, metalness: 0.6, roughness: 0.3 }),
+          new THREE.SphereGeometry(0.12 + Math.random() * 0.08, 12, 12),
+          new THREE.MeshStandardMaterial({ color: 0x111115, emissive: ballColors[i % 4], emissiveIntensity: 0.8, metalness: 0.6, roughness: 0.3 }),
       );
       const angle = (i / 5) * Math.PI * 2;
       ball.position.set(cx + Math.cos(angle) * 4.5, 0.8 + i * 0.3, cz + Math.sin(angle) * 4.5); scene.add(ball);

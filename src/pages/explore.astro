@@ -293,6 +293,68 @@ const title = 'pulppixel — 3D Explore';
     ground.rotation.x=-Math.PI/2; ground.position.y=-0.01; ground.receiveShadow=true; scene.add(ground);
     const grid = new THREE.GridHelper(80,160,0x1a3a2a,0x0e0e12); grid.material.opacity=0.2; grid.material.transparent=true; scene.add(grid);
 
+    // ── Zone colored ground patches (subtle tinted circles) ──
+    COMPANIES.forEach(co=>{
+      // Large soft glow on ground
+      const glow = new THREE.Mesh(
+        new THREE.CircleGeometry(8, 32),
+        new THREE.MeshBasicMaterial({color:co.color, transparent:true, opacity:0.015, side:THREE.DoubleSide})
+      );
+      glow.rotation.x=-Math.PI/2; glow.position.set(co.position.x, 0.002, co.position.z);
+      scene.add(glow);
+      // Inner brighter patch
+      const inner = new THREE.Mesh(
+        new THREE.CircleGeometry(5, 24),
+        new THREE.MeshBasicMaterial({color:co.color, transparent:true, opacity:0.025, side:THREE.DoubleSide})
+      );
+      inner.rotation.x=-Math.PI/2; inner.position.set(co.position.x, 0.003, co.position.z);
+      scene.add(inner);
+    });
+
+    // ── Colored path lines between zones (glowing trails) ──
+    const pathColors = [0x6ee7b7, 0xa78bfa, 0xff6b9d, 0xfbbf24];
+    for(let i=0;i<COMPANIES.length;i++){
+      for(let j=i+1;j<COMPANIES.length;j++){
+        const a=COMPANIES[i].position, b=COMPANIES[j].position;
+        const midX=(a.x+b.x)/2, midZ=(a.z+b.z)/2;
+        // Dashed/dotted path with mixed colors
+        const segs = 12;
+        for(let s=0;s<segs;s++){
+          const t=s/segs;
+          const px=a.x+(b.x-a.x)*t, pz=a.z+(b.z-a.z)*t;
+          if(s%2===0){
+            const dot = new THREE.Mesh(
+              new THREE.CircleGeometry(0.06, 6),
+              new THREE.MeshBasicMaterial({color:pathColors[(i+j)%4], transparent:true, opacity:0.12, side:THREE.DoubleSide})
+            );
+            dot.rotation.x=-Math.PI/2; dot.position.set(px, 0.005, pz);
+            scene.add(dot);
+          }
+        }
+      }
+    }
+
+    // ── Scattered terrain features (tiny blocks = Minecraft feel) ──
+    const terrainColors = [0x141418, 0x16161c, 0x121216, 0x181820];
+    for(let i=0;i<40;i++){
+      const w=0.3+Math.random()*0.5, h=0.05+Math.random()*0.15, d=0.3+Math.random()*0.5;
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(w,h,d),
+        new THREE.MeshStandardMaterial({color:terrainColors[i%4],roughness:0.9,metalness:0.1})
+      );
+      const angle=Math.random()*Math.PI*2, radius=8+Math.random()*25;
+      block.position.set(Math.cos(angle)*radius, h/2, Math.sin(angle)*radius);
+      block.rotation.y = Math.random()*0.5;
+      block.receiveShadow=true;
+      // Don't place inside company zones
+      let tooClose=false;
+      COMPANIES.forEach(co=>{
+        const dx=block.position.x-co.position.x, dz=block.position.z-co.position.z;
+        if(Math.sqrt(dx*dx+dz*dz)<5.5) tooClose=true;
+      });
+      if(!tooClose) scene.add(block);
+    }
+
     scene.add(new THREE.AmbientLight(0x151520, 0.5));
     const dL = new THREE.DirectionalLight(0x8888aa, 0.4); dL.position.set(10,20,10); dL.castShadow=true;
     dL.shadow.mapSize.set(1024,1024); dL.shadow.camera.near=1; dL.shadow.camera.far=60;
@@ -431,7 +493,7 @@ const title = 'pulppixel — 3D Explore';
     // ═════════════════════════════════════════
     const zoneAnims = [];
     let _zIdx = 0; // current zone being decorated
-    function za(obj) { obj.zone = _zIdx; za(obj); } // auto-tag zone
+    function za(obj) { obj.zone = _zIdx; zoneAnims.push(obj); }
 
     // Helper: glowing wireframe mesh
     function mkWire(geo, color, opacity=0.4) {
@@ -704,12 +766,16 @@ const title = 'pulppixel — 3D Explore';
     const keys={};
     document.addEventListener('keydown',e=>{keys[e.code]=true;});
     document.addEventListener('keyup',e=>{keys[e.code]=false;});
-    let yaw=0, isLocked=false;
+    let yaw=0, pitch=0, isLocked=false;
     if(!isMobile){
       renderer.domElement.addEventListener('click',()=>{if(!panel.classList.contains('open'))renderer.domElement.requestPointerLock();});
       document.addEventListener('pointerlockchange',()=>{isLocked=document.pointerLockElement===renderer.domElement;});
-      document.addEventListener('mousemove',e=>{if(isLocked)yaw-=e.movementX*0.003;});
-      // Left Alt: release pointer lock to show cursor
+      document.addEventListener('mousemove',e=>{
+        if(isLocked){
+          yaw-=e.movementX*0.003;
+          pitch=Math.max(-0.6,Math.min(0.8, pitch-e.movementY*0.002));
+        }
+      });
       document.addEventListener('keydown',e=>{
         if(e.code==='AltLeft'||e.code==='AltRight'){
           e.preventDefault();
@@ -800,8 +866,9 @@ const title = 'pulppixel — 3D Explore';
           jThumb.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
         }
         if(t.identifier===camTid){
-          // 카메라 회전 (손가락 이동한 만큼)
+          // 카메라 회전 (손가락 이동한 만큼) — 좌우 + 상하
           yaw-=(t.clientX-camPrev.x)*0.005;
+          pitch=Math.max(-0.6,Math.min(0.8, pitch-(t.clientY-camPrev.y)*0.003));
           camPrev={x:t.clientX,y:t.clientY};
         }
       }
@@ -1068,8 +1135,10 @@ const title = 'pulppixel — 3D Explore';
         }
       });
 
-      // Camera
-      const dO=new THREE.Vector3(0,camDist*0.55,camDist).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+      // Camera (yaw + pitch)
+      const camH = camDist * 0.55 + pitch * camDist * 0.8;
+      const camZ = camDist * Math.cos(pitch * 0.5);
+      const dO=new THREE.Vector3(0, Math.max(1.5, camH), camZ).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
       cC.lerp(ch.position.clone().add(dO),4*dt);
       cLC.lerp(ch.position.clone().add(cLO),6*dt);
       camera.position.copy(cC);camera.lookAt(cLC);

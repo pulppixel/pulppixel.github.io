@@ -11,9 +11,9 @@ export interface InputState {
 }
 
 export function createInput(
-  canvas: HTMLCanvasElement,
-  isMobile: boolean,
-  isPanelOpen: () => boolean,
+    canvas: HTMLCanvasElement,
+    isMobile: boolean,
+    isPanelOpen: () => boolean,
 ): InputState {
   const state: InputState = {
     keys: {},

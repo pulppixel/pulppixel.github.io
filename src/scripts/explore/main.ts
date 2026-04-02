@@ -6,6 +6,7 @@ import { createZones } from './zones';
 import { createInput } from './input';
 import { createPanel, createQuest, createHUD } from './ui';
 import { createSpodyGame } from './minigames/spody';
+import { createRubyGame } from './minigames/ruby';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -23,11 +24,10 @@ export function init(): void {
   // ── 미니게임 ──
   const mgContainer = document.getElementById('minigame-container')!;
   let inMinigame = false;
+  const exitMg = () => { inMinigame = false; if (!isMobile) renderer.domElement.requestPointerLock(); };
   const minigames: Record<string, { start(): void; stop(): void }> = {
-    spody: createSpodyGame(mgContainer, () => {
-      inMinigame = false;
-      if (!isMobile) renderer.domElement.requestPointerLock();
-    }),
+    spody: createSpodyGame(mgContainer, exitMg),
+    ruby: createRubyGame(mgContainer, exitMg),
   };
 
   function enterMinigame(key: string, projectIndex: number): void {

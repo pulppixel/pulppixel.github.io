@@ -7,6 +7,7 @@ import { createInput } from './input';
 import { createPanel, createQuest, createHUD } from './ui';
 import { createSpodyGame } from './minigames/spody';
 import { createRubyGame } from './minigames/ruby';
+import { createMazeGame } from './minigames/maze';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -28,6 +29,7 @@ export function init(): void {
   const minigames: Record<string, { start(): void; stop(): void }> = {
     spody: createSpodyGame(mgContainer, exitMg),
     ruby: createRubyGame(mgContainer, exitMg),
+    maze: createMazeGame(mgContainer, exitMg),
   };
 
   function enterMinigame(key: string, projectIndex: number): void {

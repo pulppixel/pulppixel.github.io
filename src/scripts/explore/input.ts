@@ -35,7 +35,6 @@ export function createInput(
     document.addEventListener('mousemove', e => {
       if (state.isLocked) {
         state.yaw -= e.movementX * 0.003;
-        state.pitch = Math.max(-0.6, Math.min(0.8, state.pitch - e.movementY * 0.002));
       }
     });
     document.addEventListener('keydown', e => {
@@ -92,7 +91,6 @@ export function createInput(
       }
       if (t.identifier === camTid) {
         state.yaw -= (t.clientX - camPrev.x) * 0.005;
-        state.pitch = Math.max(-0.6, Math.min(0.8, state.pitch - (t.clientY - camPrev.y) * 0.003));
         camPrev = { x: t.clientX, y: t.clientY };
       }
     }

@@ -4,35 +4,69 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 
 <ProjectLayout
   title="STELSI Wallet"
-  subtitle="기획안을 분석하고 Unity → Flutter로 스택 전환을 주도. Web3 지갑 앱을 1인 개발하여 양대 스토어에 출시."
+  subtitle="기획안을 분석하고 Unity → Flutter로 스택 전환을 주도. 이더리움 HD 지갑 + 스마트 컨트랙트 연동 앱을 1인 개발하여 양대 스토어에 출시."
   period="2023.02 — 2023.08"
   role="스택 전환 판단 · 설계 · 구현 · 출시 (1인)"
-  tags={['Flutter', 'Dart', 'Web3.js', '스마트 컨트랙트 (ABI)']}
+  team="1인"
+  tags={['Flutter', 'Dart', 'Riverpod', 'web3dart', 'BIP39/BIP44', 'SQLite', 'GoRouter', 'Freezed']}
   badge="SOLO"
 >
 
 <h2>배경</h2>
 <p>
   기획안을 분석해 보니 Realtime Rendering이 필요없는 일반 앱이었습니다.
-  Unity로 만들 이유가 없다고 판단하고, 대안을 찾아 스택을 전환했습니다.
+  Unity로 만들 이유가 없다고 판단하고, .NET MAUI와 Flutter를 각각 MVP로 만들어 비교한 뒤
+  Flutter를 선택했습니다. 시니어에게 두 결과물을 시연해서 설득했고,
+  리스크 대비 폴백 플랜도 함께 제시했습니다.
+  159개 소스 파일, 약 18,850줄.
 </p>
 
-<h2>스택 전환</h2>
+<div class="media-placeholder">📸 앱 스크린샷 (추가 예정)</div>
+
+<h2>Web3 레이어</h2>
 <p>
-  .NET MAUI와 Flutter를 각각 MVP로 만들어 비교한 뒤, Flutter를 선택했습니다.
-  시니어에게 두 결과물을 시연해서 설득했고, 리스크 대비 폴백 플랜도 함께 제시했습니다.
+  <code>Web3</code> 클래스가 BIP39(니모닉) → BIP32/BIP44(HD 키 파생) → web3dart(온체인 통신)을 래핑합니다.
 </p>
-
-<h2>구현</h2>
 <ul>
-  <li>Web3.js + 스마트 컨트랙트(ABI)를 연동하여 코인·토큰·NFT 조회 및 송수신 기능 구현</li>
-  <li>App Store와 Google Play에 직접 등록·배포</li>
-  <li>모든 작업 과정을 Confluence에 문서화</li>
+  <li><strong>HD 지갑</strong> — 하나의 시드에서 <code>m/44'/60'/0'/0/N</code> 경로로 10개 주소를 파생. 개인키/공개키/주소를 인덱스로 관리</li>
+  <li><strong>스마트 컨트랙트 3종</strong> — ERC-20 토큰(STELSI), ERC-1155 NFT(Base), Builder(조합/분해). ABI JSON 로드 → <code>DeployedContract</code> 초기화</li>
+  <li><strong>Read/Write 분리</strong> — <code>eth_read.dart</code>(잔액·가스비·영수증 조회), <code>eth_write.dart</code>(ETH 전송), <code>contract_read.dart</code>(토큰 잔액·NFT 소유·Approve 확인), <code>contract_write.dart</code>(토큰 전송·NFT 조합/분해)</li>
+  <li><strong>네트워크 전환</strong> — Ethereum Mainnet / Goerli Testnet 런타임 스위칭. RPC URL + 컨트랙트 주소를 <code>NetworkType</code> enum으로 분기</li>
+</ul>
+
+<h2>보안</h2>
+<ul>
+  <li>시드 구문을 <code>FlutterSecureStorage</code>(Android EncryptedSharedPreferences)에 암호화 저장</li>
+  <li>서버 인증용 시드 해시는 SHA-256 → MD5 이중 해싱</li>
+  <li>앱 진입 시 6자리 Passcode 잠금. Access/Refresh Token을 Secure Storage에 분리 저장, 만료 시 자동 갱신</li>
+</ul>
+
+<h2>아키텍처</h2>
+<ul>
+  <li><strong>상태 관리</strong> — Riverpod <code>Notifier</code> + <code>AsyncNotifier</code>. Wallet, User, Network, NFT 리스트, 트랜잭션 리스트를 각각 독립 Provider로 관리</li>
+  <li><strong>라우팅</strong> — GoRouter로 30+ 페이지를 선언적으로 관리. Splash → Passcode → Main(Tabbed) 플로우</li>
+  <li><strong>모델</strong> — Freezed + json_serializable로 불변 DTO 생성. <code>WalletData</code>, <code>TransactionData</code>, <code>OwnNftData</code>, <code>CombineNftData</code> 등</li>
+  <li><strong>로컬 DB</strong> — SQLite(sqflite)로 지갑·트랜잭션·NFT 조합 데이터를 영속 저장. <code>WalletDBHelper</code> / <code>TransactionDBHelper</code> / <code>CombineDBHelper</code></li>
+  <li><strong>HTTP</strong> — 인증 등록/로그인, 토큰 갱신, 유저 정보 CRUD. Bearer Token 기반</li>
+</ul>
+
+<h2>주요 기능</h2>
+<ul>
+  <li>지갑 생성(니모닉 생성 → 시드 검증) / 가져오기(니모닉 입력 → BIP39 검증)</li>
+  <li>ETH + STELSI 토큰 잔액 조회, 가스비 실시간 표시</li>
+  <li>QR 코드 생성(수신) / QR 스캔(송신). EIP-55 체크섬 검증</li>
+  <li>트랜잭션 전송 → 영수증 폴링(블록 번호, 상태, 타임스탬프) → 히스토리 저장</li>
+  <li>NFT 마켓플레이스 — 보유 NFT 조회, 오픈세일 목록, 상세 정보(메타데이터)</li>
+  <li>NFT 조합(Exterior + Interior + Landscape → Combine) / 분해(Uncombine). Approval 자동 처리</li>
+  <li>프로필 편집, 이메일 인증, 다중 지갑 관리, 로컬라이징</li>
 </ul>
 
 <div class="media-placeholder">🎥 트랜잭션 영상 (추가 예정)</div>
 
+<h2>성과</h2>
 <p>
+  App Store, Google Play 양대 스토어에 출시.
+  모든 작업 과정을 Confluence에 문서화.
   이후 회사 방향이 메타버스 월드 쪽으로 무게가 실리면서 추가 개발이 중단되었습니다.
 </p>
 

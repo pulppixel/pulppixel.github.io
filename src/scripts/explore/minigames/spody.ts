@@ -1,356 +1,292 @@
-// ─── SPODY 미니게임: 공 튀기기 ───
-// 공을 발사해서 벽에 반사시켜 타겟을 맞추는 게임
+// ─── SPODY v2: 돌아다니는 타겟을 공으로 터뜨리기 ───
+// 웨이브 3단계 · 콤보 시스템 · 스플래시 범위 판정
 
-// ── Helpers ──
 function rgba(hex: string, a: number): string {
   const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${a})`;
 }
 
 const C = { bg: '#0a0a0b', accent: '#6ee7b7', pink: '#ff6b9d', purple: '#a78bfa', yellow: '#fbbf24', blue: '#38bdf8' };
-const TARGET_COLORS = [C.pink, C.accent, C.purple, C.yellow, C.blue];
+const TCOL = [C.pink, C.accent, C.purple, C.yellow, C.blue];
+const SYMS = [['★', '+', '♥', '◆'], ['▲', '●', '×', '÷', '='], ['π', '∑', '√', '∞', '±', '≡', '∫']];
+const WAVES = [
+  { n: 4, r: 24, sMin: 70, sMax: 130, splash: 54 },
+  { n: 5, r: 19, sMin: 120, sMax: 200, splash: 44 },
+  { n: 7, r: 15, sMin: 160, sMax: 280, splash: 36 },
+];
+const MAX_AMMO = 3, AMMO_CD = 0.85, COMBO_WIN = 1.8;
 
-// ── Types ──
-interface Ball { x: number; y: number; vx: number; vy: number; trail: { x: number; y: number }[]; }
-interface Target { x: number; y: number; r: number; color: string; alive: boolean; hitT: number; phase: number; }
-interface Particle { x: number; y: number; vx: number; vy: number; a: number; color: string; s: number; }
-interface Popup { x: number; y: number; a: number; text: string; }
-type Phase = 'aim' | 'fly' | 'result';
-
-const BALL_R = 6, BALL_SPD = 520, TGT_R = 22, MAX_BALLS = 5, TGT_COUNT = 5;
+interface Tgt { x: number; y: number; vx: number; vy: number; r: number; color: string; sym: string; alive: boolean; hitT: number; sq: number; sqA: 'x' | 'y'; }
+interface Fly { sx: number; sy: number; ex: number; ey: number; t: number; dur: number; }
+interface Spl { x: number; y: number; t: number; r: number; }
+interface Ptc { x: number; y: number; vx: number; vy: number; a: number; color: string; s: number; }
+interface Pop { x: number; y: number; a: number; text: string; big: boolean; }
+type Phase = 'intro' | 'play' | 'clear' | 'result';
 
 export function createSpodyGame(container: HTMLElement, onExit: () => void) {
-  let canvas: HTMLCanvasElement;
-  let ctx: CanvasRenderingContext2D;
-  let animId = 0;
-  let running = false;
-
-  // State
-  let phase: Phase;
-  let ball: Ball | null;
-  let targets: Target[];
-  let particles: Particle[];
-  let popups: Popup[];
-  let score: number;
-  let ballsLeft: number;
-  let mx: number, my: number;
-  let lastT: number;
-  let isMobile: boolean;
-  // 모바일: 터치 중일 때만 에임 표시
-  let touching = false;
+  let cv: HTMLCanvasElement, cx: CanvasRenderingContext2D, aId = 0, on = false, mob = false;
+  let phase: Phase, wave: number, tgts: Tgt[], fly: Fly | null, spls: Spl[], pts: Ptc[], pops: Pop[];
+  let score: number, hits: number, totalTgt: number;
+  let ammo: number, ammoT: number, combo: number, maxCombo: number, lastHit: number, phaseT: number, prevT: number;
+  let mX = 0, mY = 0;
 
   function init(): void {
-    isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
-    canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;';
-    container.innerHTML = '';
-    container.appendChild(canvas);
-    container.style.display = 'block';
-    ctx = canvas.getContext('2d')!;
-    resize();
-    window.addEventListener('resize', resize);
-    canvas.addEventListener('mousemove', onMM);
-    canvas.addEventListener('click', onClick);
-    canvas.addEventListener('touchstart', onTS, { passive: false });
-    canvas.addEventListener('touchmove', onTM, { passive: false });
-    canvas.addEventListener('touchend', onTE, { passive: false });
-    document.addEventListener('keydown', onKey);
-    resetGame();
-    running = true;
-    lastT = performance.now();
-    loop();
+    mob = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+    cv = document.createElement('canvas');
+    cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;';
+    container.innerHTML = ''; container.appendChild(cv); container.style.display = 'block';
+    cx = cv.getContext('2d')!;
+    rsz();
+    window.addEventListener('resize', rsz);
+    cv.addEventListener('mousemove', onMM);
+    cv.addEventListener('click', onCl);
+    cv.addEventListener('touchstart', onTS, { passive: false });
+    document.addEventListener('keydown', onKy);
+    resetAll(); on = true; prevT = performance.now(); loop();
   }
 
-  function resize(): void { canvas.width = innerWidth; canvas.height = innerHeight; }
+  function rsz() { cv.width = innerWidth; cv.height = innerHeight; }
 
-  function resetGame(): void {
-    phase = 'aim'; ball = null; score = 0; ballsLeft = MAX_BALLS;
-    particles = []; popups = [];
-    mx = canvas.width / 2; my = canvas.height * 0.4;
-    targets = [];
-    const mg = 70, minY = 100, maxY = canvas.height * 0.52;
-    for (let i = 0; i < TGT_COUNT; i++) {
-      let x = 0, y = 0, ok = false, att = 0;
-      while (!ok && att++ < 80) {
-        x = mg + Math.random() * (canvas.width - mg * 2);
-        y = minY + Math.random() * (maxY - minY);
-        ok = targets.every(t => Math.hypot(x - t.x, y - t.y) > TGT_R * 3.5);
-      }
-      targets.push({ x, y, r: TGT_R, color: TARGET_COLORS[i % TARGET_COLORS.length], alive: true, hitT: 0, phase: Math.random() * Math.PI * 2 });
+  function resetAll() {
+    score = 0; hits = 0; totalTgt = 0; combo = 0; maxCombo = 0; lastHit = -10; wave = 0;
+    startWave();
+  }
+
+  function startWave() {
+    const w = WAVES[wave]; tgts = []; spls = []; pts = []; pops = []; fly = null;
+    ammo = MAX_AMMO; ammoT = 0;
+    const mg = 65, syms = SYMS[wave];
+    for (let i = 0; i < w.n; i++) {
+      const x = mg + Math.random() * (cv.width - mg * 2);
+      const y = mg + Math.random() * (cv.height * 0.55 - mg);
+      const a = Math.random() * Math.PI * 2;
+      const sp = w.sMin + Math.random() * (w.sMax - w.sMin);
+      tgts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: w.r + (Math.random() - 0.5) * 4, color: TCOL[i % TCOL.length], sym: syms[i % syms.length], alive: true, hitT: 0, sq: 0, sqA: 'x' });
     }
+    totalTgt += w.n; phase = 'intro'; phaseT = 1.3;
   }
 
-  // ── Launcher ──
-  function lp() { return { x: canvas.width / 2, y: canvas.height - 55 }; }
-  function aimDir() {
-    const l = lp(), dx = mx - l.x, dy = my - l.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const ny = Math.min(dy / len, -0.08);
-    const nx = dx / len;
-    const nl = Math.hypot(nx, ny);
-    return { x: nx / nl, y: ny / nl };
+  function throwBall(tx: number, ty: number) {
+    if (phase !== 'play' || ammo <= 0 || fly) return;
+    ammo--;
+    const sx = cv.width / 2, sy = cv.height - 38;
+    fly = { sx, sy, ex: tx, ey: ty, t: 0, dur: Math.max(0.07, Math.min(0.18, Math.hypot(tx - sx, ty - sy) / 3200)) };
   }
 
-  function fire(): void {
-    if (phase !== 'aim' || ballsLeft <= 0) return;
-    const l = lp(), d = aimDir();
-    ball = { x: l.x, y: l.y, vx: d.x * BALL_SPD, vy: d.y * BALL_SPD, trail: [] };
-    ballsLeft--;
-    phase = 'fly';
+  function doSplash(x: number, y: number) {
+    const sr = WAVES[wave].splash;
+    spls.push({ x, y, t: 0, r: sr });
+    let h = 0;
+    const now = performance.now() / 1000;
+    for (const tg of tgts) {
+      if (!tg.alive) continue;
+      if (Math.hypot(tg.x - x, tg.y - y) < sr + tg.r * 0.3) {
+        tg.alive = false; tg.hitT = now; h++;
+        for (let i = 0; i < 9; i++) {
+          const a = (i / 9) * Math.PI * 2 + Math.random() * 0.4;
+          pts.push({ x: tg.x, y: tg.y, vx: Math.cos(a) * (80 + Math.random() * 140), vy: Math.sin(a) * (80 + Math.random() * 140), a: 1, color: tg.color, s: 2 + Math.random() * 4 });
+        }
+      }
+    }
+    if (h === 0) return;
+    hits += h;
+    combo = (now - lastHit < COMBO_WIN) ? combo + 1 : 1;
+    if (combo > maxCombo) maxCombo = combo;
+    lastHit = now;
+    const cm = Math.min(combo, 8);
+    let p = h * 100 * cm; if (h >= 2) p += (h - 1) * 150;
+    score += p;
+    pops.push({ x, y: y - 12, a: 1.2, text: `+${p}`, big: false });
+    if (combo >= 2) pops.push({ x, y: y - 38, a: 1.4, text: `COMBO ×${cm}`, big: true });
+    if (h >= 2) pops.push({ x, y: y + 14, a: 1.3, text: h === 2 ? 'DOUBLE!' : h === 3 ? 'TRIPLE!' : `×${h} HIT!`, big: true });
+    if (!tgts.some(t => t.alive)) {
+      score += 300;
+      pops.push({ x: cv.width / 2, y: cv.height / 2, a: 1.8, text: `WAVE ${wave + 1} CLEAR +300`, big: true });
+      phase = 'clear'; phaseT = 1.4;
+    }
   }
 
   // ── Update ──
-  function update(dt: number): void {
+  function update(dt: number) {
     const now = performance.now() / 1000;
-    if (phase === 'fly' && ball) {
-      ball.trail.push({ x: ball.x, y: ball.y });
-      if (ball.trail.length > 18) ball.trail.shift();
-      ball.x += ball.vx * dt; ball.y += ball.vy * dt;
-      const W = canvas.width, H = canvas.height;
-      if (ball.x - BALL_R < 0) { ball.x = BALL_R; ball.vx = Math.abs(ball.vx); }
-      if (ball.x + BALL_R > W) { ball.x = W - BALL_R; ball.vx = -Math.abs(ball.vx); }
-      if (ball.y - BALL_R < 0) { ball.y = BALL_R; ball.vy = Math.abs(ball.vy); }
-      if (ball.y > H + 30) {
-        ball = null;
-        const alive = targets.some(t => t.alive);
-        phase = (ballsLeft > 0 && alive) ? 'aim' : 'result';
-        return;
+    if (phase === 'intro' || phase === 'clear') {
+      phaseT -= dt;
+      if (phaseT <= 0) {
+        if (phase === 'intro') phase = 'play';
+        else { wave++; if (wave >= WAVES.length) phase = 'result'; else startWave(); }
       }
-      for (const tg of targets) {
-        if (!tg.alive) continue;
-        const fy = tg.y + Math.sin(now * 2 + tg.phase) * 6;
-        if (Math.hypot(ball.x - tg.x, ball.y - fy) < BALL_R + tg.r) {
-          tg.alive = false; tg.hitT = now; score += 100;
-          for (let i = 0; i < 10; i++) {
-            const a = (i / 10) * Math.PI * 2 + Math.random() * 0.5;
-            particles.push({ x: tg.x, y: fy, vx: Math.cos(a) * (80 + Math.random() * 140), vy: Math.sin(a) * (80 + Math.random() * 140), a: 1, color: tg.color, s: 2 + Math.random() * 4 });
-          }
-          popups.push({ x: tg.x, y: fy, a: 1, text: '+100' });
-          if (!targets.some(t => t.alive)) {
-            score += 200;
-            popups.push({ x: canvas.width / 2, y: canvas.height / 2, a: 1.5, text: 'PERFECT +200' });
-          }
-        }
-      }
-      if (!targets.some(t => t.alive) && !ball) phase = 'result';
     }
-    // fly 끝났는데 공이 아직 남아있고 타겟이 없으면 공이 빠질 때 result
-    if (phase === 'aim' && !targets.some(t => t.alive)) phase = 'result';
+    if (phase === 'play' && now - lastHit > COMBO_WIN) combo = 0;
+    if (phase === 'play' && ammo < MAX_AMMO) { ammoT += dt; if (ammoT >= AMMO_CD) { ammo++; ammoT = 0; } }
 
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.a -= dt * 2.2;
-      if (p.a <= 0) particles.splice(i, 1);
+    if (phase === 'play' || phase === 'intro') {
+      const W = cv.width, bnd = cv.height * 0.85;
+      for (const tg of tgts) {
+        if (!tg.alive) continue;
+        tg.x += tg.vx * dt; tg.y += tg.vy * dt;
+        tg.sq = Math.max(0, tg.sq - dt * 5);
+        if (tg.x - tg.r < 0) { tg.x = tg.r; tg.vx = Math.abs(tg.vx); tg.sq = 1; tg.sqA = 'x'; }
+        if (tg.x + tg.r > W) { tg.x = W - tg.r; tg.vx = -Math.abs(tg.vx); tg.sq = 1; tg.sqA = 'x'; }
+        if (tg.y - tg.r < 0) { tg.y = tg.r; tg.vy = Math.abs(tg.vy); tg.sq = 1; tg.sqA = 'y'; }
+        if (tg.y + tg.r > bnd) { tg.y = bnd - tg.r; tg.vy = -Math.abs(tg.vy); tg.sq = 1; tg.sqA = 'y'; }
+      }
     }
-    for (let i = popups.length - 1; i >= 0; i--) {
-      const p = popups[i]; p.y -= 35 * dt; p.a -= dt * 0.9;
-      if (p.a <= 0) popups.splice(i, 1);
-    }
+
+    if (fly) { fly.t += dt; if (fly.t >= fly.dur) { doSplash(fly.ex, fly.ey); fly = null; } }
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; p.a -= dt * 2.5; if (p.a <= 0) pts.splice(i, 1); }
+    for (let i = pops.length - 1; i >= 0; i--) { const p = pops[i]; p.y -= (p.big ? 42 : 28) * dt; p.a -= dt * 0.65; if (p.a <= 0) pops.splice(i, 1); }
+    for (let i = spls.length - 1; i >= 0; i--) { spls[i].t += dt; if (spls[i].t > 0.4) spls.splice(i, 1); }
   }
 
   // ── Render ──
-  function render(): void {
+  function render() {
     const now = performance.now() / 1000;
-    const W = canvas.width, H = canvas.height;
-    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const W = cv.width, H = cv.height;
+    cx.fillStyle = C.bg; cx.fillRect(0, 0, W, H);
 
     // Grid
-    ctx.strokeStyle = rgba(C.accent, 0.03); ctx.lineWidth = 1;
-    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-
-    // Walls (top, left, right)
-    ctx.strokeStyle = rgba(C.accent, 0.12); ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, H); ctx.stroke();
-
-    // Bottom line (kill zone indicator)
-    ctx.strokeStyle = rgba(C.pink, 0.08); ctx.lineWidth = 1; ctx.setLineDash([6, 8]);
-    ctx.beginPath(); ctx.moveTo(0, H - 10); ctx.lineTo(W, H - 10); ctx.stroke();
-    ctx.setLineDash([]);
+    cx.strokeStyle = rgba(C.accent, 0.025); cx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) { cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x, H); cx.stroke(); }
+    for (let y = 0; y < H; y += 40) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+    cx.strokeStyle = rgba(C.accent, 0.08); cx.lineWidth = 1.5; cx.strokeRect(1, 1, W - 2, H * 0.85);
+    cx.setLineDash([5, 7]); cx.strokeStyle = rgba(C.pink, 0.06);
+    cx.beginPath(); cx.moveTo(0, H * 0.85); cx.lineTo(W, H * 0.85); cx.stroke(); cx.setLineDash([]);
 
     // Targets
-    for (const tg of targets) {
+    for (const tg of tgts) {
       if (!tg.alive) {
         const age = now - tg.hitT;
         if (age < 0.35) {
-          ctx.beginPath(); ctx.arc(tg.x, tg.y, tg.r * (1 + age * 5), 0, Math.PI * 2);
-          ctx.strokeStyle = rgba(tg.color, 1 - age / 0.35); ctx.lineWidth = 2; ctx.stroke();
+          cx.beginPath(); cx.arc(tg.x, tg.y, tg.r * (1 + age * 7), 0, Math.PI * 2);
+          cx.strokeStyle = rgba(tg.color, 1 - age / 0.35); cx.lineWidth = 2; cx.stroke();
         }
         continue;
       }
-      const fy = tg.y + Math.sin(now * 2 + tg.phase) * 6;
-      // Outer glow
-      ctx.beginPath(); ctx.arc(tg.x, fy, tg.r + 8, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(tg.color, 0.06); ctx.fill();
-      // Body
-      ctx.beginPath(); ctx.arc(tg.x, fy, tg.r, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(tg.color, 0.12); ctx.fill();
-      ctx.strokeStyle = rgba(tg.color, 0.7); ctx.lineWidth = 2; ctx.stroke();
-      // Inner
-      ctx.beginPath(); ctx.arc(tg.x, fy, 5, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(tg.color, 0.9); ctx.fill();
+      cx.save(); cx.translate(tg.x, tg.y);
+      if (tg.sq > 0) { const s = tg.sq * 0.3; if (tg.sqA === 'x') cx.scale(1 - s, 1 + s * 0.5); else cx.scale(1 + s * 0.5, 1 - s); }
+      cx.beginPath(); cx.arc(0, 0, tg.r + 9, 0, Math.PI * 2); cx.fillStyle = rgba(tg.color, 0.05); cx.fill();
+      cx.beginPath(); cx.arc(0, 0, tg.r, 0, Math.PI * 2); cx.fillStyle = rgba(tg.color, 0.14); cx.fill();
+      cx.strokeStyle = rgba(tg.color, 0.55); cx.lineWidth = 2; cx.stroke();
+      cx.font = `600 ${Math.round(tg.r * 0.85)}px "JetBrains Mono",monospace`;
+      cx.fillStyle = rgba(tg.color, 0.8); cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(tg.sym, 0, 1);
+      cx.restore();
     }
 
-    // Aim line
-    const showAim = phase === 'aim' && ballsLeft > 0 && (!isMobile || touching);
-    if (showAim) {
-      const l = lp(), d = aimDir();
-      // 첫 번째 벽 충돌 지점 계산
-      let hitT = 1200;
-      if (d.x < 0) { const t = (BALL_R - l.x) / d.x; if (t > 0 && t < hitT) hitT = t; }
-      if (d.x > 0) { const t = (W - BALL_R - l.x) / d.x; if (t > 0 && t < hitT) hitT = t; }
-      if (d.y < 0) { const t = (BALL_R - l.y) / d.y; if (t > 0 && t < hitT) hitT = t; }
-      const hx = l.x + d.x * hitT, hy = l.y + d.y * hitT;
-      // Main aim line
-      ctx.setLineDash([4, 6]); ctx.strokeStyle = rgba(C.accent, 0.35); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(hx, hy); ctx.stroke();
-      // Bounce prediction
-      let rx = d.x, ry = d.y;
-      if (hx <= BALL_R + 1 || hx >= W - BALL_R - 1) rx = -rx;
-      if (hy <= BALL_R + 1) ry = -ry;
-      ctx.strokeStyle = rgba(C.accent, 0.12);
-      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + rx * 140, hy + ry * 140); ctx.stroke();
-      ctx.setLineDash([]);
-      // Launcher body
-      ctx.beginPath(); ctx.arc(l.x, l.y, 11, 0, Math.PI * 2);
-      ctx.fillStyle = '#111115'; ctx.fill();
-      ctx.strokeStyle = C.accent; ctx.lineWidth = 2; ctx.stroke();
-      // Arrow
-      ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x + d.x * 22, l.y + d.y * 22);
-      ctx.strokeStyle = C.accent; ctx.lineWidth = 3; ctx.stroke();
-    } else if (phase === 'aim' && ballsLeft > 0) {
-      // 모바일: 터치하지 않을 때 발사대만 표시
-      const l = lp();
-      ctx.beginPath(); ctx.arc(l.x, l.y, 11, 0, Math.PI * 2);
-      ctx.fillStyle = '#111115'; ctx.fill();
-      ctx.strokeStyle = rgba(C.accent, 0.4); ctx.lineWidth = 2; ctx.stroke();
+    // Splashes
+    for (const sp of spls) {
+      const p = sp.t / 0.4, cr = sp.r * p;
+      cx.beginPath(); cx.arc(sp.x, sp.y, cr, 0, Math.PI * 2);
+      cx.strokeStyle = rgba(C.accent, 0.45 * (1 - p)); cx.lineWidth = 2.5; cx.stroke();
+      cx.beginPath(); cx.arc(sp.x, sp.y, cr, 0, Math.PI * 2);
+      cx.fillStyle = rgba(C.accent, 0.07 * (1 - p)); cx.fill();
     }
 
-    // Ball
-    if (ball) {
-      for (let i = 0; i < ball.trail.length; i++) {
-        const p = ball.trail[i], a = (i / ball.trail.length) * 0.35, s = BALL_R * (i / ball.trail.length);
-        ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2);
-        ctx.fillStyle = rgba(C.accent, a); ctx.fill();
+    // Flying ball
+    if (fly) {
+      const p = fly.t / fly.dur;
+      const bx = fly.sx + (fly.ex - fly.sx) * p, by = fly.sy + (fly.ey - fly.sy) * p;
+      for (let i = 1; i <= 5; i++) {
+        const tp = Math.max(0, p - i * 0.05);
+        const tx = fly.sx + (fly.ex - fly.sx) * tp, ty = fly.sy + (fly.ey - fly.sy) * tp;
+        cx.beginPath(); cx.arc(tx, ty, 4 - i * 0.5, 0, Math.PI * 2); cx.fillStyle = rgba(C.accent, 0.25 - i * 0.04); cx.fill();
       }
-      ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R + 5, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(C.accent, 0.12); ctx.fill();
-      ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
-      ctx.fillStyle = C.accent; ctx.fill();
+      cx.beginPath(); cx.arc(bx, by, 6, 0, Math.PI * 2); cx.fillStyle = C.accent; cx.fill();
+      cx.beginPath(); cx.arc(bx, by, 11, 0, Math.PI * 2); cx.fillStyle = rgba(C.accent, 0.1); cx.fill();
     }
 
-    // Particles
-    for (const p of particles) {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(p.color, Math.min(p.a, 1)); ctx.fill();
-    }
-    // Popups
-    ctx.font = '600 13px "JetBrains Mono",monospace'; ctx.textAlign = 'center';
-    for (const p of popups) { ctx.fillStyle = rgba(C.accent, Math.min(p.a, 1)); ctx.fillText(p.text, p.x, p.y); }
-
-    // ── HUD ──
-    ctx.textAlign = 'left';
-    ctx.font = '600 11px "JetBrains Mono",monospace'; ctx.fillStyle = C.accent;
-    ctx.fillText('◆ SPODY', 20, 28);
-    ctx.font = '500 10px "JetBrains Mono",monospace'; ctx.fillStyle = '#7a7a8a';
-    ctx.fillText(`SCORE  ${score}`, 20, 46);
-    // Balls
-    ctx.textAlign = 'right'; ctx.fillStyle = '#5a5a66';
-    ctx.font = '500 9px "JetBrains Mono",monospace';
-    ctx.fillText('BALLS', W - 20, 28);
-    for (let i = 0; i < MAX_BALLS; i++) {
-      ctx.beginPath(); ctx.arc(W - 24 - i * 16, 42, 5, 0, Math.PI * 2);
-      ctx.fillStyle = i < ballsLeft ? C.accent : '#1a1a1f'; ctx.fill();
-    }
-    // Close ✕
-    ctx.font = '400 16px "JetBrains Mono",monospace'; ctx.fillStyle = '#5a5a66'; ctx.textAlign = 'center';
-    ctx.fillText('✕', W - 22, 78);
-
-    // Hint
-    if (phase === 'aim' && ballsLeft > 0) {
-      const l = lp();
-      ctx.font = '400 10px "JetBrains Mono",monospace'; ctx.fillStyle = '#2a2a33'; ctx.textAlign = 'center';
-      ctx.fillText(isMobile ? 'TAP TO FIRE' : 'CLICK TO FIRE', l.x, l.y + 28);
+    // Launcher
+    if (phase === 'play') {
+      const lx = W / 2, ly = H - 38;
+      cx.beginPath(); cx.arc(lx, ly, 7, 0, Math.PI * 2); cx.fillStyle = '#111115'; cx.fill();
+      cx.strokeStyle = rgba(C.accent, ammo > 0 ? 0.45 : 0.12); cx.lineWidth = 1.5; cx.stroke();
     }
 
-    // ── Result ──
+    // Cursor (desktop)
+    if (!mob && phase === 'play') {
+      cx.beginPath(); cx.arc(mX, mY, 18, 0, Math.PI * 2);
+      cx.strokeStyle = rgba(C.accent, ammo > 0 ? 0.15 : 0.05); cx.lineWidth = 1; cx.stroke();
+      cx.beginPath(); cx.moveTo(mX - 6, mY); cx.lineTo(mX + 6, mY);
+      cx.moveTo(mX, mY - 6); cx.lineTo(mX, mY + 6);
+      cx.strokeStyle = rgba(C.accent, ammo > 0 ? 0.25 : 0.08); cx.lineWidth = 1; cx.stroke();
+    }
+
+    // Particles & popups
+    for (const p of pts) { cx.beginPath(); cx.arc(p.x, p.y, p.s, 0, Math.PI * 2); cx.fillStyle = rgba(p.color, Math.min(p.a, 1)); cx.fill(); }
+    for (const p of pops) {
+      cx.font = p.big ? '700 16px "JetBrains Mono",monospace' : '600 13px "JetBrains Mono",monospace';
+      cx.fillStyle = rgba(p.big ? C.yellow : C.accent, Math.min(p.a, 1)); cx.textAlign = 'center'; cx.fillText(p.text, p.x, p.y);
+    }
+
+    // HUD
+    cx.textAlign = 'left';
+    cx.font = '600 11px "JetBrains Mono",monospace'; cx.fillStyle = C.accent; cx.fillText('◆ SPODY', 20, 28);
+    cx.font = '500 10px "JetBrains Mono",monospace'; cx.fillStyle = '#7a7a8a'; cx.fillText(`SCORE  ${score}`, 20, 46);
+    cx.fillStyle = '#3a3a44'; cx.fillText(`WAVE ${wave + 1}/${WAVES.length}`, 20, 62);
+    cx.textAlign = 'right'; cx.fillStyle = '#5a5a66';
+    cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillText('AMMO', W - 20, 28);
+    for (let i = 0; i < MAX_AMMO; i++) {
+      cx.beginPath(); cx.arc(W - 24 - i * 16, 42, 5, 0, Math.PI * 2);
+      cx.fillStyle = i < ammo ? C.accent : (i === ammo ? rgba(C.accent, 0.12 + (ammoT / AMMO_CD) * 0.35) : '#1a1a1f'); cx.fill();
+    }
+    if (combo >= 2 && phase === 'play') {
+      cx.textAlign = 'center'; cx.font = `700 ${16 + Math.min(combo, 6) * 2}px "JetBrains Mono",monospace`;
+      cx.fillStyle = rgba(C.yellow, 0.6 + Math.sin(now * 6) * 0.15); cx.fillText(`×${Math.min(combo, 8)}`, W / 2, H - 60);
+    }
+    cx.font = '400 16px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.textAlign = 'center'; cx.fillText('✕', W - 22, 78);
+    if (phase === 'play' && ammo > 0 && !fly && tgts.every(t => t.alive) && now - lastHit > 3) {
+      cx.font = '400 10px "JetBrains Mono",monospace'; cx.fillStyle = '#2a2a33'; cx.textAlign = 'center';
+      cx.fillText(mob ? 'TAP TO THROW' : 'CLICK TO THROW', W / 2, H - 10);
+    }
+
+    // Wave intro
+    if (phase === 'intro') {
+      const p = Math.min(1, (1.3 - phaseT) / 0.4);
+      cx.fillStyle = rgba(C.bg, 0.55 * (1 - Math.max(0, (phaseT - 0.3) / 1.0))); cx.fillRect(0, 0, W, H);
+      cx.textAlign = 'center'; cx.globalAlpha = p;
+      cx.font = '700 26px "JetBrains Mono",monospace'; cx.fillStyle = C.accent; cx.fillText(`WAVE ${wave + 1}`, W / 2, H / 2 - 12);
+      cx.font = '400 11px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText(`${WAVES[wave].n} TARGETS`, W / 2, H / 2 + 16);
+      cx.globalAlpha = 1;
+    }
+
+    // Result
     if (phase === 'result') {
-      ctx.fillStyle = rgba(C.bg, 0.75); ctx.fillRect(0, 0, W, H);
-      const cx = W / 2, cy = H / 2;
-      ctx.textAlign = 'center';
-      ctx.font = '600 13px "JetBrains Mono",monospace'; ctx.fillStyle = C.accent;
-      ctx.fillText('GAME OVER', cx, cy - 44);
-      ctx.font = '600 32px "JetBrains Mono",monospace'; ctx.fillStyle = '#e8e8ec';
-      ctx.fillText(`${score}`, cx, cy + 4);
-      ctx.font = '400 10px "JetBrains Mono",monospace'; ctx.fillStyle = '#5a5a66';
-      ctx.fillText('POINTS', cx, cy + 22);
-      // Retry button
-      drawBtn(cx - 112, cy + 50, 100, 34, '다시', true);
-      // Exit button
-      drawBtn(cx + 12, cy + 50, 100, 34, '나가기', false);
+      cx.fillStyle = rgba(C.bg, 0.8); cx.fillRect(0, 0, W, H);
+      const mx = W / 2, my = H / 2; cx.textAlign = 'center';
+      cx.font = '600 12px "JetBrains Mono",monospace'; cx.fillStyle = C.accent; cx.fillText('COMPLETE', mx, my - 62);
+      cx.font = '700 36px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${score}`, mx, my - 16);
+      cx.font = '400 10px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', mx, my + 4);
+      cx.fillText(`${hits}/${totalTgt} HITS · BEST COMBO ×${maxCombo}`, mx, my + 24);
+      drawBtn(mx - 112, my + 48, 100, 34, '다시', true);
+      drawBtn(mx + 12, my + 48, 100, 34, '나가기', false);
     }
   }
 
-  function drawBtn(x: number, y: number, w: number, h: number, text: string, primary: boolean): void {
-    ctx.beginPath(); ctx.roundRect(x, y, w, h, 6);
-    if (primary) { ctx.fillStyle = rgba(C.accent, 0.1); ctx.fill(); ctx.strokeStyle = rgba(C.accent, 0.4); }
-    else { ctx.fillStyle = 'transparent'; ctx.strokeStyle = '#333'; }
-    ctx.lineWidth = 1; ctx.stroke();
-    ctx.font = '500 12px "JetBrains Mono",monospace';
-    ctx.fillStyle = primary ? C.accent : '#8a8a9a';
-    ctx.textAlign = 'center'; ctx.fillText(text, x + w / 2, y + h / 2 + 4);
+  function drawBtn(x: number, y: number, w: number, h: number, text: string, pri: boolean) {
+    cx.beginPath(); cx.roundRect(x, y, w, h, 6);
+    if (pri) { cx.fillStyle = rgba(C.accent, 0.1); cx.fill(); cx.strokeStyle = rgba(C.accent, 0.4); }
+    else { cx.fillStyle = 'transparent'; cx.strokeStyle = '#333'; }
+    cx.lineWidth = 1; cx.stroke(); cx.font = '500 12px "JetBrains Mono",monospace';
+    cx.fillStyle = pri ? C.accent : '#8a8a9a'; cx.textAlign = 'center'; cx.fillText(text, x + w / 2, y + h / 2 + 4);
   }
 
-  // ── Game loop ──
-  function loop(): void {
-    if (!running) return;
-    const now = performance.now(), dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
-    update(dt); render();
-    animId = requestAnimationFrame(loop);
-  }
+  function loop() { if (!on) return; const n = performance.now(), dt = Math.min((n - prevT) / 1000, 0.05); prevT = n; update(dt); render(); aId = requestAnimationFrame(loop); }
 
-  // ── Input ──
-  function onMM(e: MouseEvent) { mx = e.clientX; my = e.clientY; }
-
-  function onClick(e: MouseEvent) {
-    if (hitClose(e.clientX, e.clientY)) { stop(); return; }
-    if (phase === 'result') { hitResult(e.clientX, e.clientY); return; }
-    if (phase === 'aim') fire();
+  function onMM(e: MouseEvent) { mX = e.clientX; mY = e.clientY; }
+  function onCl(e: MouseEvent) { if (hitX(e.clientX, e.clientY)) { stop(); return; } if (phase === 'result') { hitR(e.clientX, e.clientY); return; } if (phase === 'play') throwBall(e.clientX, e.clientY); }
+  function onTS(e: TouchEvent) { e.preventDefault(); const t = e.changedTouches[0]; if (hitX(t.clientX, t.clientY)) { stop(); return; } if (phase === 'result') { hitR(t.clientX, t.clientY); return; } if (phase === 'play') throwBall(t.clientX, t.clientY); }
+  function onKy(e: KeyboardEvent) { if (e.key === 'Escape') stop(); }
+  function hitX(x: number, y: number) { return x > cv.width - 40 && y > 60 && y < 90; }
+  function hitR(x: number, y: number) {
+    const mx = cv.width / 2, my = cv.height / 2;
+    if (x > mx - 112 && x < mx - 12 && y > my + 48 && y < my + 82) resetAll();
+    if (x > mx + 12 && x < mx + 112 && y > my + 48 && y < my + 82) stop();
   }
-
-  function onTS(e: TouchEvent) {
-    e.preventDefault();
-    const t = e.changedTouches[0]; mx = t.clientX; my = t.clientY; touching = true;
-    if (hitClose(t.clientX, t.clientY)) { stop(); return; }
-    if (phase === 'result') { hitResult(t.clientX, t.clientY); return; }
-  }
-  function onTM(e: TouchEvent) { e.preventDefault(); const t = e.changedTouches[0]; mx = t.clientX; my = t.clientY; }
-  function onTE(e: TouchEvent) {
-    e.preventDefault(); touching = false;
-    if (phase === 'aim') fire();
-  }
-
-  function onKey(e: KeyboardEvent) { if (e.key === 'Escape') stop(); }
-
-  function hitClose(cx: number, cy: number): boolean {
-    return cx > canvas.width - 40 && cy > 60 && cy < 90;
-  }
-  function hitResult(cx: number, cy: number): void {
-    const mid = canvas.width / 2, my = canvas.height / 2;
-    if (cx > mid - 112 && cx < mid - 12 && cy > my + 50 && cy < my + 84) resetGame();
-    if (cx > mid + 12 && cx < mid + 112 && cy > my + 50 && cy < my + 84) stop();
-  }
-
-  function stop(): void {
-    running = false; cancelAnimationFrame(animId);
-    canvas.removeEventListener('mousemove', onMM);
-    canvas.removeEventListener('click', onClick);
-    canvas.removeEventListener('touchstart', onTS);
-    canvas.removeEventListener('touchmove', onTM);
-    canvas.removeEventListener('touchend', onTE);
-    document.removeEventListener('keydown', onKey);
-    window.removeEventListener('resize', resize);
-    container.style.display = 'none'; container.innerHTML = '';
-    onExit();
+  function stop() {
+    on = false; cancelAnimationFrame(aId);
+    cv.removeEventListener('mousemove', onMM); cv.removeEventListener('click', onCl);
+    cv.removeEventListener('touchstart', onTS); document.removeEventListener('keydown', onKy);
+    window.removeEventListener('resize', rsz);
+    container.style.display = 'none'; container.innerHTML = ''; onExit();
   }
 
   return { start: init, stop };

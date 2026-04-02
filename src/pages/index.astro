@@ -57,12 +57,12 @@ const projects = [
     badgeColor: 'purple' as const,
   },
   {
-    slug: 'frenzy-circle',
-    title: 'Frenzy Circle',
-    period: '2024.06 — 2024.10',
-    description: '텔레그램 환경(WebGL)에서 구동되는 TON 생태계 미니 게임. 코인 밈 테마, 랭킹 시스템, AWS 배포.',
-    tags: ['Unity', 'C#', 'WebGL', 'REST API'],
-    badge: '3인',
+    slug: 'spody',
+    title: 'SPODY — XR 유아 교육',
+    period: '2020.01 — 2021.06',
+    description: 'Kinect/ASTRA 센서 + OpenCV 캘리브레이션 기반 XR 교육 콘텐츠. 유일한 개발자로 시작, 양산 체계 구축. 공공기관 납품.',
+    tags: ['Unity', 'C#', 'OpenCV', 'Kinect', 'ASTRA'],
+    badge: 'SOLO → LEAD',
     badgeColor: 'green' as const,
   },
   {
@@ -102,13 +102,21 @@ const timeline = [
     company: 'Math Master',
     role: 'Unity Client Developer',
     period: '2021.06 — 2022.06 · 1년 1개월',
-    projects: ['일프로연산 — 초등 수학 스테이지 (SKT ZEM 선정)'],
+    projects: [
+      '일프로연산 — 초등 수학 라이브 서비스 (SKT ZEM 선정)',
+      '분수 도메인 타입 설계 (연산자 오버로딩, GCD/LCM, 약분·채점 로직)',
+      '미로 생성(Recursive Backtracker) + 탐색(A*) 알고리즘 구현',
+      '자체 Tween 라이브러리 (Ease/Loop/Coroutine 기반, DOTween 대체)',
+    ],
   },
   {
     company: 'VVR',
     role: 'Unity Client Developer · 초기 1인',
     period: '2020.01 — 2021.06 · 1년 6개월',
-    projects: ['스포디 — XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)'],
+    projects: [
+      '스포디 — XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)',
+      'Kinect/ASTRA 센서 파이프라인 + OpenCV 자동 캘리브레이션 설계',
+    ],
   },
 ];
 

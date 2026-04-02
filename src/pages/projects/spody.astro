@@ -1,0 +1,83 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+---
+
+<ProjectLayout
+  title="SPODY — XR 유아 교육 콘텐츠"
+  subtitle="깊이 센서 + OpenCV 기반 XR 교육 플랫폼. 유일한 개발자로 시작해 양산 체계를 구축하고, 매달 2~3개 콘텐츠를 납품. 유치원·공공기관 다수 납품, 인도네시아 수출."
+  period="2020.01 — 2021.06"
+  role="개발 전담 (초기 1인 → 최종 5인 팀 리드)"
+  team="초기 1인 → 최종 5인"
+  tags={['Unity', 'C#', 'OpenCV', 'Kinect V2', 'ASTRA PRO', 'DOTween']}
+  badge="SOLO → LEAD"
+>
+
+<h2>배경</h2>
+<p>
+  유일한 개발자로 시작해 매달 2~3개의 XR 유아 교육 콘텐츠를 납품했습니다.
+  빔프로젝터로 바닥에 콘텐츠를 투사하고, 깊이 센서로 아이들의 발/손 터치를 인식하는 시스템입니다.
+  432개 스크립트, 약 63,800줄. 24개+ 교육 콘텐츠 모듈.
+</p>
+
+<div class="media-placeholder">📸 아이들이 SPODY를 사용하는 모습 (추가 예정)</div>
+
+<h2>센서 파이프라인</h2>
+<p>
+  프로젝트의 핵심인 <code>KinectTouchManager</code>는 깊이 센서의 입력을 Unity UI 터치로 변환하는 파이프라인입니다.
+</p>
+<ul>
+  <li>Kinect V2 <code>DepthFrameReader</code>로 매 프레임 깊이 데이터를 읽음</li>
+  <li>Body Tracking으로 양손 좌표를 추출하고, <code>CoordinateMapper</code>로 깊이→컬러 좌표 변환</li>
+  <li>OpenCV <code>PerspectiveTransform</code>으로 센서 좌표 → 스크린 좌표로 최종 매핑</li>
+  <li><code>EventSystem.RaycastAll</code>로 Unity UI 이벤트를 시뮬레이션 — 아이가 바닥을 밟으면 UI 버튼이 눌리는 구조</li>
+  <li>커스텀 인터페이스 <code>IKinectTouchClick</code>으로 터치 이벤트 전달</li>
+</ul>
+
+<h2>캘리브레이션 — 비개발자용 자동 세팅</h2>
+<p>
+  현장에서 영업팀이나 고객이 직접 센싱 세팅을 할 수 있도록 캘리브레이션 UI를 개선했습니다.
+</p>
+<ul>
+  <li><strong>자동 캘리브레이션</strong> (<code>AutoKinectPanel</code>) — OpenCV <code>FindChessboardCorners</code>로 체스보드 패턴을 자동 인식, 4점 좌표를 <code>PerspectiveTransform</code>으로 매핑. 성공/실패 피드백 표시</li>
+  <li><strong>수동 캘리브레이션</strong> (<code>ControlPanel_</code>) — 폴백용. 화면 4개 꼭짓점을 직접 터치해서 보정</li>
+  <li>캘리브레이션 결과를 <code>ModelManager</code>에 영속 저장, 재시작 시 자동 로드</li>
+</ul>
+
+<h2>센서 교체 — Kinect V2 → ASTRA PRO</h2>
+<p>
+  Kinect V2의 단종에 대비해 ASTRA PRO로의 전환을 주도했습니다.
+  센서 레이어(<code>KinectTouchManager</code> / <code>AstraDepthManager</code>)만 교체하고,
+  상위 로직(터치 변환, 캘리브레이션, 콘텐츠)은 그대로 유지할 수 있는 구조였기 때문에 전환이 가능했습니다.
+</p>
+
+<h2>양산 체계 — 콘텐츠 템플릿</h2>
+<p>
+  처음에는 콘텐츠를 하나하나 따로 만들었는데, 반복되는 패턴이 보이기 시작했습니다.
+  그때부터 공통 부분을 템플릿화했습니다.
+</p>
+<ul>
+  <li>각 콘텐츠 모듈이 <strong>자기 네임스페이스</strong>로 격리 (<code>SPODY_3_5_1</code>, <code>Family</code> 등) — 모듈 간 충돌 방지</li>
+  <li>Manager / Controller / Data <strong>폴더 구조를 공유</strong> — 새 콘텐츠 시작 시 템플릿 복사 → 커스터마이징</li>
+  <li>공용 유틸리티(<code>_SPODY/Scrips/Util</code>) — Singleton, SoundManager, SceneChange, TimerPanel 등</li>
+  <li>각 GameManager가 Singleton + Coroutine 기반 플로우(Opening → 게임 → Ending)를 따름</li>
+  <li>이 구조 덕분에 이후 합류한 개발자들이 빠르게 콘텐츠 제작에 투입 가능</li>
+</ul>
+
+<h2>콘텐츠 목록</h2>
+<p>
+  한글(자음/모음), 영어(알파벳/단어), 수학(연산/구구단), 동물/직업, 가족, 별자리,
+  위생, 색상, 스포츠(축구/농구/야구), 다트, 두더지잡기, 개구리, 사파리 등
+  24개+ 교육 콘텐츠. 인도네시아 수출 버전 포함.
+</p>
+
+<div class="media-placeholder">🎥 콘텐츠 시연 영상 (추가 예정)</div>
+
+<h2>성과</h2>
+<ul>
+  <li>누리 교육 과정 콘텐츠를 성남·수원 유치원 다수에 납품</li>
+  <li>광주 광산구청, 광명 하안도서관 등 공공기관 납품</li>
+  <li>인도네시아 수출 버전 출시</li>
+  <li>영업 동행을 통해 유아와 교사가 실제로 사용하는 장면을 관찰, 피드백을 개발에 반영</li>
+</ul>
+
+</ProjectLayout>

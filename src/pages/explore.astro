@@ -68,26 +68,96 @@ const title = 'pulppixel — 3D Explore';
     .lbl-badge { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
 
     /* PANEL */
-    #panel { position: absolute; top: 0; right: 0; width: 420px; height: 100vh; background: rgba(10,10,11,0.95); border-left: 1px solid rgba(110,231,183,0.15); backdrop-filter: blur(16px); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); overflow-y: auto; z-index: 20; padding: 2.5rem 2rem; }
+    #panel {
+      position: absolute; top: 0; right: 0; width: 440px; height: 100vh;
+      background: rgba(8,8,10,0.97);
+      border-left: 1px solid rgba(110,231,183,0.1);
+      backdrop-filter: blur(20px);
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+      overflow-y: auto; z-index: 20; padding: 0;
+    }
     #panel.open { transform: translateX(0); }
     #panel::-webkit-scrollbar { width: 3px; }
     #panel::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    #panel-close { position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: 1px solid #333; color: #5a5a66; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-family: inherit; }
-    #panel-close:hover { border-color: #6ee7b7; color: #6ee7b7; }
-    .p-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.06em; margin-bottom: 12px; }
-    .p-period { font-size: 11px; color: #5a5a66; margin-bottom: 4px; }
-    .p-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
-    .p-sub { font-size: 14px; color: #8f8f9a; font-weight: normal; }
-    .p-role { font-size: 12px; color: #8f8f9a; margin-bottom: 20px; }
-    .p-desc { font-size: 13px; color: #8f8f9a; line-height: 1.75; margin-bottom: 20px; }
-    .p-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 24px; }
-    .p-tags span { font-size: 10px; padding: 3px 8px; background: #1a1a1f; border: 1px solid #2a2a30; border-radius: 3px; color: #8f8f9a; }
-    .p-sec { font-size: 11px; color: #6ee7b7; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; margin-top: 8px; }
-    .p-list { list-style: none; padding: 0; margin-bottom: 20px; }
-    .p-list li { font-size: 12px; color: #8f8f9a; line-height: 1.7; padding-left: 14px; position: relative; }
-    .p-list li::before { content: '—'; position: absolute; left: 0; color: #5a5a66; }
-    .p-link { display: inline-block; font-size: 11px; color: #5a5a66; text-decoration: none; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; transition: all 0.2s; margin-right: 8px; margin-bottom: 8px; }
-    .p-link:hover { border-color: #6ee7b7; color: #6ee7b7; }
+
+    /* Panel header area with accent gradient */
+    .p-header {
+      position: relative; padding: 2.5rem 2rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .p-header::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .p-header-bg {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.06; pointer-events: none;
+    }
+    #panel-close {
+      position: absolute; top: 1.25rem; right: 1.25rem; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08); color: #5a5a66; width: 32px; height: 32px;
+      border-radius: 6px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; font-family: inherit;
+      transition: all 0.2s; z-index: 2;
+    }
+    #panel-close:hover { border-color: rgba(255,255,255,0.2); color: #e8e8ec; background: rgba(255,255,255,0.06); }
+
+    .p-badge {
+      display: inline-block; font-size: 9px; padding: 3px 10px; border-radius: 4px;
+      letter-spacing: 0.08em; margin-bottom: 14px; font-weight: 500;
+      position: relative; z-index: 1;
+    }
+    .p-period { font-size: 10px; color: #4a4a55; margin-bottom: 8px; letter-spacing: 0.04em; position: relative; z-index: 1; }
+    .p-title {
+      font-size: 22px; font-weight: 600; margin-bottom: 4px; line-height: 1.25;
+      letter-spacing: -0.01em; position: relative; z-index: 1;
+    }
+    .p-sub { font-size: 13px; color: #6a6a78; font-weight: 400; display: block; margin-top: 4px; }
+
+    /* Panel body */
+    .p-body { padding: 1.5rem 2rem 2rem; }
+
+    /* Info grid (role, company) */
+    .p-info { display: flex; gap: 2rem; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .p-info-item { display: flex; flex-direction: column; gap: 3px; }
+    .p-info-label { font-size: 9px; color: #3a3a44; letter-spacing: 0.1em; text-transform: uppercase; }
+    .p-info-value { font-size: 12px; color: #9a9aaa; }
+
+    .p-desc {
+      font-size: 13px; color: #7a7a8a; line-height: 1.8; margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .p-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+    .p-tags span {
+      font-size: 10px; padding: 4px 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px; color: #7a7a8a; letter-spacing: 0.02em;
+    }
+    .p-sec {
+      font-size: 9px; color: #4a4a55; letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 12px; margin-top: 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .p-sec::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.04); }
+    .p-list { list-style: none; padding: 0; margin-bottom: 1.5rem; }
+    .p-list li {
+      font-size: 12px; color: #8a8a9a; line-height: 1.75; padding: 4px 0 4px 18px;
+      position: relative; transition: color 0.2s;
+    }
+    .p-list li::before { content: '›'; position: absolute; left: 4px; color: #3a3a44; font-size: 13px; }
+    .p-list li:hover { color: #c8c8d0; }
+    .p-list li:hover::before { color: #6ee7b7; }
+
+    .p-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.04); }
+    .p-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: #6a6a78; text-decoration: none;
+      padding: 9px 18px; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px; transition: all 0.2s; background: rgba(255,255,255,0.02);
+    }
+    .p-link:hover { border-color: rgba(110,231,183,0.3); color: #6ee7b7; background: rgba(110,231,183,0.04); }
+    .p-link-primary { border-color: rgba(110,231,183,0.2); color: #6ee7b7; }
 
     /* ─── DYNAMIC JOYSTICK ─── */
     #joystick-base {
@@ -192,14 +262,14 @@ const title = 'pulppixel — 3D Explore';
       { name:'EARLY', color:0xff6b9d, position:{x:0,z:16} },
     ];
     const PROJECTS = [
-      { co:'VOYAGER', title:'ETERNA', sub:'아고라 시스템', period:'2025.11 — 2026.04', role:'아키텍처 설계 · 구현 전담', badge:'ARCHITECT', bc:'#6ee7b7', color:0xa78bfa, desc:'디스코드형 커뮤니티 시스템. Service/Repository/State 3계층 아키텍처 직접 설계.', tags:['Unity','C#','R3','UniTask','Tencent IM','FlatBuffers'], details:['아고라 CRUD·알림·검색·권한 전체 구현','크로스플랫폼 STT 직접 구현','한글 조합 커스텀 InputField','UaaL 양방향 통신 검증'], link:'/projects/eterna/', off:{x:-2.5,z:0} },
-      { co:'VOYAGER', title:'REIW', sub:'3D 메타버스', period:'2025.06 — 2025.11', role:'채팅 재설계 · 하우징 · 퀘스트', badge:null, bc:null, color:0xa78bfa, desc:'Tencent IM 채팅 재설계, 하우징 프로토타입, NPC 퀘스트.', tags:['Unity','C#','R3','UniTask','DOTween'], details:['채팅·친구 시스템 재설계','하우징 배치·편집·Undo/Redo','NPC 퀘스트 시스템','DataTableSO 에디터 툴'], link:'/projects/reiw/', off:{x:0,z:0} },
-      { co:'VOYAGER', title:'IW Zombie', sub:'팀 서바이벌', period:'2025.02 — 2025.06', role:'게임 루프 · 채팅 · AI NPC', badge:null, bc:null, color:0xa78bfa, desc:'5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입.', tags:['Unity','C#','Tencent IM','DOTween'], details:['5단계 게임 루프 구현','Tencent IM 채팅 첫 도입','3D 사운드 풀링','범용 디버그 치트 시스템'], link:'/projects/iw-zombie/', off:{x:2.5,z:0} },
-      { co:'VERS.', title:'STELSI Wallet', sub:'이더리움 HD 지갑', period:'2023.02 — 2023.08', role:'설계 · 구현 · 출시 (1인)', badge:'SOLO', bc:'#6ee7b7', color:0x6ee7b7, desc:'Unity→Flutter 스택 전환. BIP39/BIP44 HD 지갑. 양대 스토어 출시.', tags:['Flutter','Dart','Riverpod','web3dart'], details:['HD 지갑 10개 주소 파생','스마트 컨트랙트 3종','SecureStorage 암호화','App Store + Google Play 출시'], link:'/projects/stelsi-wallet/', off:{x:-1.8,z:0} },
-      { co:'VERS.', title:'Nomads Planet', sub:'멀티플레이어 메타버스', period:'2023.06 — 2023.09', role:'기획·설계·구현 (1인)', badge:'수상', bc:'#ff6b9d', color:0xff6b9d, desc:'Unity Netcode + Vivox 멀티플레이어. K-메타버스 경진대회 장려상.', tags:['Unity','C#','Netcode','Vivox'], details:['3-Singleton 구조','Matchmaker + Backfill','NPC 교통 FSM','실시간 리더보드'], link:'/projects/nomads-planet/', off:{x:1.8,z:0} },
-      { co:'SIDE', title:'HAUL', sub:'2D PvPvE Extraction', period:'2025.10 — 현재', role:'기획·설계·구현 (1인)', badge:'IN PROGRESS', bc:'#fbbf24', color:0xfbbf24, desc:'Server-authoritative 멀티플레이어. CSP, 서버 리콘, NPC AI 1인 구현 중.', tags:['Godot 4','C#','ASP.NET','gRPC','LiteNetLib'], details:['동일 물리 엔진 misprediction 최소화','Client-side prediction + Reconciliation','NPC fake InputCmd 패턴','7-state FSM Human NPC'], link:'/projects/haul/', off:{x:0,z:0} },
-      { co:'EARLY', title:'SPODY', sub:'XR 유아 교육', period:'2020.01 — 2021.06', role:'개발 전담 (1인→5인 리드)', badge:'SOLO→LEAD', bc:'#6ee7b7', color:0x6ee7b7, desc:'Kinect/ASTRA + OpenCV XR 교육. 양산 체계 구축, 공공기관 납품.', tags:['Unity','C#','OpenCV','Kinect'], details:['깊이센서→UI 터치 파이프라인','OpenCV 자동 캘리브레이션','24개+ 모듈 양산','공공기관 납품, 인도네시아 수출'], link:'/projects/spody/', off:{x:-1.8,z:0} },
-      { co:'EARLY', title:'루비의 모험', sub:'3D 액션 RPG', period:'2019.09 — 2019.11', role:'기획·설계·구현 (1인)', badge:'우수상', bc:'#ff6b9d', color:0xff6b9d, desc:'1인 개발 3D 액션 RPG. 졸업전시 우수상.', tags:['Unity','C#','NavMesh','Timeline'], details:['5-state FSM 플레이어','콤보 + 스킬 3종','NavMesh AI + 유도탄 마법사','ScriptableObject 인벤토리'], link:'/projects/ruby-adventure/', off:{x:1.8,z:0} },
+      { co:'VOYAGER', title:'ETERNA', sub:'아고라 시스템', period:'2025.11 — 2026.04', role:'아키텍처 설계 · 구현 전담', badge:'ARCHITECT', bc:'#6ee7b7', color:0xa78bfa, coHex:'#a78bfa', desc:'디스코드형 커뮤니티 시스템. Service/Repository/State 3계층 아키텍처 직접 설계.', tags:['Unity','C#','R3','UniTask','Tencent IM','FlatBuffers'], details:['아고라 CRUD·알림·검색·권한 전체 구현','크로스플랫폼 STT 직접 구현','한글 조합 커스텀 InputField','UaaL 양방향 통신 검증'], link:'/projects/eterna/', off:{x:-2.5,z:0} },
+      { co:'VOYAGER', title:'REIW', sub:'3D 메타버스', period:'2025.06 — 2025.11', role:'채팅 재설계 · 하우징 · 퀘스트', badge:null, bc:null, color:0xa78bfa, coHex:'#a78bfa', desc:'Tencent IM 채팅 재설계, 하우징 프로토타입, NPC 퀘스트.', tags:['Unity','C#','R3','UniTask','DOTween'], details:['채팅·친구 시스템 재설계','하우징 배치·편집·Undo/Redo','NPC 퀘스트 시스템','DataTableSO 에디터 툴'], link:'/projects/reiw/', off:{x:0,z:0} },
+      { co:'VOYAGER', title:'IW Zombie', sub:'팀 서바이벌', period:'2025.02 — 2025.06', role:'게임 루프 · 채팅 · AI NPC', badge:null, bc:null, color:0xa78bfa, coHex:'#a78bfa', desc:'5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입.', tags:['Unity','C#','Tencent IM','DOTween'], details:['5단계 게임 루프 구현','Tencent IM 채팅 첫 도입','3D 사운드 풀링','범용 디버그 치트 시스템'], link:'/projects/iw-zombie/', off:{x:2.5,z:0} },
+      { co:'VERS.', title:'STELSI Wallet', sub:'이더리움 HD 지갑', period:'2023.02 — 2023.08', role:'설계 · 구현 · 출시 (1인)', badge:'SOLO', bc:'#6ee7b7', color:0x6ee7b7, coHex:'#6ee7b7', desc:'Unity→Flutter 스택 전환. BIP39/BIP44 HD 지갑. 양대 스토어 출시.', tags:['Flutter','Dart','Riverpod','web3dart'], details:['HD 지갑 10개 주소 파생','스마트 컨트랙트 3종','SecureStorage 암호화','App Store + Google Play 출시'], link:'/projects/stelsi-wallet/', off:{x:-1.8,z:0} },
+      { co:'VERS.', title:'Nomads Planet', sub:'멀티플레이어 메타버스', period:'2023.06 — 2023.09', role:'기획·설계·구현 (1인)', badge:'수상', bc:'#ff6b9d', color:0xff6b9d, coHex:'#6ee7b7', desc:'Unity Netcode + Vivox 멀티플레이어. K-메타버스 경진대회 장려상.', tags:['Unity','C#','Netcode','Vivox'], details:['3-Singleton 구조','Matchmaker + Backfill','NPC 교통 FSM','실시간 리더보드'], link:'/projects/nomads-planet/', off:{x:1.8,z:0} },
+      { co:'SIDE', title:'HAUL', sub:'2D PvPvE Extraction', period:'2025.10 — 현재', role:'기획·설계·구현 (1인)', badge:'IN PROGRESS', bc:'#fbbf24', color:0xfbbf24, coHex:'#fbbf24', desc:'Server-authoritative 멀티플레이어. CSP, 서버 리콘, NPC AI 1인 구현 중.', tags:['Godot 4','C#','ASP.NET','gRPC','LiteNetLib'], details:['동일 물리 엔진 misprediction 최소화','Client-side prediction + Reconciliation','NPC fake InputCmd 패턴','7-state FSM Human NPC'], link:'/projects/haul/', off:{x:0,z:0} },
+      { co:'EARLY', title:'SPODY', sub:'XR 유아 교육', period:'2020.01 — 2021.06', role:'개발 전담 (1인→5인 리드)', badge:'SOLO→LEAD', bc:'#6ee7b7', color:0x6ee7b7, coHex:'#ff6b9d', desc:'Kinect/ASTRA + OpenCV XR 교육. 양산 체계 구축, 공공기관 납품.', tags:['Unity','C#','OpenCV','Kinect'], details:['깊이센서→UI 터치 파이프라인','OpenCV 자동 캘리브레이션','24개+ 모듈 양산','공공기관 납품, 인도네시아 수출'], link:'/projects/spody/', off:{x:-1.8,z:0} },
+      { co:'EARLY', title:'루비의 모험', sub:'3D 액션 RPG', period:'2019.09 — 2019.11', role:'기획·설계·구현 (1인)', badge:'우수상', bc:'#ff6b9d', color:0xff6b9d, coHex:'#ff6b9d', desc:'1인 개발 3D 액션 RPG. 졸업전시 우수상.', tags:['Unity','C#','NavMesh','Timeline'], details:['5-state FSM 플레이어','콤보 + 스킬 3종','NavMesh AI + 유도탄 마법사','ScriptableObject 인벤토리'], link:'/projects/ruby-adventure/', off:{x:1.8,z:0} },
     ];
 
     // ─── SCENE ───
@@ -290,6 +360,55 @@ const title = 'pulppixel — 3D Explore';
       const a=COMPANIES[i].position,b=COMPANIES[j].position;
       scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x,0.01,a.z),new THREE.Vector3((a.x+b.x)/2,0.01,(a.z+b.z)/2),new THREE.Vector3(b.x,0.01,b.z)]),ptM));
     }
+
+    // ─── COMPANY 3D LABELS (Canvas Sprite) ───
+    function makeTextSprite(text, color) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256; canvas.height = 64;
+      ctx.font = '600 28px JetBrains Mono, monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.7;
+      ctx.fillText(text, 128, 32);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearFilter;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(3, 0.75, 1);
+      return sprite;
+    }
+    COMPANIES.forEach(co => {
+      const hex = '#' + co.color.toString(16).padStart(6, '0');
+      const label = makeTextSprite(co.name, hex);
+      label.position.set(co.position.x, 2.8, co.position.z - 3.6);
+      scene.add(label);
+    });
+
+    // ─── BACKGROUND STARS (Skybox feel) ───
+    const starCount = 500;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      // Distribute on a large sphere
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 60 + Math.random() * 20;
+      starPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      starPos[i*3+1] = Math.abs(r * Math.cos(phi)) * 0.5 + 5; // bias upward
+      starPos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+      // Subtle color variation
+      const tint = Math.random();
+      if (tint < 0.3) { starColors[i*3]=0.43; starColors[i*3+1]=0.91; starColors[i*3+2]=0.72; } // green
+      else if (tint < 0.5) { starColors[i*3]=0.65; starColors[i*3+1]=0.55; starColors[i*3+2]=0.98; } // purple
+      else { starColors[i*3]=0.7; starColors[i*3+1]=0.7; starColors[i*3+2]=0.75; } // white-ish
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+      size: 0.15, transparent: true, opacity: 0.5, vertexColors: true, sizeAttenuation: true
+    })));
 
     // Quest
     const visited=new Set();
@@ -424,7 +543,33 @@ const title = 'pulppixel — 3D Explore';
     document.getElementById('panel-close').onclick=closeP;
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeP();});
     function closeP(){panel.classList.remove('open');if(!isMobile)setTimeout(()=>renderer.domElement.requestPointerLock(),100);}
-    function openP(p,i){let h='';if(p.badge)h+=`<div class="p-badge" style="background:${p.bc}18;color:${p.bc};border:1px solid ${p.bc}33;">${p.badge}</div>`;h+=`<div class="p-period">${p.period}</div><div class="p-title">${p.title}<br><span class="p-sub">${p.sub}</span></div><div class="p-role">${p.role}</div><div class="p-desc">${p.desc}</div><div class="p-tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div><div class="p-sec">주요 작업</div><ul class="p-list">${p.details.map(d=>`<li>${d}</li>`).join('')}</ul><a href="${p.link}" class="p-link">상세 보기 ↗</a><a href="https://github.com/pulppixel" target="_blank" class="p-link">GitHub ↗</a>`;pc.innerHTML=h;panel.classList.add('open');if(!isMobile)document.exitPointerLock();vst(i);}
+    function openP(p,i){
+      const ac = p.coHex || '#6ee7b7';
+      const bc = p.bc || ac;
+      let h = `<div class="p-header">`;
+      h += `<div class="p-header-bg" style="background:linear-gradient(135deg, ${ac}15, transparent 70%);"></div>`;
+      h += `<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,${ac},transparent);"></div>`;
+      if(p.badge) h += `<div class="p-badge" style="background:${bc}15;color:${bc};border:1px solid ${bc}30;">${p.badge}</div>`;
+      h += `<div class="p-period">${p.period}</div>`;
+      h += `<div class="p-title">${p.title}<span class="p-sub">${p.sub}</span></div>`;
+      h += `</div>`;
+      h += `<div class="p-body">`;
+      h += `<div class="p-info">`;
+      h += `<div class="p-info-item"><span class="p-info-label">역할</span><span class="p-info-value">${p.role}</span></div>`;
+      h += `<div class="p-info-item"><span class="p-info-label">소속</span><span class="p-info-value" style="color:${ac}">${p.co}</span></div>`;
+      h += `</div>`;
+      h += `<div class="p-desc">${p.desc}</div>`;
+      h += `<div class="p-sec">기술 스택</div>`;
+      h += `<div class="p-tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div>`;
+      h += `<div class="p-sec">주요 작업</div>`;
+      h += `<ul class="p-list">${p.details.map(d=>`<li>${d}</li>`).join('')}</ul>`;
+      h += `<div class="p-links">`;
+      h += `<a href="${p.link}" class="p-link p-link-primary">상세 보기 ↗</a>`;
+      h += `<a href="https://github.com/pulppixel" target="_blank" class="p-link">GitHub ↗</a>`;
+      h += `</div></div>`;
+      pc.innerHTML=h;panel.classList.add('open');
+      if(!isMobile)document.exitPointerLock();vst(i);
+    }
 
     document.getElementById('mobile-interact').addEventListener('touchstart',e=>{
       e.preventDefault();e.stopPropagation();
@@ -471,8 +616,17 @@ const title = 'pulppixel — 3D Explore';
       const wp=moving?t*10:0,sw=moving?Math.sin(wp):0;
       lL.rotation.x=sw*0.5;lR.rotation.x=-sw*0.5;sL.rotation.x=sw*0.3;sR.rotation.x=-sw*0.3;
       aL.rotation.x=-sw*0.45;aR.rotation.x=sw*0.45;hL.rotation.x=-sw*0.45;hR.rotation.x=sw*0.45;
-      const bob=moving?Math.abs(Math.sin(wp))*0.05:0;
+      // Idle breathing
+      const breathe = Math.sin(t * 2) * 0.012;
+      const idleSway = Math.sin(t * 0.8) * 0.015;
+      const bob=moving?Math.abs(Math.sin(wp))*0.05:breathe;
       bd.position.y=0.66+bob;hd.position.y=1.08+bob;vs.position.y=1.1+bob;cp.position.y=0.72+bob;eL.position.y=1.1+bob;eR.position.y=1.1+bob;
+      // Idle arm sway
+      if(!moving){aL.rotation.x=idleSway;aR.rotation.x=-idleSway;aL.rotation.z=-0.05;aR.rotation.z=0.05;}else{aL.rotation.z=0;aR.rotation.z=0;}
+      // Eye blink (every ~4 seconds)
+      const blinkPhase = t % 4;
+      const blinkScale = (blinkPhase > 3.85 && blinkPhase < 3.95) ? 0.1 : 1;
+      eL.scale.y = blinkScale; eR.scale.y = blinkScale;
 
       // Nearest
       nP=null;let nd=Infinity;
@@ -483,7 +637,15 @@ const title = 'pulppixel — 3D Explore';
 
       if(keys['KeyE']&&nP&&!panel.classList.contains('open')){openP(nP.userData.project,nP.userData.index);keys['KeyE']=false;}
 
-      pms.forEach((m,i)=>{m.position.y=m.userData.baseY+Math.sin(t*1.5+i*0.8)*0.12;m.rotation.y=t*0.35;const n=m===nP;m.scale.setScalar(m.scale.x+((n?1.25:1)-m.scale.x)*0.08);m.material.emissiveIntensity+=((n?1.5:0.6)-m.material.emissiveIntensity)*0.1;});
+      pms.forEach((m,i)=>{
+        m.position.y=m.userData.baseY+Math.sin(t*1.5+i*0.8)*0.12;
+        m.rotation.y=t*0.35;
+        const n=m===nP;
+        const ts=n?1.25:1;
+        m.scale.setScalar(m.scale.x+(ts-m.scale.x)*0.08);
+        const tei=n?1.2+Math.sin(t*4)*0.4:0.6;
+        m.material.emissiveIntensity+=(tei-m.material.emissiveIntensity)*0.1;
+      });
 
       // Camera
       const dO=new THREE.Vector3(0,camDist*0.55,camDist).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
@@ -495,6 +657,14 @@ const title = 'pulppixel — 3D Explore';
       const pa=pG.attributes.position.array;
       for(let i=0;i<pC;i++){pa[i*3+1]+=0.003;if(pa[i*3+1]>15)pa[i*3+1]=0;}
       pG.attributes.position.needsUpdate=true;
+
+      // Star twinkle
+      const sOp = starGeo.getAttribute('color');
+      for(let i=0;i<starCount;i+=8){
+        const flicker = 0.4 + Math.sin(t*1.5+i*0.3)*0.3;
+        sOp.array[i*3] *= (0.95+flicker*0.05);
+      }
+      sOp.needsUpdate = true;
 
       renderer.render(scene,camera);
       fc++;const now=performance.now();if(now-flt>=1000){fps.textContent=fc+' fps';fc=0;flt=now;}

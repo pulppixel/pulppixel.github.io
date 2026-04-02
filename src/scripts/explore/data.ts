@@ -21,6 +21,7 @@ export interface ProjectData {
   details: string[];
   link: string;
   off: { x: number; z: number };
+  minigame?: string;
 }
 
 export const COMPANIES: CompanyData[] = [
@@ -37,6 +38,6 @@ export const PROJECTS: ProjectData[] = [
   { co: 'VERS.', title: 'STELSI Wallet', sub: '이더리움 HD 지갑', period: '2023.02 — 2023.08', role: '설계 · 구현 · 출시 (1인)', badge: 'SOLO', bc: '#6ee7b7', color: 0x6ee7b7, coHex: '#6ee7b7', desc: 'Unity→Flutter 스택 전환. BIP39/BIP44 HD 지갑. 양대 스토어 출시.', tags: ['Flutter', 'Dart', 'Riverpod', 'web3dart'], details: ['HD 지갑 10개 주소 파생', '스마트 컨트랙트 3종', 'SecureStorage 암호화', 'App Store + Google Play 출시'], link: '/projects/stelsi-wallet/', off: { x: -1.8, z: 0 } },
   { co: 'VERS.', title: 'Nomads Planet', sub: '멀티플레이어 메타버스', period: '2023.06 — 2023.09', role: '기획·설계·구현 (1인)', badge: '수상', bc: '#ff6b9d', color: 0xff6b9d, coHex: '#6ee7b7', desc: 'Unity Netcode + Vivox 멀티플레이어. K-메타버스 경진대회 장려상.', tags: ['Unity', 'C#', 'Netcode', 'Vivox'], details: ['3-Singleton 구조', 'Matchmaker + Backfill', 'NPC 교통 FSM', '실시간 리더보드'], link: '/projects/nomads-planet/', off: { x: 1.8, z: 0 } },
   { co: 'SIDE', title: 'HAUL', sub: '2D PvPvE Extraction', period: '2025.10 — 현재', role: '기획·설계·구현 (1인)', badge: 'IN PROGRESS', bc: '#fbbf24', color: 0xfbbf24, coHex: '#fbbf24', desc: 'Server-authoritative 멀티플레이어. CSP, 서버 리콘, NPC AI 1인 구현 중.', tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'], details: ['동일 물리 엔진 misprediction 최소화', 'Client-side prediction + Reconciliation', 'NPC fake InputCmd 패턴', '7-state FSM Human NPC'], link: '/projects/haul/', off: { x: 0, z: 0 } },
-  { co: 'EARLY', title: 'SPODY', sub: 'XR 유아 교육', period: '2020.01 — 2021.06', role: '개발 전담 (1인→5인 리드)', badge: 'SOLO→LEAD', bc: '#6ee7b7', color: 0x6ee7b7, coHex: '#ff6b9d', desc: 'Kinect/ASTRA + OpenCV XR 교육. 양산 체계 구축, 공공기관 납품.', tags: ['Unity', 'C#', 'OpenCV', 'Kinect'], details: ['깊이센서→UI 터치 파이프라인', 'OpenCV 자동 캘리브레이션', '24개+ 모듈 양산', '공공기관 납품, 인도네시아 수출'], link: '/projects/spody/', off: { x: -1.8, z: 0 } },
+  { co: 'EARLY', title: 'SPODY', sub: 'XR 유아 교육', period: '2020.01 — 2021.06', role: '개발 전담 (1인→5인 리드)', badge: 'SOLO→LEAD', bc: '#6ee7b7', color: 0x6ee7b7, coHex: '#ff6b9d', desc: 'Kinect/ASTRA + OpenCV XR 교육. 양산 체계 구축, 공공기관 납품.', tags: ['Unity', 'C#', 'OpenCV', 'Kinect'], details: ['깊이센서→UI 터치 파이프라인', 'OpenCV 자동 캘리브레이션', '24개+ 모듈 양산', '공공기관 납품, 인도네시아 수출'], link: '/projects/spody/', off: { x: -1.8, z: 0 }, minigame: 'spody' },
   { co: 'EARLY', title: '루비의 모험', sub: '3D 액션 RPG', period: '2019.09 — 2019.11', role: '기획·설계·구현 (1인)', badge: '우수상', bc: '#ff6b9d', color: 0xff6b9d, coHex: '#ff6b9d', desc: '1인 개발 3D 액션 RPG. 졸업전시 우수상.', tags: ['Unity', 'C#', 'NavMesh', 'Timeline'], details: ['5-state FSM 플레이어', '콤보 + 스킬 3종', 'NavMesh AI + 유도탄 마법사', 'ScriptableObject 인벤토리'], link: '/projects/ruby-adventure/', off: { x: 1.8, z: 0 } },
 ];

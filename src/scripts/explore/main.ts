@@ -5,6 +5,7 @@ import { createCharacter } from './character';
 import { createZones } from './zones';
 import { createInput } from './input';
 import { createPanel, createQuest, createHUD } from './ui';
+import { createSpodyGame } from './minigames/spody';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -19,10 +20,31 @@ export function init(): void {
   const input = createInput(renderer.domElement, isMobile, panel.isOpen);
   const hud = createHUD();
 
+  // ── 미니게임 ──
+  const mgContainer = document.getElementById('minigame-container')!;
+  let inMinigame = false;
+  const minigames: Record<string, { start(): void; stop(): void }> = {
+    spody: createSpodyGame(mgContainer, () => {
+      inMinigame = false;
+      if (!isMobile) renderer.domElement.requestPointerLock();
+    }),
+  };
+
+  function enterMinigame(key: string, projectIndex: number): void {
+    if (!minigames[key]) return;
+    inMinigame = true;
+    if (!isMobile) document.exitPointerLock();
+    quest.visit(projectIndex);
+    minigames[key].start();
+  }
+
   // Mobile interact button
   document.getElementById('mobile-interact')!.addEventListener('touchstart', e => {
     e.preventDefault(); e.stopPropagation();
-    if (nearestProject) panel.open(nearestProject.userData.project, nearestProject.userData.index);
+    if (!nearestProject) return;
+    const proj = nearestProject.userData.project;
+    if (proj.minigame) enterMinigame(proj.minigame, nearestProject.userData.index);
+    else panel.open(proj, nearestProject.userData.index);
   }, { passive: false });
 
   // ── 게임 상태 ──
@@ -46,6 +68,12 @@ export function init(): void {
     requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
+
+    // 미니게임 중에는 월드 업데이트 스킵 (Three.js 렌더링만 유지)
+    if (inMinigame) {
+      renderer.render(scene, camera);
+      return;
+    }
 
     // ── 이동 ──
     mv.set(0, 0, 0);
@@ -87,7 +115,9 @@ export function init(): void {
 
     // ── E키 인터랙트 ──
     if (input.keys['KeyE'] && nearestProject && !panel.isOpen()) {
-      panel.open(nearestProject.userData.project, nearestProject.userData.index);
+      const proj = nearestProject.userData.project;
+      if (proj.minigame) enterMinigame(proj.minigame, nearestProject.userData.index);
+      else panel.open(proj, nearestProject.userData.index);
       input.keys['KeyE'] = false;
     }
 

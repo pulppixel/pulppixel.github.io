@@ -11,77 +11,21 @@
         <a href="https://www.linkedin.com/in/hwankee-baik-272948266/" target="_blank" rel="noopener">LinkedIn</a>
         <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub</a>
         <a href="mailto:devenvy100@gmail.com">Email</a>
+        <a href="/explore/" class="explore-cta">◆ 3D로 둘러보기</a>
       </div>
     </div>
   </div>
 </section>
-
 <style>
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    padding-top: 56px;
-  }
-  .hero-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 1.25rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.2s;
-  }
-  .hero-label::before {
-    content: '> ';
-    color: var(--text-tertiary);
-  }
-  .hero h1 {
-    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.35s;
-  }
-  .hero p {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    max-width: 580px;
-    line-height: 1.8;
-    font-weight: 300;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.5s;
-  }
-  .hero-links {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 2.5rem;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.65s;
-  }
-  .hero-links a {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    transition: all 0.2s;
-  }
-  .hero-links a:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  @media (max-width: 480px) {
-    .hero-links { flex-direction: column; }
-    .hero-links a { text-align: center; }
-  }
+  .hero { min-height: 100vh; display: flex; align-items: center; padding-top: 56px; }
+  .hero-label { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.25rem; opacity: 0; animation: fadeUp 0.6s ease forwards 0.2s; }
+  .hero-label::before { content: '> '; color: var(--text-tertiary); }
+  .hero h1 { font-family: 'Outfit', 'Noto Sans KR', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1.5rem; opacity: 0; animation: fadeUp 0.6s ease forwards 0.35s; }
+  .hero p { font-size: 1.05rem; color: var(--text-secondary); max-width: 580px; line-height: 1.8; font-weight: 300; opacity: 0; animation: fadeUp 0.6s ease forwards 0.5s; }
+  .hero-links { display: flex; gap: 0.75rem; margin-top: 2.5rem; flex-wrap: wrap; opacity: 0; animation: fadeUp 0.6s ease forwards 0.65s; }
+  .hero-links a { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-secondary); text-decoration: none; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 6px; transition: all 0.2s; }
+  .hero-links a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .explore-cta { color: var(--accent) !important; border-color: var(--accent-mid) !important; }
+  .explore-cta:hover { background: var(--accent-dim) !important; }
+  @media (max-width: 480px) { .hero-links { flex-direction: column; } .hero-links a { text-align: center; } }
 </style>

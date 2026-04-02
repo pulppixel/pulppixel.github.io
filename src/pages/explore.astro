@@ -1,0 +1,298 @@
+---
+// No layout wrapper — this is a fullscreen 3D experience
+const title = 'pulppixel — 3D Explore';
+---
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0b; overflow: hidden; font-family: 'JetBrains Mono', 'Courier New', monospace; touch-action: none; -webkit-user-select: none; user-select: none; color: #e8e8ec; }
+    canvas { display: block; }
+
+    /* NAV */
+    #nav { position: absolute; top: 16px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 15; pointer-events: none; }
+    #nav > * { pointer-events: auto; }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; color: #e8e8ec; }
+    .logo span { color: #6ee7b7; }
+    .nav-links { display: flex; gap: 12px; align-items: center; }
+    .nav-links a { font-size: 10px; color: #5a5a66; text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; padding: 4px 10px; border: 1px solid transparent; border-radius: 4px; }
+    .nav-links a:hover { color: #e8e8ec; }
+    .classic-link { border-color: #333 !important; }
+    .classic-link:hover { border-color: #6ee7b7 !important; color: #6ee7b7 !important; }
+    .is-mobile .nav-links .hide-mobile { display: none; }
+
+    /* HERO */
+    #hero-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; text-align: center; opacity: 0; animation: heroIn 2s ease forwards 0.3s; transition: opacity 0.8s; }
+    #hero-label.hidden { opacity: 0 !important; }
+    #hero-label h1 { font-size: 15px; color: #6ee7b7; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; text-shadow: 0 0 30px rgba(110,231,183,0.3); }
+    #hero-label p { font-size: 11px; color: #5a5a66; letter-spacing: 0.08em; }
+    @keyframes heroIn { from { opacity:0; transform:translate(-50%,-45%); } to { opacity:1; transform:translate(-50%,-50%); } }
+
+    /* QUEST LOG */
+    #quest-log { position: absolute; top: 56px; left: 20px; width: 210px; background: rgba(10,10,11,0.85); border: 1px solid rgba(110,231,183,0.15); border-radius: 6px; padding: 10px 12px; backdrop-filter: blur(8px); z-index: 12; font-size: 11px; }
+    .quest-header { color: #6ee7b7; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .quest-icon { font-size: 8px; }
+    #quest-toggle { margin-left: auto; background: none; border: none; color: #5a5a66; cursor: pointer; font-size: 10px; }
+    .quest-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; color: #5a5a66; font-size: 10px; transition: color 0.3s; }
+    .quest-item.visited { color: #6ee7b7; }
+    .quest-item .check { width: 12px; flex-shrink: 0; }
+    .quest-item.visited .check::after { content: '✓'; }
+    .quest-item:not(.visited) .check::after { content: '○'; }
+    .quest-progress { display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; }
+    .quest-bar { flex: 1; height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
+    #quest-fill { height: 100%; width: 0%; background: #6ee7b7; transition: width 0.5s ease; }
+    #quest-count { font-size: 10px; color: #5a5a66; white-space: nowrap; }
+    #quest-reset { background: none; border: 1px solid #333; color: #5a5a66; font-size: 10px; padding: 3px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; width: 100%; }
+    #quest-reset:hover { border-color: #6ee7b7; color: #6ee7b7; }
+
+    /* INTERACT */
+    #interact-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60px); pointer-events: none; text-align: center; font-size: 12px; color: #6ee7b7; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 15px rgba(110,231,183,0.3); }
+    #interact-hint.show { opacity: 1; }
+    .key { display: inline-block; border: 1px solid rgba(110,231,183,0.4); border-radius: 3px; padding: 1px 7px; font-size: 11px; }
+    .mobile-hint { display: none; }
+    .is-mobile .desktop-hint { display: none; }
+    .is-mobile .mobile-hint { display: inline; }
+
+    /* PROJECT LABEL */
+    #project-label { position: absolute; pointer-events: none; padding: 6px 14px; background: rgba(10,10,11,0.85); border: 1px solid rgba(110,231,183,0.3); border-radius: 4px; font-size: 12px; letter-spacing: 0.04em; display: none; backdrop-filter: blur(8px); white-space: nowrap; left: 50%; top: 38%; transform: translateX(-50%); }
+    .lbl-period { font-size: 10px; color: #5a5a66; margin-top: 2px; }
+    .lbl-badge { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+
+    /* PANEL */
+    #panel { position: absolute; top: 0; right: 0; width: 420px; height: 100vh; background: rgba(10,10,11,0.93); border-left: 1px solid rgba(110,231,183,0.15); backdrop-filter: blur(16px); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); overflow-y: auto; z-index: 20; padding: 2.5rem 2rem; }
+    #panel.open { transform: translateX(0); }
+    #panel::-webkit-scrollbar { width: 3px; }
+    #panel::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    #panel-close { position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: 1px solid #333; color: #5a5a66; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    #panel-close:hover { border-color: #6ee7b7; color: #6ee7b7; }
+    .p-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .p-period { font-size: 11px; color: #5a5a66; margin-bottom: 4px; }
+    .p-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
+    .p-sub { font-size: 14px; color: #8f8f9a; font-weight: normal; }
+    .p-role { font-size: 12px; color: #8f8f9a; margin-bottom: 20px; }
+    .p-desc { font-size: 13px; color: #8f8f9a; line-height: 1.75; margin-bottom: 20px; }
+    .p-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 24px; }
+    .p-tags span { font-size: 10px; padding: 3px 8px; background: #1a1a1f; border: 1px solid #2a2a30; border-radius: 3px; color: #8f8f9a; }
+    .p-sec { font-size: 11px; color: #6ee7b7; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; margin-top: 8px; }
+    .p-list { list-style: none; padding: 0; margin-bottom: 20px; }
+    .p-list li { font-size: 12px; color: #8f8f9a; line-height: 1.7; padding-left: 14px; position: relative; }
+    .p-list li::before { content: '—'; position: absolute; left: 0; color: #5a5a66; }
+    .p-link { display: inline-block; font-size: 11px; color: #5a5a66; text-decoration: none; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; transition: all 0.2s; margin-right: 8px; margin-bottom: 8px; }
+    .p-link:hover { border-color: #6ee7b7; color: #6ee7b7; }
+
+    /* JOYSTICK */
+    #joystick-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 45%; z-index: 10; display: none; }
+    .is-mobile #joystick-zone { display: block; }
+    #joystick-base { position: absolute; bottom: 60px; left: 50px; width: 100px; height: 100px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.25); background: rgba(110,231,183,0.04); }
+    #joystick-thumb { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: rgba(110,231,183,0.25); border: 1px solid rgba(110,231,183,0.5); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    #joystick-thumb.active { background: rgba(110,231,183,0.45); }
+    #mobile-interact { position: absolute; bottom: 80px; right: 40px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.3); background: rgba(110,231,183,0.06); color: #6ee7b7; font-size: 11px; display: none; align-items: center; justify-content: center; z-index: 10; cursor: pointer; text-transform: uppercase; }
+    .is-mobile #mobile-interact.show { display: flex; }
+
+    #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #6ee7b7; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(110,231,183,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; }
+    .is-mobile #controls-hint { display: none; }
+    #fps { position: absolute; top: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; }
+    .is-mobile #fps { top: auto; bottom: 16px; right: 16px; }
+
+    @media (max-width: 520px) { #panel { width: 100vw; padding: 2rem 1.25rem; } #quest-log { width: 170px; } }
+  </style>
+</head>
+<body>
+  <div id="nav">
+    <a href="/" class="logo">pulppixel<span>.</span></a>
+    <div class="nav-links">
+      <a href="/" class="classic-link">← classic view</a>
+      <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
+      <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
+    </div>
+  </div>
+
+  <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer · 6 yrs · explore my projects</p></div>
+  <div id="controls-hint">wasd — move · mouse — look · e — interact</div>
+  <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
+  <div id="project-label"></div>
+
+  <div id="quest-log">
+    <div class="quest-header"><span class="quest-icon">◆</span> QUEST LOG <button id="quest-toggle">▼</button></div>
+    <div id="quest-list"></div>
+    <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
+    <button id="quest-reset">↻ reset</button>
+  </div>
+
+  <div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
+  <div id="joystick-zone"><div id="joystick-base"><div id="joystick-thumb"></div></div></div>
+  <button id="mobile-interact">E</button>
+  <div id="fps"></div>
+
+  <script>
+    import * as THREE from 'three';
+
+    const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+    if (isMobile) document.body.classList.add('is-mobile');
+
+    const COMPANIES = [
+      { name:'VOYAGER', color:0xa78bfa, position:{x:0,z:-10} },
+      { name:'VERS.', color:0x6ee7b7, position:{x:12,z:6} },
+      { name:'SIDE', color:0xfbbf24, position:{x:-12,z:6} },
+      { name:'EARLY', color:0xff6b9d, position:{x:0,z:14} },
+    ];
+    const PROJECTS = [
+      { co:'VOYAGER', title:'ETERNA', sub:'아고라 시스템', period:'2025.11 — 2026.04', role:'아키텍처 설계 · 구현 전담', badge:'ARCHITECT', bc:'#6ee7b7', color:0xa78bfa, desc:'디스코드형 커뮤니티 시스템. Service/Repository/State 3계층 아키텍처 직접 설계.', tags:['Unity','C#','R3','UniTask','Tencent IM','FlatBuffers'], details:['아고라 CRUD·알림·검색·권한 전체 구현','크로스플랫폼 STT 직접 구현','한글 조합 커스텀 InputField','UaaL 양방향 통신 검증'], link:'/projects/eterna/', off:{x:-2,z:0} },
+      { co:'VOYAGER', title:'REIW', sub:'3D 메타버스', period:'2025.06 — 2025.11', role:'채팅 재설계 · 하우징 · 퀘스트', badge:null, bc:null, color:0xa78bfa, desc:'Tencent IM 채팅 재설계, 하우징 프로토타입, NPC 퀘스트.', tags:['Unity','C#','R3','UniTask','DOTween'], details:['채팅·친구 시스템 재설계','하우징 배치·편집·Undo/Redo','NPC 퀘스트 시스템','DataTableSO 에디터 툴'], link:'/projects/reiw/', off:{x:0,z:0} },
+      { co:'VOYAGER', title:'IW Zombie', sub:'팀 서바이벌', period:'2025.02 — 2025.06', role:'게임 루프 · 채팅 · AI NPC', badge:null, bc:null, color:0xa78bfa, desc:'5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입.', tags:['Unity','C#','Tencent IM','DOTween'], details:['5단계 게임 루프 구현','Tencent IM 채팅 첫 도입','3D 사운드 풀링','범용 디버그 치트 시스템'], link:'/projects/iw-zombie/', off:{x:2,z:0} },
+      { co:'VERS.', title:'STELSI Wallet', sub:'이더리움 HD 지갑', period:'2023.02 — 2023.08', role:'설계 · 구현 · 출시 (1인)', badge:'SOLO', bc:'#6ee7b7', color:0x6ee7b7, desc:'Unity→Flutter 스택 전환. BIP39/BIP44 HD 지갑. 양대 스토어 출시.', tags:['Flutter','Dart','Riverpod','web3dart'], details:['HD 지갑 10개 주소 파생','스마트 컨트랙트 3종','SecureStorage 암호화','App Store + Google Play 출시'], link:'/projects/stelsi-wallet/', off:{x:-1.5,z:0} },
+      { co:'VERS.', title:'Nomads Planet', sub:'멀티플레이어 메타버스', period:'2023.06 — 2023.09', role:'기획·설계·구현 (1인)', badge:'수상', bc:'#ff6b9d', color:0xff6b9d, desc:'Unity Netcode + Vivox 멀티플레이어. K-메타버스 경진대회 장려상.', tags:['Unity','C#','Netcode','Vivox'], details:['3-Singleton 구조','Matchmaker + Backfill','NPC 교통 FSM','실시간 리더보드'], link:'/projects/nomads-planet/', off:{x:1.5,z:0} },
+      { co:'SIDE', title:'HAUL', sub:'2D PvPvE Extraction', period:'2025.10 — 현재', role:'기획·설계·구현 (1인)', badge:'IN PROGRESS', bc:'#fbbf24', color:0xfbbf24, desc:'Server-authoritative 멀티플레이어. CSP, 서버 리콘, NPC AI 1인 구현 중.', tags:['Godot 4','C#','ASP.NET','gRPC','LiteNetLib'], details:['동일 물리 엔진 misprediction 최소화','Client-side prediction + Reconciliation','NPC fake InputCmd 패턴','7-state FSM Human NPC'], link:'/projects/haul/', off:{x:0,z:0} },
+      { co:'EARLY', title:'SPODY', sub:'XR 유아 교육', period:'2020.01 — 2021.06', role:'개발 전담 (1인→5인 리드)', badge:'SOLO→LEAD', bc:'#6ee7b7', color:0x6ee7b7, desc:'Kinect/ASTRA + OpenCV XR 교육. 양산 체계 구축, 공공기관 납품.', tags:['Unity','C#','OpenCV','Kinect'], details:['깊이센서→UI 터치 파이프라인','OpenCV 자동 캘리브레이션','24개+ 모듈 양산','공공기관 납품, 인도네시아 수출'], link:'/projects/spody/', off:{x:-1.5,z:0} },
+      { co:'EARLY', title:'루비의 모험', sub:'3D 액션 RPG', period:'2019.09 — 2019.11', role:'기획·설계·구현 (1인)', badge:'우수상', bc:'#ff6b9d', color:0xff6b9d, desc:'1인 개발 3D 액션 RPG. 졸업전시 우수상.', tags:['Unity','C#','NavMesh','Timeline'], details:['5-state FSM 플레이어','콤보 + 스킬 3종','NavMesh AI + 유도탄 마법사','ScriptableObject 인벤토리'], link:'/projects/ruby-adventure/', off:{x:1.5,z:0} },
+    ];
+
+    // SCENE
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0a0a0b, 0.014);
+    const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 150);
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    document.body.appendChild(renderer.domElement);
+
+    const grid = new THREE.GridHelper(80,160,0x1a3a2a,0x0e0e12);
+    grid.material.opacity=0.25; grid.material.transparent=true; scene.add(grid);
+    scene.add(new THREE.AmbientLight(0x111122,0.35));
+    const pl1=new THREE.PointLight(0x6ee7b7,1.5,20);pl1.position.set(5,5,5);scene.add(pl1);
+    const pl2=new THREE.PointLight(0xff6b9d,1,15);pl2.position.set(-8,4,-6);scene.add(pl2);
+    const pl3=new THREE.PointLight(0xa78bfa,0.8,12);pl3.position.set(0,6,-10);scene.add(pl3);
+
+    const pC=250,pG=new THREE.BufferGeometry(),pP=new Float32Array(pC*3);
+    for(let i=0;i<pC;i++){pP[i*3]=(Math.random()-0.5)*50;pP[i*3+1]=Math.random()*12;pP[i*3+2]=(Math.random()-0.5)*50;}
+    pG.setAttribute('position',new THREE.BufferAttribute(pP,3));
+    scene.add(new THREE.Points(pG,new THREE.PointsMaterial({color:0x6ee7b7,size:0.025,transparent:true,opacity:0.4})));
+
+    // CHARACTER
+    function mk(w,h,d,c,e,i){return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:c,emissive:e,emissiveIntensity:i,metalness:0.8,roughness:0.2}));}
+    function ae(m,c){m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:0.4})));}
+
+    const ch=new THREE.Group();scene.add(ch);
+    const bd=mk(0.35,0.45,0.25,0x111111,0x6ee7b7,0.5);bd.position.y=0.65;ch.add(bd);ae(bd,0x6ee7b7);
+    const hd=mk(0.28,0.25,0.25,0x111111,0x6ee7b7,0.7);hd.position.y=1.05;ch.add(hd);ae(hd,0x6ee7b7);
+    const eg=new THREE.BoxGeometry(0.06,0.04,0.02),em=new THREE.MeshBasicMaterial({color:0x6ee7b7});
+    ch.add(new THREE.Mesh(eg,em)).position.set(-0.07,1.08,0.13);
+    ch.add(new THREE.Mesh(eg,em)).position.set(0.07,1.08,0.13);
+    const lL=mk(0.12,0.35,0.14,0x111111,0x6ee7b7,0.3);lL.position.set(-0.1,0.25,0);ch.add(lL);
+    const lR=mk(0.12,0.35,0.14,0x111111,0x6ee7b7,0.3);lR.position.set(0.1,0.25,0);ch.add(lR);
+    const aL=mk(0.1,0.35,0.12,0x111111,0xa78bfa,0.5);aL.position.set(-0.27,0.65,0);ch.add(aL);
+    const aR=mk(0.1,0.35,0.12,0x111111,0xa78bfa,0.5);aR.position.set(0.27,0.65,0);ch.add(aR);
+    ch.add(new THREE.PointLight(0x6ee7b7,1.5,5)).position.y=1.5;
+
+    // ZONES + CUBES
+    const pms=[];const pcG=new THREE.BoxGeometry(0.6,0.6,0.6);const pcE=new THREE.EdgesGeometry(pcG);
+    COMPANIES.forEach(co=>{
+      const r=new THREE.Mesh(new THREE.RingGeometry(3.5,3.6,48),new THREE.MeshBasicMaterial({color:co.color,transparent:true,opacity:0.12,side:THREE.DoubleSide}));
+      r.rotation.x=-Math.PI/2;r.position.set(co.position.x,0.01,co.position.z);scene.add(r);
+      const f=new THREE.Mesh(new THREE.CircleGeometry(3.5,48),new THREE.MeshBasicMaterial({color:co.color,transparent:true,opacity:0.03,side:THREE.DoubleSide}));
+      f.rotation.x=-Math.PI/2;f.position.set(co.position.x,0.005,co.position.z);scene.add(f);
+      const p=mk(0.06,1.8,0.06,0x111111,co.color,0.5);p.position.set(co.position.x,0.9,co.position.z-3.2);scene.add(p);
+      scene.add(new THREE.PointLight(co.color,0.6,4)).position.set(co.position.x,2,co.position.z-3.2);
+
+      PROJECTS.filter(pr=>pr.co===co.name).forEach(proj=>{
+        const mt=new THREE.MeshStandardMaterial({color:0x111111,emissive:proj.color,emissiveIntensity:0.7,metalness:0.85,roughness:0.2});
+        const ms=new THREE.Mesh(pcG,mt);
+        const px=co.position.x+proj.off.x*2,pz=co.position.z+proj.off.z*2;
+        ms.position.set(px,0.5,pz);ms.userData={project:proj,baseY:0.5,index:pms.length};
+        ms.add(new THREE.LineSegments(pcE,new THREE.LineBasicMaterial({color:proj.color,transparent:true,opacity:0.35})));
+        const sp=mk(0.06,0.35,0.06,0x111111,proj.color,0.3);sp.position.y=-0.28;ms.add(sp);
+        const rg=new THREE.Mesh(new THREE.RingGeometry(0.5,0.52,24),new THREE.MeshBasicMaterial({color:proj.color,transparent:true,opacity:0.15,side:THREE.DoubleSide}));
+        rg.rotation.x=-Math.PI/2;rg.position.set(px,0.01,pz);scene.add(rg);
+        scene.add(ms);pms.push(ms);
+      });
+    });
+
+    // QUEST
+    const visited=new Set();const ql=document.getElementById('quest-list'),qf=document.getElementById('quest-fill'),qc=document.getElementById('quest-count');
+    function initQ(){ql.innerHTML='';PROJECTS.forEach((p,i)=>{const d=document.createElement('div');d.className='quest-item';d.id='q'+i;d.innerHTML=`<span class="check"></span>${p.title}`;ql.appendChild(d);});updQ();}
+    function visit(i){if(visited.has(i))return;visited.add(i);updQ();}
+    function updQ(){PROJECTS.forEach((_,i)=>{const e=document.getElementById('q'+i);if(e)e.className=visited.has(i)?'quest-item visited':'quest-item';});qf.style.width=(visited.size/PROJECTS.length*100)+'%';qc.textContent=`${visited.size} / ${PROJECTS.length}`;}
+    document.getElementById('quest-reset').onclick=()=>{visited.clear();updQ();};
+    let qCol=false;document.getElementById('quest-toggle').onclick=()=>{qCol=!qCol;ql.style.display=qCol?'none':'block';document.getElementById('quest-toggle').textContent=qCol?'▶':'▼';};
+    initQ();
+
+    // INPUT
+    const keys={};document.addEventListener('keydown',e=>keys[e.code]=true);document.addEventListener('keyup',e=>keys[e.code]=false);
+    let yaw=0,isLocked=false;
+    if(!isMobile){renderer.domElement.addEventListener('click',()=>{if(!panel.classList.contains('open'))renderer.domElement.requestPointerLock();});document.addEventListener('pointerlockchange',()=>{isLocked=document.pointerLockElement===renderer.domElement;});document.addEventListener('mousemove',e=>{if(isLocked)yaw-=e.movementX*0.003;});}
+
+    // TOUCH
+    const jBase=document.getElementById('joystick-base'),jThumb=document.getElementById('joystick-thumb');
+    let jAct=false,jId=null,jIn={x:0,y:0},cTId=null,cTP={x:0,y:0},pinch=false,pDist=0,camDist=5;
+    document.getElementById('joystick-zone').addEventListener('touchstart',e=>{e.preventDefault();jAct=true;jId=e.changedTouches[0].identifier;jThumb.classList.add('active');uJ(e.changedTouches[0]);},{passive:false});
+    document.getElementById('joystick-zone').addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===jId)uJ(t);},{passive:false});
+    document.getElementById('joystick-zone').addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===jId)rJ();});
+    function uJ(t){const r=jBase.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=t.clientX-cx,dy=t.clientY-cy;const m=r.width/2,d=Math.sqrt(dx*dx+dy*dy);if(d>m){dx=dx/d*m;dy=dy/d*m;}jThumb.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;jIn.x=dx/m;jIn.y=dy/m;}
+    function rJ(){jAct=false;jId=null;jIn.x=0;jIn.y=0;jThumb.style.transform='translate(-50%,-50%)';jThumb.classList.remove('active');}
+    function tD(a,b){return Math.sqrt((a.clientX-b.clientX)**2+(a.clientY-b.clientY)**2);}
+    renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length>=2){pinch=true;pDist=tD(e.touches[0],e.touches[1]);return;}const t=e.changedTouches[0];if((t.clientY<innerHeight*0.55||jAct)&&cTId===null){cTId=t.identifier;cTP={x:t.clientX,y:t.clientY};}},{passive:true});
+    renderer.domElement.addEventListener('touchmove',e=>{if(pinch&&e.touches.length>=2){const nd=tD(e.touches[0],e.touches[1]);camDist=Math.max(2.5,Math.min(10,camDist-(nd-pDist)*0.01));pDist=nd;return;}for(const t of e.changedTouches)if(t.identifier===cTId){yaw-=(t.clientX-cTP.x)*0.005;cTP={x:t.clientX,y:t.clientY};}},{passive:true});
+    renderer.domElement.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=false;for(const t of e.changedTouches)if(t.identifier===cTId)cTId=null;});
+    renderer.domElement.addEventListener('wheel',e=>{camDist=Math.max(2.5,Math.min(10,camDist+e.deltaY*0.005));},{passive:true});
+
+    // PANEL
+    const panel=document.getElementById('panel'),pc=document.getElementById('panel-content');
+    document.getElementById('panel-close').onclick=()=>{panel.classList.remove('open');if(!isMobile)renderer.domElement.requestPointerLock();};
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.classList.remove('open');});
+    function openP(p,i){let h='';if(p.badge)h+=`<div class="p-badge" style="background:${p.bc}18;color:${p.bc};border:1px solid ${p.bc}33;">${p.badge}</div>`;h+=`<div class="p-period">${p.period}</div><div class="p-title">${p.title}<br><span class="p-sub">${p.sub}</span></div><div class="p-role">${p.role}</div><div class="p-desc">${p.desc}</div><div class="p-tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div><div class="p-sec">주요 작업</div><ul class="p-list">${p.details.map(d=>`<li>${d}</li>`).join('')}</ul><a href="${p.link}" class="p-link">상세 보기 ↗</a><a href="https://github.com/pulppixel" target="_blank" class="p-link">GitHub ↗</a>`;pc.innerHTML=h;panel.classList.add('open');if(!isMobile)document.exitPointerLock();visit(i);}
+    document.getElementById('mobile-interact').addEventListener('touchstart',e=>{e.preventDefault();if(nP){const d=nP.userData;openP(d.project,d.index);}},{passive:false});
+
+    // STATE
+    const mv=new THREE.Vector3();const SP=4.5;let started=false,nP=null;
+    const hl=document.getElementById('hero-label'),ih=document.getElementById('interact-hint'),pl=document.getElementById('project-label'),mi=document.getElementById('mobile-interact');
+    const cOff=new THREE.Vector3(0,2.8,4.5),cLOff=new THREE.Vector3(0,0.8,0);
+    const cC=ch.position.clone().add(cOff),cLC=ch.position.clone().add(cLOff);camera.position.copy(cC);
+
+    // LOOP
+    const clk=new THREE.Clock();let fc=0,flt=performance.now();const fps=document.getElementById('fps');
+    function animate(){
+      requestAnimationFrame(animate);
+      const dt=Math.min(clk.getDelta(),0.05),t=clk.getElapsedTime();
+
+      mv.set(0,0,0);
+      if(keys['KeyW']||keys['ArrowUp'])mv.z-=1;if(keys['KeyS']||keys['ArrowDown'])mv.z+=1;
+      if(keys['KeyA']||keys['ArrowLeft'])mv.x-=1;if(keys['KeyD']||keys['ArrowRight'])mv.x+=1;
+      if(jAct){mv.x+=jIn.x;mv.z+=jIn.y;}
+      const moving=mv.length()>0.15;
+      if(moving){if(!started){started=true;hl.classList.add('hidden');}mv.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw);ch.position.x=Math.max(-28,Math.min(28,ch.position.x+mv.x*SP*dt));ch.position.z=Math.max(-28,Math.min(28,ch.position.z+mv.z*SP*dt));const tr=Math.atan2(mv.x,mv.z);let df=tr-ch.rotation.y;while(df>Math.PI)df-=Math.PI*2;while(df<-Math.PI)df+=Math.PI*2;ch.rotation.y+=df*8*dt;}
+      const wp=moving?t*10:0,sw=moving?Math.sin(wp):0;
+      lL.rotation.x=sw*0.5;lR.rotation.x=-sw*0.5;aL.rotation.x=-sw*0.4;aR.rotation.x=sw*0.4;
+      const bn=moving?Math.abs(Math.sin(wp))*0.06:0;bd.position.y=0.65+bn;hd.position.y=1.05+bn;
+
+      nP=null;let nd=Infinity;
+      pms.forEach(m=>{const dx=ch.position.x-m.position.x,dz=ch.position.z-m.position.z,d=Math.sqrt(dx*dx+dz*dz);if(d<2.2&&d<nd){nd=d;nP=m;}});
+      if(nP){const p=nP.userData.project;let lb=`${p.title} — ${p.sub}`;if(p.badge)lb+=` <span class="lbl-badge" style="background:${p.bc}22;color:${p.bc};border:1px solid ${p.bc}44;">${p.badge}</span>`;lb+=`<div class="lbl-period">${p.period}</div>`;pl.innerHTML=lb;pl.style.display='block';ih.classList.add('show');mi.classList.add('show');}else{pl.style.display='none';ih.classList.remove('show');mi.classList.remove('show');}
+      if(keys['KeyE']&&nP&&!panel.classList.contains('open')){const d=nP.userData;openP(d.project,d.index);keys['KeyE']=false;}
+
+      pms.forEach((m,i)=>{m.position.y=m.userData.baseY+Math.sin(t*1.5+i*0.8)*0.15;m.rotation.y=t*0.4;const n=m===nP;m.scale.setScalar(m.scale.x+((n?1.3:1)-m.scale.x)*0.08);m.material.emissiveIntensity=n?1.5:0.7;});
+
+      const so=cOff.clone();so.z=camDist;so.y=camDist*0.6;
+      const ro=so.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+      cC.lerp(ch.position.clone().add(ro),4*dt);cLC.lerp(ch.position.clone().add(cLOff),6*dt);
+      camera.position.copy(cC);camera.lookAt(cLC);
+
+      const pa=pG.attributes.position.array;for(let i=0;i<pC;i++){pa[i*3+1]+=0.002;if(pa[i*3+1]>12)pa[i*3+1]=0;}pG.attributes.position.needsUpdate=true;
+      renderer.render(scene,camera);
+      fc++;const now=performance.now();if(now-flt>=1000){fps.textContent=fc+' fps';fc=0;flt=now;}
+    }
+    animate();
+    window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+  </script>
+</body>
+</html>

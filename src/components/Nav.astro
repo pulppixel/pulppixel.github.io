@@ -17,70 +17,55 @@ const { showBackLink = false } = Astro.props;
         <a href="#contact" class="hide-mobile">Contact</a>
       </>
     )}
+    <a href="/explore/" class="explore-link">◆ 3D</a>
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">◐</button>
   </div>
 </nav>
 
 <style>
   nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 100;
-    padding: 0 2rem;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    padding: 0 2rem; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(12px);
     background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   }
-
   .logo {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-    text-decoration: none;
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text-primary); letter-spacing: -0.02em; text-decoration: none;
   }
   .logo span { color: var(--accent); }
-
-  .nav-links {
-    display: flex;
-    gap: 1.75rem;
-    align-items: center;
-  }
+  .nav-links { display: flex; gap: 1.75rem; align-items: center; }
   .nav-links a {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    transition: color 0.2s;
+    font-size: 0.8rem; color: var(--text-secondary);
+    text-decoration: none; font-weight: 400;
+    letter-spacing: 0.02em; transition: color 0.2s;
   }
   .nav-links a:hover { color: var(--text-primary); }
-
-  .theme-toggle {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
+  .explore-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem !important;
+    color: var(--accent) !important;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--accent-mid);
+    border-radius: 4px;
+    letter-spacing: 0.06em;
     transition: all 0.2s;
   }
-  .theme-toggle:hover {
-    border-color: var(--border-hover);
-    color: var(--text-primary);
+  .explore-link:hover {
+    background: var(--accent-dim);
+    border-color: var(--accent);
   }
-
+  .theme-toggle {
+    background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-secondary); width: 32px; height: 32px;
+    border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--border-hover); color: var(--text-primary); }
   @media (max-width: 768px) {
     nav { padding: 0 1.25rem; }
     .hide-mobile { display: none; }

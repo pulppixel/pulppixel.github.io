@@ -1,6 +1,6 @@
 // ─── 진입점 · 게임 루프 ───
 import * as THREE from 'three';
-import { getGroundHeight } from './data';
+import { getGroundHeight, isFenceBlocked } from './data';
 import { createScene, updateEnvironment } from './scene';
 import { createCharacter } from './character';
 import { createZones } from './zones';
@@ -110,8 +110,8 @@ export function init(): void {
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
-  const GRAVITY = -15;
-  const JUMP_FORCE = 9.8;
+  const GRAVITY = -19;
+  const JUMP_FORCE = 10.6;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
 
@@ -167,26 +167,28 @@ export function init(): void {
       const speed = isSprinting ? SP * SPRINT_MULT : SP;
       mv.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
 
-      // 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
+      // 벽 충돌 + 울타리 충돌 — 축 분리 슬라이딩
       const curY = character.group.position.y;
       const footY = character.group.position.y;
       const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
-
       const ghBoth = getGroundHeight(nx, nz);
-      if (ghBoth <= footY + STEP_H) {
+      const fbBoth = isFenceBlocked(nx, nz, curY);
+      if (ghBoth <= footY + STEP_H && !fbBoth) {
         // 양 축 모두 이동 가능
         character.group.position.x = nx;
         character.group.position.z = nz;
       } else {
         // 축 분리 — X만 시도
         const ghX = getGroundHeight(nx, character.group.position.z);
-        if (ghX <= curY + STEP_H) {
+        const fbX = isFenceBlocked(nx, character.group.position.z, curY);
+        if (ghX <= curY + STEP_H && !fbX) {
           character.group.position.x = nx;
         }
         // Z만 시도
         const ghZ = getGroundHeight(character.group.position.x, nz);
-        if (ghZ <= curY + STEP_H) {
+        const fbZ = isFenceBlocked(character.group.position.x, nz, curY);
+        if (ghZ <= curY + STEP_H && !fbZ) {
           character.group.position.z = nz;
         }
       }

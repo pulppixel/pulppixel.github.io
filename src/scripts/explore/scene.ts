@@ -261,52 +261,203 @@ function buildMushrooms(scene: THREE.Scene): void {
 }
 
 // ═══════════════════════════════════════
-// ── Fences ──
+// ── Fences — Auto-edge with adjacency detection ──
 // ═══════════════════════════════════════
 
 function buildFences(scene: THREE.Scene): void {
-  const fenceMat = nat(WOOD_LT);
+  const STEP = 1.15;   // spacing between fence elements
+  const ADJ = 5.0;     // adjacency threshold — platforms closer than this are "connected"
+
+  // ── Shared geometries (reused across all fence elements) ──
+  const wallGeo = new THREE.BoxGeometry(1.1, 0.30, 0.28);
+  const hedgeGeo = new THREE.BoxGeometry(1.15, 0.38, 0.44);
+  const postGeo = new THREE.BoxGeometry(0.16, 0.70, 0.16);
+  const cornerGeo = new THREE.BoxGeometry(0.22, 0.42, 0.22);
+  const flowerGeo = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+
+  // ── Shared materials ──
+  const wallMat = nat(STONE);
+  const wallLtMat = nat(0x9a9488);
+  const hedgeMat = nat(0x4a9a4a);
+  const hedgeLtMat = nat(0x5aaa5a);
+  const hedgeDkMat = nat(0x3a8a3a);
   const postMat = nat(WOOD);
+  const railMat = nat(WOOD_LT);
+  const cornerMat = nat(0x7a7568);
+  const flowerMats = [nat(FL_PK), nat(FL_YL), nat(FL_BL), nat(0xf5c8e0)];
 
-  // Fence segments on zone platform edges
-  const segments: [number, number, number, 'x' | 'z'][] = [
-    // x, z, length, axis
-    [7, -13, 4, 'x'],     // Zone 0 right edge
-    [-7, -13, 4, 'x'],    // Zone 0 left edge
-    [35, -35, 3, 'z'],    // Zone 1 right edge
-    [-35, -35, 3, 'z'],   // Zone 2 left edge
-    [4, 4, 3, 'x'],       // Spawn right
-    [-7, 4, 3, 'x'],      // Spawn left
-  ];
+  // Position-based deterministic random
+  const hash = (a: number, b: number) => {
+    const n = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+    return n - Math.floor(n);
+  };
 
-  segments.forEach(([x, z, len, axis]) => {
-    for (let i = 0; i <= len; i++) {
-      const px = axis === 'x' ? x + i * 1.5 : x;
-      const pz = axis === 'z' ? z + i * 1.5 : z;
-      const h = getH(px, pz);
-      if (h < 0) continue;
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.15), postMat);
-      post.position.set(px, h + 0.35, pz);
-      post.castShadow = true;
-      scene.add(post);
+  // Check if a point on platform edge has a neighboring platform (= path opening)
+  function isConnected(
+      ex: number, ez: number,
+      axis: 'x' | 'z', dir: number,
+      self: typeof PLATFORMS[0],
+  ): boolean {
+    for (const q of PLATFORMS) {
+      if (q === self || q.h <= 0) continue;
+      if (axis === 'x') {
+        // Right/left edge — check if Q's opposite edge is nearby
+        const qEdge = dir > 0 ? q.x - q.w / 2 : q.x + q.w / 2;
+        const pEdge = self.x + dir * self.w / 2;
+        if (Math.abs(qEdge - pEdge) < ADJ &&
+            ez >= q.z - q.d / 2 - 1.5 && ez <= q.z + q.d / 2 + 1.5) return true;
+      } else {
+        const qEdge = dir > 0 ? q.z - q.d / 2 : q.z + q.d / 2;
+        const pEdge = self.z + dir * self.d / 2;
+        if (Math.abs(qEdge - pEdge) < ADJ &&
+            ex >= q.x - q.w / 2 - 1.5 && ex <= q.x + q.w / 2 + 1.5) return true;
+      }
     }
-    const h = getH(x, z);
-    if (h < 0) return;
-    for (let r = 0; r < 2; r++) {
-      const rY = h + 0.25 + r * 0.25;
-      const rLen = len * 1.5;
-      const rail = new THREE.Mesh(
-          new THREE.BoxGeometry(axis === 'x' ? rLen : 0.08, 0.06, axis === 'z' ? rLen : 0.08),
-          fenceMat,
-      );
-      rail.position.set(
-          axis === 'x' ? x + rLen / 2 : x,
-          rY,
-          axis === 'z' ? z + rLen / 2 : z,
-      );
-      scene.add(rail);
+    return false;
+  }
+
+  // ── Iterate all platforms ──
+  for (const p of PLATFORMS) {
+    if (p.h <= 0) continue;
+    const hw = p.w / 2, hd = p.d / 2;
+    const isMain = p.w >= 14;  // main islands get stone wall + hedge
+
+    // 4 edges — inset 0.3 from corners to avoid z-fighting & overlaps
+    const edges: { axis: 'x' | 'z'; dir: number; from: number; to: number }[] = [
+      { axis: 'x', dir:  1, from: p.z - hd + 0.4, to: p.z + hd - 0.4 },  // right
+      { axis: 'x', dir: -1, from: p.z - hd + 0.4, to: p.z + hd - 0.4 },  // left
+      { axis: 'z', dir:  1, from: p.x - hw + 0.4, to: p.x + hw - 0.4 },  // back (+z)
+      { axis: 'z', dir: -1, from: p.x - hw + 0.4, to: p.x + hw - 0.4 },  // front (-z)
+    ];
+
+    for (const edge of edges) {
+      const len = edge.to - edge.from;
+      if (len < 0.5) continue;
+      const steps = Math.max(1, Math.round(len / STEP));
+      const runsAlongZ = edge.axis === 'x';  // right/left edge → fence runs along z
+
+      // Track consecutive open segments for bridge rails
+      const openRuns: { start: number; end: number }[] = [];
+      let runStart: number | null = null;
+
+      for (let i = 0; i <= steps; i++) {
+        const along = edge.from + (i / steps) * len;
+        const ex = runsAlongZ ? p.x + edge.dir * hw : along;
+        const ez = runsAlongZ ? along : p.z + edge.dir * hd;
+
+        if (isConnected(ex, ez, edge.axis, edge.dir, p)) {
+          // Connected to another platform — leave opening
+          if (runStart !== null) {
+            openRuns.push({ start: runStart, end: along });
+            runStart = null;
+          }
+          continue;
+        }
+
+        if (runStart === null) runStart = along;
+
+        // Place fence element at platform edge
+        const fx = runsAlongZ ? p.x + edge.dir * (hw + 0.05) : along;
+        const fz = runsAlongZ ? along : p.z + edge.dir * (hd + 0.05);
+        const h = hash(fx * 7.1, fz * 3.7);
+
+        if (isMain) {
+          // ── Main island: Stone wall base + hedge + flowers ──
+          const wall = new THREE.Mesh(wallGeo, h > 0.5 ? wallMat : wallLtMat);
+          wall.position.set(fx, p.h + 0.15, fz);
+          if (runsAlongZ) wall.rotation.y = Math.PI / 2;
+          wall.castShadow = true;
+          scene.add(wall);
+
+          // Hedge on top (~70%)
+          if (h > 0.30) {
+            const hMat = h > 0.7 ? hedgeDkMat : h > 0.5 ? hedgeMat : hedgeLtMat;
+            const hedge = new THREE.Mesh(hedgeGeo, hMat);
+            hedge.position.set(fx, p.h + 0.49, fz);
+            if (runsAlongZ) hedge.rotation.y = Math.PI / 2;
+            hedge.castShadow = true;
+            scene.add(hedge);
+          }
+
+          // Flower accent (~12%)
+          if (h > 0.88) {
+            const fl = new THREE.Mesh(flowerGeo, flowerMats[Math.floor(h * 40) % flowerMats.length]);
+            fl.position.set(fx, p.h + 0.76, fz);
+            fl.rotation.y = Math.PI / 4;
+            scene.add(fl);
+          }
+        } else {
+          // ── Bridge / path: Wooden fence posts ──
+          if (i % 2 === 0) {
+            const post = new THREE.Mesh(postGeo, postMat);
+            post.position.set(fx, p.h + 0.35, fz);
+            post.castShadow = true;
+            scene.add(post);
+          }
+        }
+      }
+
+      // Close last open run
+      if (runStart !== null) openRuns.push({ start: runStart, end: edge.to });
+
+      // ── Bridge rails — connect posts with horizontal bars ──
+      if (!isMain) {
+        openRuns.forEach(run => {
+          const segLen = run.end - run.start;
+          if (segLen < 0.5) return;
+          const mid = (run.start + run.end) / 2;
+          const rx = runsAlongZ ? p.x + edge.dir * (hw + 0.05) : mid;
+          const rz = runsAlongZ ? mid : p.z + edge.dir * (hd + 0.05);
+
+          for (let r = 0; r < 2; r++) {
+            const ry = p.h + 0.22 + r * 0.22;
+            const rail = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    runsAlongZ ? 0.06 : segLen + 0.1,
+                    0.05,
+                    runsAlongZ ? segLen + 0.1 : 0.06,
+                ),
+                railMat,
+            );
+            rail.position.set(rx, ry, rz);
+            scene.add(rail);
+          }
+        });
+      }
     }
-  });
+
+    // ── Corner posts (4 corners of each platform) ──
+    const corners: [number, number][] = [
+      [p.x + hw, p.z + hd], [p.x + hw, p.z - hd],
+      [p.x - hw, p.z + hd], [p.x - hw, p.z - hd],
+    ];
+    corners.forEach(([cx, cz]) => {
+      // Skip if both adjacent edges are connected (i.e. corner is an opening)
+      const connX = isConnected(cx, cz, 'x', cx > p.x ? 1 : -1, p);
+      const connZ = isConnected(cx, cz, 'z', cz > p.z ? 1 : -1, p);
+      if (connX && connZ) return;
+
+      if (isMain) {
+        const corner = new THREE.Mesh(cornerGeo, cornerMat);
+        corner.position.set(cx, p.h + 0.21, cz);
+        corner.castShadow = true;
+        scene.add(corner);
+        // Small hedge ball on corner
+        const ball = new THREE.Mesh(
+            new THREE.BoxGeometry(0.32, 0.30, 0.32),
+            hedgeMat,
+        );
+        ball.position.set(cx, p.h + 0.57, cz);
+        ball.castShadow = true;
+        scene.add(ball);
+      } else {
+        const post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(cx, p.h + 0.35, cz);
+        post.castShadow = true;
+        scene.add(post);
+      }
+    });
+  }
 }
 
 // ═══════════════════════════════════════

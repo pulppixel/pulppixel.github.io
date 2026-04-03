@@ -54,8 +54,8 @@ function at<T extends THREE.Object3D>(m: T, x: number, y: number, z: number): T 
 // ── Layout Constants ──
 // ═══════════════════════════════════════
 
-const HEAD_Y = 1.22, BODY_Y = 0.76, ARM_Y = 0.88;
-const ARM_X = 0.24, LEG_Y = 0.58, LEG_X = 0.09;
+const HEAD_Y = 1.02, BODY_Y = 0.56, ARM_Y = 0.68;
+const ARM_X = 0.24, LEG_Y = 0.38, LEG_X = 0.09;
 const FZ = 0.245; // face plane Z (front of head)
 
 // ═══════════════════════════════════════

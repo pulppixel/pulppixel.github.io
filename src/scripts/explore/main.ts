@@ -102,15 +102,14 @@ export function init(): void {
   const BOUND_X = 50, BOUND_Z_MIN = -68, BOUND_Z_MAX = 10;
   // 벽 충돌용 step height
   const STEP_H = 0.35;
-  const FOOT_OFFSET = 0.23;   // 캐릭터 발바닥 오프셋 (LEG_Y - sole)
   let smoothGroundY = 0;       // 부드러운 지면 추적용
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
-  const GRAVITY = -19;
-  const JUMP_FORCE = 9.2;
+  const GRAVITY = -15;
+  const JUMP_FORCE = 10.6;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
 
@@ -168,7 +167,7 @@ export function init(): void {
 
       // 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
       const curY = character.group.position.y;
-      const footY = character.group.position.y + FOOT_OFFSET;
+      const footY = character.group.position.y;
       const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
 
@@ -208,9 +207,7 @@ export function init(): void {
     // ── 중력 + 지면 충돌 ──
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
-
-    const rawGroundH = getGroundHeight(character.group.position.x, character.group.position.z);
-    const groundH = rawGroundH - FOOT_OFFSET;
+    const groundH = getGroundHeight(character.group.position.x, character.group.position.z);
 
     // 물에 빠짐 → 리스폰
     if (character.group.position.y < WATER_Y) {
@@ -219,10 +216,10 @@ export function init(): void {
       smoothGroundY = SPAWN.y;
       isGrounded = false;
       wasGrounded = false;
-      return; // 이번 프레임은 스킵
+      return;
     }
 
-    if (character.group.position.y <= groundH && rawGroundH > -0.5) {
+    if (character.group.position.y <= groundH && groundH > -0.5) {
       if (wasGrounded && velocityY > -3) {
         // 걸어서 높이 변화 → lerp
         smoothGroundY += (groundH - smoothGroundY) * Math.min(1, 14 * dt);

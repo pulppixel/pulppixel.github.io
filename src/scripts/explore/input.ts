@@ -33,7 +33,7 @@ export function createInput(
     document.addEventListener('mousemove', e => {
       if (state.isLocked) {
         state.yaw -= e.movementX * 0.003;
-        // ★ pitch 반전 (+ 방향)
+        // pitch 반전 (+ 방향)
         state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + e.movementY * 0.002));
       }
     });
@@ -89,7 +89,7 @@ export function createInput(
       }
       if (t.identifier === camTid) {
         state.yaw -= (t.clientX - camPrev.x) * 0.005;
-        // ★ 모바일도 pitch 반전
+        // 모바일도 pitch 반전
         state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + (t.clientY - camPrev.y) * 0.004));
         camPrev = { x: t.clientX, y: t.clientY };
       }

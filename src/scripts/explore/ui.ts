@@ -1,5 +1,5 @@
 // ─── 워프 · HUD ───
-// ★ 퀘스트 로그 → 워프 메뉴, 패널 제거
+// 퀘스트 로그 → 워프 메뉴, 패널 제거
 import type { ProjectData } from './data';
 import { COMPANIES, PROJECTS, PLATFORMS } from './data';
 
@@ -23,7 +23,7 @@ export function createWarp(onTeleport: (x: number, z: number, h: number) => void
     qc.textContent = `${visited.size} / ${PROJECTS.length}`;
   }
 
-  // ★ 존 워프 버튼 생성
+  // 존 워프 버튼 생성
   ql.innerHTML = '';
   COMPANIES.forEach((co, i) => {
     const d = document.createElement('div');
@@ -81,8 +81,7 @@ export function createHUD(): HUD {
   return {
     heroLabel, interactHint, projectLabel, mobileInteract,
     showProjectHint(p: ProjectData): void {
-      // ★ 미니게임 여부에 따라 힌트 변경
-      const action = p.minigame ? 'PLAY' : 'OPEN';
+      // 미니게임 여부에 따라 힌트 변경
       let lb = `${p.title} — ${p.sub}`;
       if (p.badge) lb += ` <span class="lbl-badge" style="background:${p.bc}22;color:${p.bc};border:1px solid ${p.bc}44;">${p.badge}</span>`;
       lb += `<div class="lbl-period">${p.period}</div>`;

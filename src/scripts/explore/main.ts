@@ -21,7 +21,7 @@ export function init(): void {
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
-  // ★ 워프 (퀘스트 대체) — 캐릭터 텔레포트 콜백
+  // 워프 — 캐릭터 텔레포트 콜백
   const warp = createWarp((x: number, z: number, h: number) => {
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
@@ -80,7 +80,7 @@ export function init(): void {
     }, 480);
   }
 
-  // ★ 인터랙트 — 미니게임은 바로 시작, 나머지는 링크 열기
+  // 인터랙트 — 미니게임은 바로 시작, 나머지는 링크 열기
   function interact(m: THREE.Mesh): void {
     const proj = m.userData.project;
     warp.visit(m.userData.index);
@@ -100,7 +100,7 @@ export function init(): void {
   const mv = new THREE.Vector3();
   const SP = 4.8;
   const BOUND_X = 50, BOUND_Z_MIN = -68, BOUND_Z_MAX = 10;
-  // ★ 벽 충돌용 step height
+  // 벽 충돌용 step height
   const STEP_H = 0.35;
   const FOOT_OFFSET = 0.23;   // 캐릭터 발바닥 오프셋 (LEG_Y - sole)
   let smoothGroundY = 0;       // 부드러운 지면 추적용
@@ -113,6 +113,9 @@ export function init(): void {
   const JUMP_FORCE = 9.2;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
+
+  const WATER_Y = -1.5;           // 이 아래로 떨어지면 리스폰
+  const SPAWN = { x: 0, y: 1.0, z: 0 };  // 리스폰 위치
 
   // 더스트 파티클
   const DUST_MAX = 80;
@@ -163,7 +166,7 @@ export function init(): void {
       const speed = isSprinting ? SP * SPRINT_MULT : SP;
       mv.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
 
-      // ★ 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
+      // 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
       const curY = character.group.position.y;
       const footY = character.group.position.y + FOOT_OFFSET;
       const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
@@ -202,29 +205,38 @@ export function init(): void {
       input.keys['Space'] = false;
     }
 
-    // ── 중력 + 지면 충돌 ── 전체 교체
+    // ── 중력 + 지면 충돌 ──
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
 
     const rawGroundH = getGroundHeight(character.group.position.x, character.group.position.z);
-    const groundH = rawGroundH - FOOT_OFFSET;  // 발바닥이 지면에 닿도록 보정
+    const groundH = rawGroundH - FOOT_OFFSET;
 
-    if (character.group.position.y <= groundH) {
+    // 물에 빠짐 → 리스폰
+    if (character.group.position.y < WATER_Y) {
+      character.group.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+      velocityY = 0;
+      smoothGroundY = SPAWN.y;
+      isGrounded = false;
+      wasGrounded = false;
+      return; // 이번 프레임은 스킵
+    }
+
+    if (character.group.position.y <= groundH && rawGroundH > -0.5) {
       if (wasGrounded && velocityY > -3) {
-        // 걸어서 높이 변화 → lerp (톡톡 방지)
+        // 걸어서 높이 변화 → lerp
         smoothGroundY += (groundH - smoothGroundY) * Math.min(1, 14 * dt);
         character.group.position.y = smoothGroundY;
       } else {
-        // 낙하 착지 → 즉시 + squash
+        // 낙하 착지
         character.group.position.y = groundH;
         smoothGroundY = groundH;
-        if (velocityY < -2) character.landSquash();
+        if (velocityY < -2 && !wasGrounded) character.landSquash();
       }
       velocityY = 0;
       isGrounded = true;
     } else {
       isGrounded = false;
-      // 공중일 때도 smoothGroundY 동기화 (착지 시 튐 방지)
       smoothGroundY = character.group.position.y;
     }
     wasGrounded = isGrounded;
@@ -278,7 +290,7 @@ export function init(): void {
     if (nearestProject) hud.showProjectHint(nearestProject.userData.project);
     else hud.hideProjectHint();
 
-    // ★ E키 → interact()
+    // E키 → interact()
     if (input.keys['KeyE'] && nearestProject) {
       interact(nearestProject);
       input.keys['KeyE'] = false;

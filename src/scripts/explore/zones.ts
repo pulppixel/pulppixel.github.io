@@ -1,5 +1,4 @@
 // ─── 존 · 프로젝트 큐브 · 마크 데코레이션 ───
-// ★ Step 3: 하드코딩 좌표 → COMPANIES 참조, 플랫폼 높이 반영
 import * as THREE from 'three';
 import { COMPANIES, PROJECTS, PLATFORMS } from './data';
 import { mk, ae, mkWire, mkGlow, makeTextSprite } from './helpers';
@@ -25,7 +24,6 @@ export interface ZonesContext {
 
 const LAV = 0x9B8EC4, WARM = 0xFBBF24, PINK = 0xE8A0A0, TEAL = 0x67E8F9;
 
-/** 존 중심의 플랫폼 높이 조회 */
 function zoneHeight(x: number, z: number): number {
   for (const p of PLATFORMS) {
     if (Math.abs(p.x - x) < 1 && Math.abs(p.z - z) < 1) return p.h;
@@ -50,17 +48,17 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     zoneAnims.push(a);
   }
 
-  const pcG = new THREE.BoxGeometry(0.65, 0.65, 0.65);
+  // ★ 인터랙터블: 다이아몬드 형태 (큐브 45도 회전)
+  const pcG = new THREE.BoxGeometry(0.55, 0.55, 0.55);
   const pcE = new THREE.EdgesGeometry(pcG);
 
   COMPANIES.forEach((co, zi) => {
     const cx = co.position.x, cz = co.position.z;
-    // ★ 플랫폼 높이
     const ph = zoneHeight(cx, cz);
 
     const pf = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.15, 7.6),
         new THREE.MeshStandardMaterial({ color: 0x1a1824, emissive: co.color, emissiveIntensity: 0.03, metalness: 0.6, roughness: 0.4 }));
-    pf.position.set(cx, ph + 0.04, cz); pf.receiveShadow = true; scene.add(pf);
+    pf.position.set(cx, ph + 0.12, cz); pf.receiveShadow = true; scene.add(pf);
 
     const rn = new THREE.Mesh(new THREE.RingGeometry(3.7, 3.85, 4),
         new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.06, side: THREE.DoubleSide }));
@@ -85,23 +83,41 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       pillarLight: pL, pillar: pl, burstRing,
       active: false, wasActive: false, activationTime: 0, proximity: 0 });
 
-    // ★ 프로젝트 큐브 — baseY에 플랫폼 높이 반영
+    // ★ 프로젝트 "다이아몬드" — 환경 큐브와 구분
     PROJECTS.filter(p => p.co === co.name).forEach(proj => {
       const mt = new THREE.MeshStandardMaterial({
-        color: 0x1a1824, emissive: proj.color, emissiveIntensity: 0.15, metalness: 0.7, roughness: 0.25 });
+        color: 0x1a1824, emissive: proj.color, emissiveIntensity: 0.3,
+        metalness: 0.7, roughness: 0.25,
+      });
       const ms = new THREE.Mesh(pcG, mt);
       const px = cx + proj.off.x * 1.8, pz = cz + proj.off.z * 1.8;
-      const cubeBaseY = ph + 0.55;
+      const cubeBaseY = ph + 0.8;
       ms.position.set(px, cubeBaseY, pz); ms.castShadow = true;
+      ms.rotation.set(Math.PI / 4, 0, Math.PI / 4);
       ms.userData = { project: proj, baseY: cubeBaseY, index: projectMeshes.length, zone: zi };
-      ms.add(new THREE.LineSegments(pcE, new THREE.LineBasicMaterial({ color: proj.color, transparent: true, opacity: 0.1 })));
+      ms.add(new THREE.LineSegments(pcE, new THREE.LineBasicMaterial({ color: proj.color, transparent: true, opacity: 0.25 })));
 
-      const st = mk(0.3, 0.15, 0.3, 0x1e1c28, proj.color, 0.08);
+      // 바닥 글로우 링
+      const glowRing = new THREE.Mesh(
+          new THREE.RingGeometry(0.5, 0.65, 16),
+          new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.08, side: THREE.DoubleSide }),
+      );
+      glowRing.rotation.x = -Math.PI / 2;
+      glowRing.position.set(px, ph + 0.02, pz);
+      scene.add(glowRing);
+
+      // 비콘 빔
+      const beam = new THREE.Mesh(
+          new THREE.BoxGeometry(0.04, 3.5, 0.04),
+          new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.06 }),
+      );
+      beam.position.set(px, ph + 2, pz);
+      scene.add(beam);
+
+      // 스탠드
+      const st = mk(0.3, 0.15, 0.3, 0x1e1c28, proj.color, 0.12);
       st.position.set(px, ph + 0.075, pz); scene.add(st); ae(st, proj.color);
 
-      const br = new THREE.Mesh(new THREE.RingGeometry(0.45, 0.48, 4),
-          new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.04, side: THREE.DoubleSide }));
-      br.rotation.x = -Math.PI / 2; br.position.set(px, ph + 0.01, pz); scene.add(br);
       scene.add(ms); projectMeshes.push(ms);
     });
   });
@@ -116,10 +132,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
   // ══════════════════════════════════════
   // ── ZONE DECORATIONS ──
-  // ★ COMPANIES 참조 + ph 오프셋
   // ══════════════════════════════════════
 
-  // Zone 0: 2025-2026 · Nether Portal
   _zIdx = 0;
   {
     const cx = COMPANIES[0].position.x, cz = COMPANIES[0].position.z;
@@ -138,20 +152,19 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const portalFill = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.6),
         new THREE.MeshBasicMaterial({ color: LAV, transparent: true, opacity: 0.12, side: THREE.DoubleSide }));
     portalFill.position.set(0, 1.0, 0); portalFrame.add(portalFill);
-    portalFrame.position.set(cx + 5, ph + 0.2, cz); portalFrame.rotation.y = 0.3; scene.add(portalFrame);
+    portalFrame.position.set(cx + 6.5, ph + 0.2, cz); portalFrame.rotation.y = 0.3; scene.add(portalFrame);
     za({ mesh: portalFill, type: 'pulse', baseOp: 0.12, range: 0.06 });
 
     const book = mkGlow(new THREE.BoxGeometry(0.3, 0.04, 0.22), WARM, 0.7);
-    book.position.set(cx - 4, ph + 1.0, cz + 1); scene.add(book);
+    book.position.set(cx - 6, ph + 1.0, cz + 1); scene.add(book);
     za({ mesh: book, type: 'float', baseY: ph + 1.0, range: 0.2, speed: 0.8, phase: 0 });
 
     for (let i = 0; i < 2; i++) {
       const shelf = mkGlow(new THREE.BoxGeometry(0.8, 0.8, 0.4), LAV, 0.15);
-      shelf.position.set(cx - 5 + i * 1.2, ph + 0.4, cz - 1.5); scene.add(shelf); ae(shelf, LAV);
+      shelf.position.set(cx - 7 + i * 1.2, ph + 0.4, cz - 1.5); scene.add(shelf); ae(shelf, LAV);
     }
   }
 
-  // Zone 1: 2023 · Treasure
   _zIdx = 1;
   {
     const cx = COMPANIES[1].position.x, cz = COMPANIES[1].position.z;
@@ -160,7 +173,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const goldGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
     [[0,0,0],[0.6,0,0],[0,0,0.6],[0.3,0.6,0.3]].forEach(([gx, gy, gz], i) => {
       const g = new THREE.Mesh(goldGeo, goldMat);
-      g.position.set(cx + 4.5 + gx, ph + 0.3 + gy, cz + gz); scene.add(g);
+      g.position.set(cx + 6 + gx, ph + 0.3 + gy, cz + gz); scene.add(g);
       if (i === 3) za({ mesh: g, type: 'float', baseY: ph + 0.9, range: 0.15, speed: 1.0, phase: 0 });
     });
 
@@ -168,26 +181,25 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const cb = mkGlow(new THREE.BoxGeometry(0.7, 0.4, 0.45), WARM, 0.25); chest.add(cb); ae(cb, WARM);
     const lid = mkGlow(new THREE.BoxGeometry(0.72, 0.15, 0.47), WARM, 0.3); lid.position.y = 0.27; lid.rotation.x = -0.3; chest.add(lid); ae(lid, WARM);
     const lock = mkGlow(new THREE.BoxGeometry(0.08, 0.1, 0.02), TEAL, 1.0); lock.position.set(0, 0.15, 0.24); chest.add(lock);
-    chest.position.set(cx - 4, ph + 0.2, cz + 1); scene.add(chest);
+    chest.position.set(cx - 5.5, ph + 0.2, cz + 1); scene.add(chest);
 
     const emerald = new THREE.Group();
     const ec = mkGlow(new THREE.BoxGeometry(0.25, 0.25, 0.25), TEAL, 1.0);
     ec.rotation.set(Math.PI / 4, 0, Math.PI / 4); emerald.add(ec);
-    emerald.position.set(cx - 4, ph + 1.5, cz - 1); scene.add(emerald);
+    emerald.position.set(cx - 5.5, ph + 1.5, cz - 1); scene.add(emerald);
     za({ mesh: emerald, type: 'spin', axis: 'y', speed: 1.2, baseY: ph + 1.5, float: 0.2 });
   }
 
-  // Zone 2: 2026 · Beacon
   _zIdx = 2;
   {
     const cx = COMPANIES[2].position.x, cz = COMPANIES[2].position.z;
     const ph = zoneHeight(cx, cz);
     const beacon = mkGlow(new THREE.BoxGeometry(0.8, 0.5, 0.8), TEAL, 0.7);
     beacon.position.set(cx + 4.5, ph + 0.25, cz); scene.add(beacon); ae(beacon, TEAL);
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.15, 8, 0.15),
+    const beam2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 8, 0.15),
         new THREE.MeshBasicMaterial({ color: TEAL, transparent: true, opacity: 0.08 }));
-    beam.position.set(cx + 4.5, ph + 4.5, cz); scene.add(beam);
-    za({ mesh: beam, type: 'pulse', baseOp: 0.08, range: 0.04 });
+    beam2.position.set(cx + 4.5, ph + 4.5, cz); scene.add(beam2);
+    za({ mesh: beam2, type: 'pulse', baseOp: 0.08, range: 0.04 });
 
     const crystal = new THREE.Group();
     const cc = mkGlow(new THREE.BoxGeometry(0.35, 0.35, 0.35), TEAL, 1.5);
@@ -203,7 +215,6 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     }
   }
 
-  // Zone 3: 2019-2022 · Overworld
   _zIdx = 3;
   {
     const cx = COMPANIES[3].position.x, cz = COMPANIES[3].position.z;
@@ -219,7 +230,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     za({ mesh: fire, type: 'pulse', baseEi: 2.0, range: 0.8 });
 
     const fColors = [PINK, WARM, LAV, PINK, LAV];
-    [[-4.5, 0.5], [-3.8, -1], [-5.2, -0.5], [-4, 1.5], [-5, 1]].forEach(([fx, fz], i) => {
+    [[-6, 0.5], [-5.5, -1.2], [-6.5, -0.3], [-5.8, 1.8], [-6.8, 1]].forEach(([fx, fz], i) => {
       const stem = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.06),
           new THREE.MeshStandardMaterial({ color: 0x1a2e20, metalness: 0.1, roughness: 0.8 }));
       stem.position.set(cx + fx, ph + 0.15, cz + fz); scene.add(stem);
@@ -237,13 +248,13 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const swordG = new THREE.Group();
     swordG.add(mkGlow(new THREE.BoxGeometry(0.06, 0.7, 0.03), PINK, 0.8));
     const guard = mkGlow(new THREE.BoxGeometry(0.2, 0.05, 0.05), WARM, 0.6); guard.position.y = -0.3; swordG.add(guard);
-    swordG.position.set(cx - 5, ph + 1.8, cz); swordG.rotation.z = 0.3; scene.add(swordG);
+    swordG.position.set(cx - 6.5, ph + 1.8, cz); swordG.rotation.z = 0.3; scene.add(swordG);
     za({ mesh: swordG, type: 'float', baseY: ph + 1.8, range: 0.2, speed: 0.7, phase: 1 });
 
     const pickG = new THREE.Group();
     pickG.add(mkGlow(new THREE.BoxGeometry(0.06, 0.6, 0.03), TEAL, 0.8));
     const pickHead = mkGlow(new THREE.BoxGeometry(0.35, 0.06, 0.05), TEAL, 0.6); pickHead.position.y = 0.3; pickG.add(pickHead);
-    pickG.position.set(cx - 5, ph + 1.8, cz); pickG.rotation.z = -0.3; scene.add(pickG);
+    pickG.position.set(cx - 6.5, ph + 1.8, cz); pickG.rotation.z = -0.3; scene.add(pickG);
     za({ mesh: pickG, type: 'float', baseY: ph + 1.8, range: 0.2, speed: 0.7, phase: 1.5 });
   }
 
@@ -251,20 +262,25 @@ export function createZones(scene: THREE.Scene): ZonesContext {
   // ── Update ──
   // ══════════════════════════════════════
   function update(t: number, dt: number, charPos: THREE.Vector3, nearestMesh: THREE.Mesh | null): void {
-    const ZONE_R = 8, ZONE_IN = 5; // ★ 넓어진 존에 맞춰 범위 확대
+    const ZONE_R = 8, ZONE_IN = 5;
 
     projectMeshes.forEach((m, i) => {
-      m.position.y = m.userData.baseY + Math.sin(t * 1.5 + i * 0.8) * 0.12;
-      m.rotation.y = t * 0.35;
+      // ★ 더 큰 bob + Y축 회전 유지
+      m.position.y = m.userData.baseY + Math.sin(t * 1.5 + i * 0.8) * 0.18;
+      m.rotation.y = t * 0.5; // 45도 기본 회전 위에 Y축 spin
+      // rotation.x, rotation.z는 초기 PI/4 유지하려면... Group으로 감싸야 하지만
+      // 대신 Y만 돌려도 다이아몬드 느낌 충분
+
       const isNearest = m === nearestMesh;
-      const ts = isNearest ? 1.25 : 1;
+      const ts = isNearest ? 1.35 : 1;
       m.scale.setScalar(m.scale.x + (ts - m.scale.x) * 0.08);
       const zi = m.userData.zone ?? -1;
       const zp = zi >= 0 ? zones[zi].proximity : 0.3;
-      const tei = isNearest ? 1.2 + Math.sin(t * 4) * 0.4 : zp * 0.6;
+      // ★ 인터랙터블 emissive 더 밝게
+      const tei = isNearest ? 1.5 + Math.sin(t * 4) * 0.5 : 0.3 + zp * 0.5;
       (m.material as THREE.MeshStandardMaterial).emissiveIntensity += (tei - (m.material as THREE.MeshStandardMaterial).emissiveIntensity) * 0.1;
       if (m.children[0] && (m.children[0] as THREE.LineSegments).material)
-        ((m.children[0] as THREE.LineSegments).material as THREE.LineBasicMaterial).opacity = zp * 0.3;
+        ((m.children[0] as THREE.LineSegments).material as THREE.LineBasicMaterial).opacity = 0.15 + zp * 0.2;
     });
 
     zones.forEach(z => {

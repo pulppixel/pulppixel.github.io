@@ -5,7 +5,7 @@ import { createScene, updateEnvironment } from './scene';
 import { createCharacter } from './character';
 import { createZones } from './zones';
 import { createInput } from './input';
-import { createPanel, createQuest, createHUD } from './ui';
+import { createWarp, createHUD } from './ui';
 import { createSpodyGame } from './minigames/spody';
 import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
@@ -18,10 +18,15 @@ export function init(): void {
   const { scene, camera, renderer, particles, stars } = createScene(isMobile);
   const character = createCharacter(scene);
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
-  const quest = createQuest();
-  const panel = createPanel(isMobile, quest.visit);
-  const input = createInput(renderer.domElement, isMobile, panel.isOpen);
+  const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
+
+  // ★ 워프 (퀘스트 대체) — 캐릭터 텔레포트 콜백
+  const warp = createWarp((x: number, z: number, h: number) => {
+    character.group.position.set(x, h + 0.5, z + 4);
+    velocityY = 0;
+    isGrounded = false;
+  });
 
   // ── 미니게임 ──
   const mgContainer = document.getElementById('minigame-container')!;
@@ -34,41 +39,43 @@ export function init(): void {
     nomads: createNomadsGame(mgContainer, exitMg),
   };
 
-  function enterMinigame(key: string, projectIndex: number): void {
+  function enterMinigame(key: string): void {
     if (!minigames[key]) return;
     inMinigame = true;
     if (!isMobile) document.exitPointerLock();
-    quest.visit(projectIndex);
     minigames[key].start();
+  }
+
+  // ★ 인터랙트 — 미니게임은 바로 시작, 나머지는 링크 열기
+  function interact(m: THREE.Mesh): void {
+    const proj = m.userData.project;
+    warp.visit(m.userData.index);
+    if (proj.minigame) {
+      enterMinigame(proj.minigame);
+    } else if (proj.link && proj.link !== '#') {
+      window.open(proj.link, '_blank');
+    }
   }
 
   document.getElementById('mobile-interact')!.addEventListener('touchstart', e => {
     e.preventDefault(); e.stopPropagation();
-    if (!nearestProject) return;
-    const proj = nearestProject.userData.project;
-    if (proj.minigame) enterMinigame(proj.minigame, nearestProject.userData.index);
-    else panel.open(proj, nearestProject.userData.index);
+    if (nearestProject) interact(nearestProject);
   }, { passive: false });
 
   // ── 게임 상태 ──
   const mv = new THREE.Vector3();
   const SP = 4.8;
-  // ★ 맵 경계 확장
-  const BOUND_X = 50;
-  const BOUND_Z_MIN = -68;
-  const BOUND_Z_MAX = 10;
+  const BOUND_X = 50, BOUND_Z_MIN = -68, BOUND_Z_MAX = 10;
+  // ★ 벽 충돌용 step height
+  const STEP_H = 0.35;
 
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
-
-  // 점프
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
-  const GRAVITY = -22;
-  const JUMP_FORCE = 8.2;
-
-  // 스프린트
+  const GRAVITY = -19;
+  const JUMP_FORCE = 9.2;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
 
@@ -120,9 +127,30 @@ export function init(): void {
       isSprinting = wantSprint && isGrounded;
       const speed = isSprinting ? SP * SPRINT_MULT : SP;
       mv.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
-      // ★ 확장된 맵 경계
-      character.group.position.x = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
-      character.group.position.z = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
+
+      // ★ 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
+      const curY = character.group.position.y;
+      const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
+      const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
+
+      const ghBoth = getGroundHeight(nx, nz);
+      if (ghBoth <= curY + STEP_H) {
+        // 양 축 모두 이동 가능
+        character.group.position.x = nx;
+        character.group.position.z = nz;
+      } else {
+        // 축 분리 — X만 시도
+        const ghX = getGroundHeight(nx, character.group.position.z);
+        if (ghX <= curY + STEP_H) {
+          character.group.position.x = nx;
+        }
+        // Z만 시도
+        const ghZ = getGroundHeight(character.group.position.x, nz);
+        if (ghZ <= curY + STEP_H) {
+          character.group.position.z = nz;
+        }
+      }
+
       const tr = Math.atan2(mv.x, mv.z);
       let df = tr - character.group.rotation.y;
       while (df > Math.PI) df -= Math.PI * 2;
@@ -138,15 +166,13 @@ export function init(): void {
       input.keys['Space'] = false;
     }
 
-    // ★ 중력 + 높이맵 기반 지면 충돌
+    // ── 중력 + 지면 충돌 ──
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
     const groundH = getGroundHeight(character.group.position.x, character.group.position.z);
     if (character.group.position.y <= groundH) {
       character.group.position.y = groundH;
-      if (velocityY < -2 && !wasGrounded) {
-        character.landSquash();
-      }
+      if (velocityY < -2 && !wasGrounded) character.landSquash();
       velocityY = 0;
       isGrounded = true;
     } else {
@@ -154,7 +180,6 @@ export function init(): void {
     }
     wasGrounded = isGrounded;
 
-    // ── 캐릭터 애니메이션 ──
     character.animate(t, moving, isSprinting);
 
     // ── 더스트 파티클 ──
@@ -190,7 +215,7 @@ export function init(): void {
     dustGeo.setDrawRange(0, dustCount);
     dustGeo.attributes.position.needsUpdate = true;
 
-    // ── 가장 가까운 프로젝트 (★ 3D 거리 + 높이 고려) ──
+    // ── 가장 가까운 프로젝트 ──
     nearestProject = null;
     let nearestDist = Infinity;
     projectMeshes.forEach(m => {
@@ -204,10 +229,9 @@ export function init(): void {
     if (nearestProject) hud.showProjectHint(nearestProject.userData.project);
     else hud.hideProjectHint();
 
-    if (input.keys['KeyE'] && nearestProject && !panel.isOpen()) {
-      const proj = nearestProject.userData.project;
-      if (proj.minigame) enterMinigame(proj.minigame, nearestProject.userData.index);
-      else panel.open(proj, nearestProject.userData.index);
+    // ★ E키 → interact()
+    if (input.keys['KeyE'] && nearestProject) {
+      interact(nearestProject);
       input.keys['KeyE'] = false;
     }
 

@@ -41,6 +41,9 @@ const title = 'pulppixel — 3D Explore';
     .quest-item .check { width: 12px; flex-shrink: 0; }
     .quest-item.visited .check::after { content: '✓'; }
     .quest-item:not(.visited) .check::after { content: '○'; }
+    .warp-item { display: flex; align-items: center; gap: 6px; padding: 4px 4px; color: #8a8a9a; font-size: 10px; cursor: pointer; transition: color 0.2s, background 0.2s; border-radius: 3px; }
+    .warp-item:hover { color: #6ee7b7; background: rgba(110,231,183,0.06); }
+    .warp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .quest-progress { display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; }
     .quest-bar { flex: 1; height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
     #quest-fill { height: 100%; width: 0%; background: #6ee7b7; transition: width 0.5s ease; }
@@ -105,8 +108,6 @@ const title = 'pulppixel — 3D Explore';
     #zone-hint { position: absolute; left: 0; right: 0; top: 65%; height: 1px; background: linear-gradient(90deg, transparent 5%, rgba(110,231,183,0.1) 50%, transparent 95%); pointer-events: none; z-index: 3; opacity: 0; }
     .is-mobile #zone-hint { opacity: 1; animation: zoneHintFade 4s ease forwards 3s; }
     @keyframes zoneHintFade { to { opacity: 0; } }
-    .is-mobile #quest-log { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(10,10,11,0.95); }
-    .is-mobile #panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(8,8,10,0.99); }
     @media (max-width: 520px) { #panel { width: 100vw; padding: 2rem 1.25rem; } #quest-log { width: 170px; font-size: 10px; } }
   </style>
 </head>
@@ -131,7 +132,7 @@ const title = 'pulppixel — 3D Explore';
   <div id="zone-hint"></div>
 
   <div id="quest-log">
-    <div class="quest-header"><span class="quest-icon">◆</span> QUEST LOG <button id="quest-toggle">▼</button></div>
+    <div class="quest-header"><span class="quest-icon">◆</span> WARP <button id="quest-toggle">▼</button></div>
     <div id="quest-list"></div>
     <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
     <button id="quest-reset">↻ reset</button>

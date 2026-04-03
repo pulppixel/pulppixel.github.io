@@ -24,19 +24,17 @@ export function createInput(
     jIn: { x: 0, y: 0 },
   };
 
-  // ── Keyboard ──
   document.addEventListener('keydown', e => { state.keys[e.code] = true; });
   document.addEventListener('keyup', e => { state.keys[e.code] = false; });
 
-  // ── PC Mouse ──
   if (!isMobile) {
     canvas.addEventListener('click', () => { if (!isPanelOpen()) canvas.requestPointerLock(); });
     document.addEventListener('pointerlockchange', () => { state.isLocked = document.pointerLockElement === canvas; });
     document.addEventListener('mousemove', e => {
       if (state.isLocked) {
         state.yaw -= e.movementX * 0.003;
-        // ★ 카메라 상하 회전 (pitch)
-        state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch - e.movementY * 0.002));
+        // ★ pitch 반전 (+ 방향)
+        state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + e.movementY * 0.002));
       }
     });
     document.addEventListener('keydown', e => {
@@ -44,10 +42,8 @@ export function createInput(
     });
   }
 
-  // ── Wheel zoom ──
   canvas.addEventListener('wheel', e => { state.camDist = Math.max(2.5, Math.min(12, state.camDist + e.deltaY * 0.004)); }, { passive: true });
 
-  // ── Mobile Touch ──
   const jBase = document.getElementById('joystick-base')!;
   const jThumb = document.getElementById('joystick-thumb')!;
   let moveOrig = { x: 0, y: 0 };
@@ -93,8 +89,8 @@ export function createInput(
       }
       if (t.identifier === camTid) {
         state.yaw -= (t.clientX - camPrev.x) * 0.005;
-        // ★ 모바일 카메라 상하 (상단 터치 드래그)
-        state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch - (t.clientY - camPrev.y) * 0.004));
+        // ★ 모바일도 pitch 반전
+        state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + (t.clientY - camPrev.y) * 0.004));
         camPrev = { x: t.clientX, y: t.clientY };
       }
     }

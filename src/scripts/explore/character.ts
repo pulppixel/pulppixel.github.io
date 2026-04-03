@@ -1,11 +1,10 @@
 // ─── 캐릭터 생성 · 애니메이션 ───
-// Chibi Minecraft · Lavender Cat-Ear Hoodie
+// Chibi Minecraft · Lavender Cat-Ear Hoodie + Bazzi-style Bangs
 import * as THREE from 'three';
 
 export interface Character {
   group: THREE.Group;
   animate(t: number, moving: boolean, sprinting?: boolean): void;
-  /** 착지 스쿼시 트리거 */
   landSquash(): void;
 }
 
@@ -14,12 +13,17 @@ export function createCharacter(scene: THREE.Scene): Character {
   scene.add(ch);
 
   const LAV = 0x8B7EB8, LAVDK = 0x6B5E98, LAVLT = 0xA899D4;
-  const SKIN = 0xF0DFC8, PANT = 0x3B3960, BOOT = 0x2E2845;
-  const BLUSH = 0xE8A0A0, SOLEC = 0x9B8EC4;
+  const SKIN = 0xEDD0B5, PANT = 0x3B3960, BOOT = 0x2E2845;
+  const BLUSH = 0xFF8A8A, SOLEC = 0x9B8EC4;
 
   function flat(w: number, h: number, d: number, c: number): THREE.Mesh {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
         new THREE.MeshStandardMaterial({ color: c, metalness: 0.05, roughness: 0.85 }));
+    m.castShadow = true; return m;
+  }
+  function flatSkin(w: number, h: number, d: number): THREE.Mesh {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: SKIN, emissive: SKIN, emissiveIntensity: 0.15, metalness: 0.05, roughness: 0.85 }));
     m.castShadow = true; return m;
   }
   function glow(w: number, h: number, d: number, c: number, e: number, ei: number): THREE.Mesh {
@@ -28,26 +32,23 @@ export function createCharacter(scene: THREE.Scene): Character {
   }
 
   // ── HEAD ──
-  const head = flat(0.50, 0.48, 0.48, SKIN); head.position.y = 1.24; ch.add(head);
-  // head top = 1.24 + 0.24 = 1.48
+  const head = flatSkin(0.50, 0.48, 0.48); head.position.y = 1.24; ch.add(head);
 
-  // ★ Z-fighting 수정: hood top이 head top과 겹치지 않도록 +0.02
-  // hood top: 1.35 + 0.15 = 1.50 (head top 1.48보다 0.02 위)
+  // Hood (원본 사이즈, Z-fighting 수정만 적용)
   const hood = flat(0.54, 0.30, 0.46, LAV); hood.position.set(0, 1.35, -0.04); ch.add(hood);
   const hoodRim = flat(0.55, 0.06, 0.49, LAVDK); hoodRim.position.set(0, 1.17, -0.03); ch.add(hoodRim);
-  // ★ Z-fighting 수정: hoodBack 뒷면이 head 뒷면(z=-0.24)과 겹치지 않도록 -0.01
   const hoodBack = flat(0.50, 0.20, 0.08, LAVDK); hoodBack.position.set(0, 1.04, -0.29); ch.add(hoodBack);
 
-  // Cat ears
-  const earGeo = new THREE.BoxGeometry(0.12, 0.16, 0.10);
+  // Cat ears (키운 버전)
+  const earGeo = new THREE.BoxGeometry(0.12, 0.24, 0.10);
   const earL = new THREE.Mesh(earGeo, new THREE.MeshStandardMaterial({ color: LAV, metalness: 0.05, roughness: 0.8 }));
-  earL.position.set(-0.16, 1.54, 0.02); earL.rotation.z = 0.15; ch.add(earL);
+  earL.position.set(-0.16, 1.58, 0.02); earL.rotation.z = 0.15; ch.add(earL);
   const earR = new THREE.Mesh(earGeo, new THREE.MeshStandardMaterial({ color: LAV, metalness: 0.05, roughness: 0.8 }));
-  earR.position.set(0.16, 1.54, 0.02); earR.rotation.z = -0.15; ch.add(earR);
-  const earInL = flat(0.06, 0.10, 0.04, BLUSH); earInL.position.set(-0.16, 1.55, 0.06); earInL.rotation.z = 0.15; ch.add(earInL);
-  const earInR = flat(0.06, 0.10, 0.04, BLUSH); earInR.position.set(0.16, 1.55, 0.06); earInR.rotation.z = -0.15; ch.add(earInR);
+  earR.position.set(0.16, 1.58, 0.02); earR.rotation.z = -0.15; ch.add(earR);
+  const earInL = flat(0.06, 0.16, 0.04, BLUSH); earInL.position.set(-0.16, 1.59, 0.06); earInL.rotation.z = 0.15; ch.add(earInL);
+  const earInR = flat(0.06, 0.16, 0.04, BLUSH); earInR.position.set(0.16, 1.59, 0.06); earInR.rotation.z = -0.15; ch.add(earInR);
 
-  // ── Face (FZ=0.255 safely clears head front z=0.24) ──
+  // ── Face ──
   const FZ = 0.255;
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1528, side: THREE.DoubleSide });
   const eL = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.09), eyeMat); eL.position.set(-0.10, 1.24, FZ); ch.add(eL);
@@ -57,9 +58,14 @@ export function createCharacter(scene: THREE.Scene): Character {
   const hlL = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.03), hlMat); hlL.position.set(-0.08, 1.27, FZ + 0.002); ch.add(hlL);
   const hlR = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.03), hlMat); hlR.position.set(0.12, 1.27, FZ + 0.002); ch.add(hlR);
 
-  const blushMat = new THREE.MeshBasicMaterial({ color: BLUSH, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
-  const blushL = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.04), blushMat); blushL.position.set(-0.18, 1.18, FZ); ch.add(blushL);
-  const blushR = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.04), blushMat.clone()); blushR.position.set(0.18, 1.18, FZ); ch.add(blushR);
+  const blushMat = new THREE.MeshBasicMaterial({ color: BLUSH, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+  const blushL = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.05), blushMat); blushL.position.set(-0.16, 1.19, FZ); ch.add(blushL);
+  const blushR = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.05), blushMat.clone()); blushR.position.set(0.16, 1.19, FZ); ch.add(blushR);
+
+  // 코
+  const nose = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 0.03),
+      new THREE.MeshBasicMaterial({ color: 0xE8A0A0, side: THREE.DoubleSide }));
+  nose.position.set(0, 1.19, FZ); ch.add(nose);
 
   const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.02),
       new THREE.MeshBasicMaterial({ color: 0x8B6B6B, side: THREE.DoubleSide }));
@@ -74,11 +80,11 @@ export function createCharacter(scene: THREE.Scene): Character {
   // ── ARMS ──
   const armPivotL = new THREE.Group(); armPivotL.position.set(-0.25, 0.90, 0); ch.add(armPivotL);
   const armL = flat(0.13, 0.32, 0.14, LAV); armL.position.y = -0.16; armPivotL.add(armL);
-  const handL = flat(0.09, 0.09, 0.09, SKIN); handL.position.y = -0.34; armPivotL.add(handL);
+  const handL = flatSkin(0.09, 0.09, 0.09); handL.position.y = -0.34; armPivotL.add(handL);
 
   const armPivotR = new THREE.Group(); armPivotR.position.set(0.25, 0.90, 0); ch.add(armPivotR);
   const armR = flat(0.13, 0.32, 0.14, LAV); armR.position.y = -0.16; armPivotR.add(armR);
-  const handR = flat(0.09, 0.09, 0.09, SKIN); handR.position.y = -0.34; armPivotR.add(handR);
+  const handR = flatSkin(0.09, 0.09, 0.09); handR.position.y = -0.34; armPivotR.add(handR);
 
   // ── LEGS ──
   const legPivotL = new THREE.Group(); legPivotL.position.set(-0.09, 0.58, 0); ch.add(legPivotL);
@@ -109,18 +115,13 @@ export function createCharacter(scene: THREE.Scene): Character {
       new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }));
   cSh.rotation.x = -Math.PI / 2; cSh.position.y = 0.005; ch.add(cSh);
 
-  // 착지 스쿼시 상태
   let squashT = 0;
+  function landSquash(): void { squashT = 0.18; }
 
-  function landSquash(): void {
-    squashT = 0.18;
-  }
 
-  // ════════════════════════════════════
   function animate(t: number, moving: boolean, sprinting = false): void {
     const animSpd = sprinting ? 13 : 9;
     const wp = moving ? t * animSpd : 0, sw = moving ? Math.sin(wp) : 0;
-
     const swingArm = sprinting ? 0.75 : 0.55;
     const swingLeg = sprinting ? 0.65 : 0.45;
     armPivotL.rotation.x = moving ? -sw * swingArm : Math.sin(t * 1.2) * 0.05;
@@ -133,23 +134,18 @@ export function createCharacter(scene: THREE.Scene): Character {
 
     const bob = moving ? Math.abs(Math.sin(wp)) * (sprinting ? 0.06 : 0.04) : Math.sin(t * 2) * 0.012;
 
-    // 착지 스쿼시
     let sqY = 1, sqXZ = 1;
     if (squashT > 0) {
-      const p = squashT / 0.18;
-      sqY = 1 - p * 0.2;
-      sqXZ = 1 + p * 0.12;
+      const p = squashT / 0.18; sqY = 1 - p * 0.2; sqXZ = 1 + p * 0.12;
       squashT = Math.max(0, squashT - 1 / 60 * 1.2);
     }
     ch.scale.set(sqXZ, sqY, sqXZ);
 
     head.position.y = 1.24 + bob;
-    // ★ hood Y: 1.33 → 1.35 (Z-fighting 수정 반영)
-    hood.position.y = 1.35 + bob;
-    hoodRim.position.y = 1.17 + bob;
-    hoodBack.position.y = 1.04 + bob;
-    earL.position.y = 1.54 + bob; earR.position.y = 1.54 + bob;
-    earInL.position.y = 1.55 + bob; earInR.position.y = 1.55 + bob;
+    hood.position.y = 1.35 + bob; hoodRim.position.y = 1.17 + bob; hoodBack.position.y = 1.04 + bob;
+    earL.position.y = 1.58 + bob; earR.position.y = 1.58 + bob;
+    earInL.position.y = 1.59 + bob; earInR.position.y = 1.59 + bob;
+
     torso.position.y = 0.76 + bob * 0.6;
     pocket.position.y = 0.65 + bob * 0.6; dsL.position.y = 0.88 + bob * 0.6; dsR.position.y = 0.88 + bob * 0.6;
     armPivotL.position.y = 0.90 + bob * 0.6; armPivotR.position.y = 0.90 + bob * 0.6;
@@ -159,14 +155,15 @@ export function createCharacter(scene: THREE.Scene): Character {
     const fy = 1.24 + bob;
     eL.position.y = fy; eR.position.y = fy;
     hlL.position.y = fy + 0.03; hlR.position.y = fy + 0.03;
-    blushL.position.y = 1.18 + bob; blushR.position.y = 1.18 + bob;
+    blushL.position.y = 1.19 + bob; blushR.position.y = 1.19 + bob;
+    nose.position.y = 1.19 + bob;
     mouth.position.y = 1.14 + bob;
 
     const bc = t % 3.8;
     const blink = (bc > 3.5 && bc < 3.65) || (t % 7 > 6.7 && t % 7 < 6.85);
     eL.scale.y = blink ? 0.1 : 1; eR.scale.y = blink ? 0.1 : 1;
     hlL.visible = !blink; hlR.visible = !blink;
-    (blushMat).opacity = 0.30 + Math.sin(t) * 0.05;
+    (blushMat).opacity = 0.45 + Math.sin(t) * 0.05;
 
     const twitch = t % 5 > 4.7 && t % 5 < 4.9;
     earR.rotation.z = twitch ? -0.35 : -0.15; earInR.rotation.z = twitch ? -0.35 : -0.15;
@@ -176,7 +173,6 @@ export function createCharacter(scene: THREE.Scene): Character {
     tailTip.position.x = Math.sin(t * 2.5 + 3.2) * 0.08 * 2 * ta * 1.2;
 
     (bpScreen.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8 + Math.sin(t * 2) * 0.2;
-
     const soleBase = sprinting ? 1.2 : 0.5;
     const soleBoost = moving ? (sprinting ? 0.5 : 0.2) : 0;
     (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = soleBase + soleBoost;

@@ -1,6 +1,6 @@
 // ─── 캐릭터 생성 · 애니메이션 ───
+// Chibi Minecraft · Lavender Cat-Ear Hoodie
 import * as THREE from 'three';
-import { mk, ae } from './helpers';
 
 export interface Character {
   group: THREE.Group;
@@ -8,120 +8,145 @@ export interface Character {
 }
 
 export function createCharacter(scene: THREE.Scene): Character {
-  const ch = new THREE.Group(); scene.add(ch);
+  const ch = new THREE.Group();
+  scene.add(ch);
 
-  // Body
-  const bd = mk(0.38, 0.48, 0.22, 0x111115, 0x6ee7b7, 0.4); bd.position.y = 0.66; ch.add(bd); ae(bd, 0x6ee7b7);
-  const cp = mk(0.3, 0.15, 0.01, 0x0a0a0a, 0x6ee7b7, 0.8); cp.position.set(0, 0.72, 0.12); ch.add(cp);
-  const belt = mk(0.4, 0.05, 0.24, 0x0a0a0a, 0xa78bfa, 0.6); belt.position.set(0, 0.44, 0); ch.add(belt);
-  const buckle = mk(0.08, 0.04, 0.01, 0x111111, 0x6ee7b7, 1.5); buckle.position.set(0, 0.44, 0.13); ch.add(buckle);
+  const LAV = 0x8B7EB8, LAVDK = 0x6B5E98, LAVLT = 0xA899D4;
+  const SKIN = 0xF0DFC8, PANT = 0x3B3960, BOOT = 0x2E2845;
+  const BLUSH = 0xE8A0A0, SOLEC = 0x9B8EC4;
 
-  // Head
-  const hd = mk(0.3, 0.28, 0.26, 0x111115, 0x6ee7b7, 0.5); hd.position.y = 1.08; ch.add(hd); ae(hd, 0x6ee7b7);
-  const vs = mk(0.28, 0.1, 0.02, 0x050508, 0x6ee7b7, 1.2); vs.position.set(0, 1.1, 0.14); ch.add(vs);
+  function flat(w: number, h: number, d: number, c: number): THREE.Mesh {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: c, metalness: 0.05, roughness: 0.85 }));
+    m.castShadow = true; return m;
+  }
+  function glow(w: number, h: number, d: number, c: number, e: number, ei: number): THREE.Mesh {
+    return new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: ei, metalness: 0.3, roughness: 0.5 }));
+  }
 
-  // Eyes
-  const eyeGeo = new THREE.BoxGeometry(0.09, 0.06, 0.025);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x6ee7b7 });
-  const eL = new THREE.Mesh(eyeGeo, eyeMat); eL.position.set(-0.07, 1.1, 0.145); ch.add(eL);
-  const eR = new THREE.Mesh(eyeGeo, eyeMat); eR.position.set(0.07, 1.1, 0.145); ch.add(eR);
-  const eyeGlowL = new THREE.PointLight(0x6ee7b7, 0.3, 1); eyeGlowL.position.set(-0.07, 1.1, 0.2); ch.add(eyeGlowL);
-  const eyeGlowR = new THREE.PointLight(0x6ee7b7, 0.3, 1); eyeGlowR.position.set(0.07, 1.1, 0.2); ch.add(eyeGlowR);
+  // ── HEAD ──
+  const head = flat(0.50, 0.48, 0.48, SKIN); head.position.y = 1.24; ch.add(head);
 
-  // Ears + Antenna
-  const earL = mk(0.04, 0.08, 0.06, 0x0a0a0a, 0xa78bfa, 1.0); earL.position.set(-0.17, 1.1, 0); ch.add(earL);
-  const earR = mk(0.04, 0.08, 0.06, 0x0a0a0a, 0xa78bfa, 1.0); earR.position.set(0.17, 1.1, 0); ch.add(earR);
-  const antBase = mk(0.03, 0.15, 0.03, 0x111115, 0xa78bfa, 0.4); antBase.position.set(0.08, 1.3, 0); ch.add(antBase);
-  const antTip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), new THREE.MeshBasicMaterial({ color: 0x6ee7b7 }));
-  antTip.position.set(0.08, 1.4, 0); ch.add(antTip);
-  const antLight = new THREE.PointLight(0x6ee7b7, 0.4, 2); antLight.position.set(0.08, 1.45, 0); ch.add(antLight);
+  // Hood (z=-0.04 to avoid front Z-fight with face)
+  const hood = flat(0.54, 0.30, 0.46, LAV); hood.position.set(0, 1.33, -0.04); ch.add(hood);
+  const hoodRim = flat(0.55, 0.06, 0.49, LAVDK); hoodRim.position.set(0, 1.17, -0.03); ch.add(hoodRim);
+  const hoodBack = flat(0.50, 0.20, 0.08, LAVDK); hoodBack.position.set(0, 1.04, -0.28); ch.add(hoodBack);
 
-  // Shoulders + Arms + Hands
-  const shL = mk(0.14, 0.06, 0.15, 0x0a0a0a, 0xa78bfa, 0.7); shL.position.set(-0.26, 0.88, 0); ch.add(shL);
-  const shR = mk(0.14, 0.06, 0.15, 0x0a0a0a, 0xa78bfa, 0.7); shR.position.set(0.26, 0.88, 0); ch.add(shR);
-  const aL = mk(0.11, 0.38, 0.13, 0x111115, 0xa78bfa, 0.4); aL.position.set(-0.29, 0.66, 0); ch.add(aL);
-  const aR = mk(0.11, 0.38, 0.13, 0x111115, 0xa78bfa, 0.4); aR.position.set(0.29, 0.66, 0); ch.add(aR);
-  const hL = mk(0.08, 0.08, 0.08, 0x0a0a0a, 0x6ee7b7, 0.8); hL.position.set(-0.29, 0.44, 0); ch.add(hL);
-  const hR = mk(0.08, 0.08, 0.08, 0x0a0a0a, 0x6ee7b7, 0.8); hR.position.set(0.29, 0.44, 0); ch.add(hR);
+  // Cat ears
+  const earGeo = new THREE.BoxGeometry(0.12, 0.16, 0.10);
+  const earL = new THREE.Mesh(earGeo, new THREE.MeshStandardMaterial({ color: LAV, metalness: 0.05, roughness: 0.8 }));
+  earL.position.set(-0.16, 1.54, 0.02); earL.rotation.z = 0.15; ch.add(earL);
+  const earR = new THREE.Mesh(earGeo, new THREE.MeshStandardMaterial({ color: LAV, metalness: 0.05, roughness: 0.8 }));
+  earR.position.set(0.16, 1.54, 0.02); earR.rotation.z = -0.15; ch.add(earR);
+  const earInL = flat(0.06, 0.10, 0.04, BLUSH); earInL.position.set(-0.16, 1.55, 0.06); earInL.rotation.z = 0.15; ch.add(earInL);
+  const earInR = flat(0.06, 0.10, 0.04, BLUSH); earInR.position.set(0.16, 1.55, 0.06); earInR.rotation.z = -0.15; ch.add(earInR);
 
-  // Legs + Knees + Shoes + Soles
-  const lL = mk(0.13, 0.38, 0.15, 0x111115, 0x6ee7b7, 0.2); lL.position.set(-0.11, 0.22, 0); ch.add(lL);
-  const lR = mk(0.13, 0.38, 0.15, 0x111115, 0x6ee7b7, 0.2); lR.position.set(0.11, 0.22, 0); ch.add(lR);
-  const kneeL = mk(0.08, 0.06, 0.02, 0x0a0a0a, 0x6ee7b7, 0.6); kneeL.position.set(-0.11, 0.28, 0.09); ch.add(kneeL);
-  const kneeR = mk(0.08, 0.06, 0.02, 0x0a0a0a, 0x6ee7b7, 0.6); kneeR.position.set(0.11, 0.28, 0.09); ch.add(kneeR);
-  const sL = mk(0.14, 0.06, 0.2, 0x0a0a0a, 0xa78bfa, 0.6); sL.position.set(-0.11, 0.03, 0.02); ch.add(sL);
-  const sR = mk(0.14, 0.06, 0.2, 0x0a0a0a, 0xa78bfa, 0.6); sR.position.set(0.11, 0.03, 0.02); ch.add(sR);
-  const soleL = mk(0.14, 0.02, 0.2, 0x000000, 0x6ee7b7, 1.5); soleL.position.set(-0.11, 0.005, 0.02); ch.add(soleL);
-  const soleR = mk(0.14, 0.02, 0.2, 0x000000, 0x6ee7b7, 1.5); soleR.position.set(0.11, 0.005, 0.02); ch.add(soleR);
+  // ── Face (FZ=0.255 safely clears head front z=0.24) ──
+  const FZ = 0.255;
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1528, side: THREE.DoubleSide });
+  const eL = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.09), eyeMat); eL.position.set(-0.10, 1.24, FZ); ch.add(eL);
+  const eR = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.09), eyeMat); eR.position.set(0.10, 1.24, FZ); ch.add(eR);
 
-  // Backpack
-  const bpBody = mk(0.24, 0.3, 0.12, 0x0e0e12, 0xa78bfa, 0.3); bpBody.position.set(0, 0.72, -0.18); ch.add(bpBody); ae(bpBody, 0xa78bfa);
-  const bpScreen = mk(0.16, 0.08, 0.01, 0x000000, 0x6ee7b7, 1.8); bpScreen.position.set(0, 0.76, -0.25); ch.add(bpScreen);
-  const bpLight = new THREE.PointLight(0x6ee7b7, 0.3, 1.5); bpLight.position.set(0, 0.76, -0.3); ch.add(bpLight);
+  const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  const hlL = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.03), hlMat); hlL.position.set(-0.08, 1.27, FZ + 0.002); ch.add(hlL);
+  const hlR = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.03), hlMat); hlR.position.set(0.12, 1.27, FZ + 0.002); ch.add(hlR);
 
-  // Character light + shadow
-  const cLight = new THREE.PointLight(0x6ee7b7, 1.2, 5); cLight.position.y = 1.5; ch.add(cLight);
-  const cSh = new THREE.Mesh(new THREE.CircleGeometry(0.35, 16), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: 0.35 }));
+  const blushMat = new THREE.MeshBasicMaterial({ color: BLUSH, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+  const blushL = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.04), blushMat); blushL.position.set(-0.18, 1.18, FZ); ch.add(blushL);
+  const blushR = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.04), blushMat.clone()); blushR.position.set(0.18, 1.18, FZ); ch.add(blushR);
+
+  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.02),
+      new THREE.MeshBasicMaterial({ color: 0x8B6B6B, side: THREE.DoubleSide }));
+  mouth.position.set(0, 1.14, FZ); ch.add(mouth);
+
+  // ── BODY ──
+  const torso = flat(0.38, 0.36, 0.24, LAV); torso.position.y = 0.76; ch.add(torso);
+  const pocket = flat(0.20, 0.10, 0.01, LAVDK); pocket.position.set(0, 0.65, 0.125); ch.add(pocket);
+  const dsL = flat(0.015, 0.12, 0.01, LAVLT); dsL.position.set(-0.04, 0.88, 0.125); ch.add(dsL);
+  const dsR = flat(0.015, 0.12, 0.01, LAVLT); dsR.position.set(0.04, 0.88, 0.125); ch.add(dsR);
+
+  // ── ARMS ──
+  const armPivotL = new THREE.Group(); armPivotL.position.set(-0.25, 0.90, 0); ch.add(armPivotL);
+  const armL = flat(0.13, 0.32, 0.14, LAV); armL.position.y = -0.16; armPivotL.add(armL);
+  const handL = flat(0.09, 0.09, 0.09, SKIN); handL.position.y = -0.34; armPivotL.add(handL);
+
+  const armPivotR = new THREE.Group(); armPivotR.position.set(0.25, 0.90, 0); ch.add(armPivotR);
+  const armR = flat(0.13, 0.32, 0.14, LAV); armR.position.y = -0.16; armPivotR.add(armR);
+  const handR = flat(0.09, 0.09, 0.09, SKIN); handR.position.y = -0.34; armPivotR.add(handR);
+
+  // ── LEGS (sole Y offset fixes Z-fight) ──
+  const legPivotL = new THREE.Group(); legPivotL.position.set(-0.09, 0.58, 0); ch.add(legPivotL);
+  const legL = flat(0.14, 0.32, 0.15, PANT); legL.position.y = -0.16; legPivotL.add(legL);
+  const bootL = flat(0.16, 0.09, 0.19, BOOT); bootL.position.set(0, -0.345, 0.02); legPivotL.add(bootL);
+  const soleL = glow(0.16, 0.025, 0.19, 0x1a1528, SOLEC, 0.6); soleL.position.set(0, -0.40, 0.02); legPivotL.add(soleL);
+
+  const legPivotR = new THREE.Group(); legPivotR.position.set(0.09, 0.58, 0); ch.add(legPivotR);
+  const legR = flat(0.14, 0.32, 0.15, PANT); legR.position.y = -0.16; legPivotR.add(legR);
+  const bootR = flat(0.16, 0.09, 0.19, BOOT); bootR.position.set(0, -0.345, 0.02); legPivotR.add(bootR);
+  const soleR = glow(0.16, 0.025, 0.19, 0x1a1528, SOLEC, 0.6); soleR.position.set(0, -0.40, 0.02); legPivotR.add(soleR);
+
+  // ── TAIL ──
+  const tailParts: THREE.Mesh[] = [];
+  for (let i = 0; i < 4; i++) {
+    const t = flat(0.06, 0.06, 0.06, LAV); t.position.set(0, 0.55 - i * 0.06, -0.16 - i * 0.06);
+    ch.add(t); tailParts.push(t);
+  }
+  const tailTip = flat(0.07, 0.07, 0.07, LAVDK); tailTip.position.set(0, 0.31, -0.38); ch.add(tailTip);
+
+  // ── BACKPACK ──
+  const bpBody = flat(0.22, 0.18, 0.08, LAVDK); bpBody.position.set(0, 0.82, -0.24); ch.add(bpBody);
+  const bpScreen = glow(0.12, 0.06, 0.01, 0x1a1528, LAVLT, 1.0); bpScreen.position.set(0, 0.84, -0.285); ch.add(bpScreen);
+
+  // ── LIGHTS ──
+  const cLight = new THREE.PointLight(0xddc8ee, 0.5, 4); cLight.position.y = 1.4; ch.add(cLight);
+  const cSh = new THREE.Mesh(new THREE.CircleGeometry(0.35, 16),
+      new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }));
   cSh.rotation.x = -Math.PI / 2; cSh.position.y = 0.005; ch.add(cSh);
 
-  // ── Animate ──
+  // ════════════════════════════════════
   function animate(t: number, moving: boolean): void {
-    const wp = moving ? t * 10 : 0, sw = moving ? Math.sin(wp) : 0;
+    const wp = moving ? t * 9 : 0, sw = moving ? Math.sin(wp) : 0;
 
-    // Walk cycle
-    lL.rotation.x = sw * 0.5; lR.rotation.x = -sw * 0.5;
-    sL.rotation.x = sw * 0.3; sR.rotation.x = -sw * 0.3;
-    kneeL.rotation.x = sw * 0.3; kneeR.rotation.x = -sw * 0.3;
+    armPivotL.rotation.x = moving ? -sw * 0.55 : Math.sin(t * 1.2) * 0.05;
+    armPivotR.rotation.x = moving ? sw * 0.55 : -Math.sin(t * 1.2) * 0.05;
+    legPivotL.rotation.x = sw * 0.45;
+    legPivotR.rotation.x = -sw * 0.45;
 
-    // Breathe / bob
-    const breathe = Math.sin(t * 2) * 0.015;
-    const idleSway = Math.sin(t * 0.8) * 0.02;
-    const bob = moving ? Math.abs(Math.sin(wp)) * 0.05 : breathe;
+    const bob = moving ? Math.abs(Math.sin(wp)) * 0.04 : Math.sin(t * 2) * 0.012;
 
-    // Vertical offsets
-    bd.position.y = 0.66 + bob; hd.position.y = 1.08 + bob; vs.position.y = 1.1 + bob; cp.position.y = 0.72 + bob;
-    eL.position.y = 1.1 + bob; eR.position.y = 1.1 + bob;
-    belt.position.y = 0.44 + bob * 0.5; buckle.position.y = 0.44 + bob * 0.5;
-    bpBody.position.y = 0.72 + bob; bpScreen.position.y = 0.76 + bob;
-    shL.position.y = 0.88 + bob; shR.position.y = 0.88 + bob;
-    earL.position.y = 1.1 + bob; earR.position.y = 1.1 + bob;
-    antBase.position.y = 1.3 + bob; antTip.position.y = 1.4 + bob;
+    head.position.y = 1.24 + bob;
+    hood.position.y = 1.33 + bob; hoodRim.position.y = 1.17 + bob; hoodBack.position.y = 1.04 + bob;
+    earL.position.y = 1.54 + bob; earR.position.y = 1.54 + bob;
+    earInL.position.y = 1.55 + bob; earInR.position.y = 1.55 + bob;
+    torso.position.y = 0.76 + bob * 0.6;
+    pocket.position.y = 0.65 + bob * 0.6; dsL.position.y = 0.88 + bob * 0.6; dsR.position.y = 0.88 + bob * 0.6;
+    armPivotL.position.y = 0.90 + bob * 0.6; armPivotR.position.y = 0.90 + bob * 0.6;
+    legPivotL.position.y = 0.58 + bob * 0.3; legPivotR.position.y = 0.58 + bob * 0.3;
+    bpBody.position.y = 0.82 + bob * 0.6; bpScreen.position.y = 0.84 + bob * 0.6;
 
-    // Arms
-    if (moving) {
-      aL.rotation.x = -sw * 0.45; aR.rotation.x = sw * 0.45;
-      hL.rotation.x = -sw * 0.45; hR.rotation.x = sw * 0.45;
-      aL.rotation.z = 0; aR.rotation.z = 0;
-    } else {
-      aL.rotation.x = idleSway; aR.rotation.x = -idleSway;
-      aL.rotation.z = -0.06; aR.rotation.z = 0.06;
-      hL.rotation.x = idleSway; hR.rotation.x = -idleSway;
-    }
+    const fy = 1.24 + bob;
+    eL.position.y = fy; eR.position.y = fy;
+    hlL.position.y = fy + 0.03; hlR.position.y = fy + 0.03;
+    blushL.position.y = 1.18 + bob; blushR.position.y = 1.18 + bob;
+    mouth.position.y = 1.14 + bob;
 
-    // Antenna
-    antBase.rotation.z = Math.sin(t * 1.5) * 0.1 + (moving ? sw * 0.08 : 0);
-    antTip.position.x = 0.08 + Math.sin(t * 1.5) * 0.015;
-    (antTip.material as THREE.MeshBasicMaterial).color.setHSL(0.45, 0.8, 0.5 + Math.sin(t * 3) * 0.15);
-    antLight.intensity = 0.3 + Math.sin(t * 3) * 0.15;
+    const bc = t % 3.8;
+    const blink = (bc > 3.5 && bc < 3.65) || (t % 7 > 6.7 && t % 7 < 6.85);
+    eL.scale.y = blink ? 0.1 : 1; eR.scale.y = blink ? 0.1 : 1;
+    hlL.visible = !blink; hlR.visible = !blink;
+    (blushMat).opacity = 0.30 + Math.sin(t) * 0.05;
 
-    // Backpack screen flicker
-    (bpScreen.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.5 + Math.sin(t * 5) * 0.5;
-    bpLight.intensity = 0.2 + Math.sin(t * 5) * 0.1;
+    const twitch = t % 5 > 4.7 && t % 5 < 4.9;
+    earR.rotation.z = twitch ? -0.35 : -0.15; earInR.rotation.z = twitch ? -0.35 : -0.15;
 
-    // Shoe sole glow
-    (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + (moving ? Math.abs(sw) * 0.5 : Math.sin(t * 2) * 0.2);
-    (soleR.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + (moving ? Math.abs(-sw) * 0.5 : Math.sin(t * 2) * 0.2);
+    const ta = moving ? 2 : 1;
+    tailParts.forEach((tp, i) => { tp.position.x = Math.sin(t * 2.5 + i * 0.8) * 0.08 * (i + 1) * 0.5 * ta; });
+    tailTip.position.x = Math.sin(t * 2.5 + 3.2) * 0.08 * 2 * ta * 1.2;
 
-    // Eye blink
-    const blinkCycle = t % 3.5;
-    const isBlinking = blinkCycle > 3.2 && blinkCycle < 3.4;
-    eL.scale.y = isBlinking ? 0 : 1; eR.scale.y = isBlinking ? 0 : 1;
-    eL.visible = !isBlinking; eR.visible = !isBlinking;
-    eyeGlowL.intensity = isBlinking ? 0 : 0.3;
-    eyeGlowR.intensity = isBlinking ? 0 : 0.3;
-    // Double blink
-    const dblBlink = t % 7 > 6.6 && t % 7 < 6.75;
-    if (dblBlink) { eL.visible = false; eR.visible = false; eyeGlowL.intensity = 0; eyeGlowR.intensity = 0; }
+    (bpScreen.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8 + Math.sin(t * 2) * 0.2;
+    (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + (moving ? 0.2 : 0);
+    (soleR.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + (moving ? 0.2 : 0);
   }
 
   return { group: ch, animate };

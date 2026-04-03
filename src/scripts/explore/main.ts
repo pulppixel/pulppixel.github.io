@@ -8,6 +8,7 @@ import { createPanel, createQuest, createHUD } from './ui';
 import { createSpodyGame } from './minigames/spody';
 import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
+import { createNomadsGame } from './minigames/nomads';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -30,6 +31,7 @@ export function init(): void {
     spody: createSpodyGame(mgContainer, exitMg),
     ruby: createRubyGame(mgContainer, exitMg),
     maze: createMazeGame(mgContainer, exitMg),
+    nomads: createNomadsGame(mgContainer, exitMg),
   };
 
   function enterMinigame(key: string, projectIndex: number): void {

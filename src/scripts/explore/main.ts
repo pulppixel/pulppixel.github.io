@@ -10,6 +10,7 @@ import { createSpodyGame } from './minigames/spody';
 import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
+import { createHaulGame } from './minigames/haul';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -60,6 +61,7 @@ export function init(): void {
     ruby: createRubyGame(mgContainer, exitMg),
     maze: createMazeGame(mgContainer, exitMg),
     nomads: createNomadsGame(mgContainer, exitMg),
+    haul: createHaulGame(mgContainer, exitMg),
   };
 
   function enterMinigame(key: string): void {
@@ -109,7 +111,7 @@ export function init(): void {
   let isGrounded = true;
   let wasGrounded = true;
   const GRAVITY = -15;
-  const JUMP_FORCE = 10.6;
+  const JUMP_FORCE = 9.8;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
 

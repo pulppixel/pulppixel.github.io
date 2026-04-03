@@ -1,7 +1,7 @@
 // ─── 씬 · 복셀 지형 · 환경 ───
-// Night Minecraft + Kawaii Neon — ★ 라이팅 대폭 강화
+// ★ Step 3: 맵 확대 + 플랫폼 높이차 + 레벨 디자인
 import * as THREE from 'three';
-import { COMPANIES } from './data';
+import { COMPANIES, PLATFORMS } from './data';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -11,16 +11,9 @@ export interface SceneContext {
   stars: { geo: THREE.BufferGeometry; baseColors: Float32Array; count: number };
 }
 
-// ── Palette ──
 const PK = 0xff6b9d;
 const GD = 0xfbbf24;
 const SK = 0x67e8f9;
-
-// ── Noise helper ──
-function hash(a: number, b: number): number {
-  const n = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
-  return n - Math.floor(n);
-}
 
 function nearZone(x: number, z: number, r: number): boolean {
   for (const co of COMPANIES) {
@@ -31,45 +24,33 @@ function nearZone(x: number, z: number, r: number): boolean {
 }
 
 // ══════════════════════════════════════════
-// ── Terrain builders ──
+// ── Ground ──
 // ══════════════════════════════════════════
 
-function buildGroundBlocks(scene: THREE.Scene): void {
-  const S = 2; // block size
-  const geo = new THREE.BoxGeometry(S - 0.06, 0.15, S - 0.06);
-  // ★ 지면 밝기 향상
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x1c1c24, emissive: PK, emissiveIntensity: 0.015,
-    metalness: 0.3, roughness: 0.88,
-  });
+function buildGround(scene: THREE.Scene): void {
+  // ★ 넓은 베이스 평면 (어두운 바닥)
+  const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(130, 90),
+      new THREE.MeshStandardMaterial({ color: 0x141418, emissive: PK, emissiveIntensity: 0.008, metalness: 0.3, roughness: 0.9 }),
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.set(0, -0.01, -29);
+  ground.receiveShadow = true;
+  scene.add(ground);
 
-  const count = 31 * 31; // -30 to 30, step 2
-  const mesh = new THREE.InstancedMesh(geo, mat, count);
-  mesh.receiveShadow = true;
-  const d = new THREE.Object3D();
-  let i = 0;
-  for (let x = -30; x <= 30; x += S) {
-    for (let z = -30; z <= 30; z += S) {
-      d.position.set(x, -0.075, z);
-      d.updateMatrix();
-      mesh.setMatrixAt(i++, d.matrix);
-    }
-  }
-  mesh.count = i;
-  mesh.instanceMatrix.needsUpdate = true;
-  scene.add(mesh);
-
-  // Subtle edge grid — ★ 약간 더 밝게
-  const grid = new THREE.GridHelper(62, 31, 0x2a2030, 0x1a1824);
-  (grid.material as THREE.Material).opacity = 0.3;
+  // 그리드 오버레이
+  const grid = new THREE.GridHelper(130, 65, 0x2a2030, 0x1a1824);
+  grid.position.set(0, 0.001, -29);
+  (grid.material as THREE.Material).opacity = 0.2;
   (grid.material as THREE.Material).transparent = true;
   scene.add(grid);
 }
 
-function buildRaisedTerrain(scene: THREE.Scene): void {
-  const geo = new THREE.BoxGeometry(1.9, 1, 1.9);
+// ══════════════════════════════════════════
+// ★ Platforms from PLATFORMS data
+// ══════════════════════════════════════════
 
-  // ★ 머티리얼 밝기 향상
+function buildPlatforms(scene: THREE.Scene, isMobile: boolean): void {
   const grassMat = new THREE.MeshStandardMaterial({
     color: 0x162e1e, emissive: 0x2a5a38, emissiveIntensity: 0.22,
     metalness: 0.2, roughness: 0.85,
@@ -78,104 +59,131 @@ function buildRaisedTerrain(scene: THREE.Scene): void {
     color: 0x1e1e2a, emissive: 0x2a2a3a, emissiveIntensity: 0.12,
     metalness: 0.4, roughness: 0.8,
   });
+  const edgeMat = new THREE.LineBasicMaterial({ color: PK, transparent: true, opacity: 0.06 });
 
-  const clusters: [number, number, number, number, number][] = [
-    // [cx, cz, countX, countZ, maxH]
-    [-25, -2, 3, 2, 3],  [-22, -20, 2, 3, 2],
-    [22, -5, 2, 2, 3],   [25, -22, 3, 2, 2],
-    [-8, 2, 2, 2, 2],    [10, 2, 3, 1, 2],
-    [-26, -12, 2, 2, 4],  [26, -12, 2, 3, 3],
-    [5, -28, 3, 2, 2],   [-6, -28, 2, 2, 3],
-    [18, -26, 2, 2, 2],  [-20, -26, 3, 2, 3],
-    // Small accent blocks
-    [-15, -4, 1, 1, 2],  [16, -8, 1, 1, 1],
-    [-12, -22, 1, 1, 2], [14, -20, 1, 1, 1],
-  ];
+  // 존별 에지 색상 결정
+  function getEdgeColor(px: number, pz: number): number {
+    let best = 0, bestD = Infinity;
+    COMPANIES.forEach((co, i) => {
+      const d = Math.hypot(px - co.position.x, pz - co.position.z);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return COMPANIES[best].color;
+  }
 
-  const edgeMat = new THREE.LineBasicMaterial({ color: PK, transparent: true, opacity: 0.08 });
-  const edgeGeo = new THREE.EdgesGeometry(geo);
+  for (const p of PLATFORMS) {
+    if (p.h <= 0.05) continue; // 스폰(h=0)은 flat ground
+    const eCol = getEdgeColor(p.x, p.z);
 
-  clusters.forEach(([cx, cz, w, dp, maxH]) => {
-    for (let bx = 0; bx < w; bx++) {
-      for (let bz = 0; bz < dp; bz++) {
-        const h = 1 + Math.floor(hash(cx + bx, cz + bz) * maxH);
-        for (let y = 0; y < h; y++) {
-          const px = cx + bx * 2, pz = cz + bz * 2;
-          if (nearZone(px, pz, 5.5)) continue;
-          const isTop = y === h - 1;
-          const block = new THREE.Mesh(geo, isTop ? grassMat : stoneMat);
-          block.position.set(px, y * 1 + 0.5, pz);
-          block.castShadow = true;
-          block.receiveShadow = true;
-          scene.add(block);
+    // 본체 (stone)
+    const bodyH = Math.max(0.15, p.h - 0.15);
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(p.w, bodyH, p.d),
+        stoneMat,
+    );
+    body.position.set(p.x, bodyH / 2, p.z);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    scene.add(body);
 
-          if (isTop) {
-            block.add(new THREE.LineSegments(edgeGeo, edgeMat));
-          }
-        }
-      }
+    // 상단 잔디 캡
+    const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(p.w, 0.15, p.d),
+        grassMat,
+    );
+    cap.position.set(p.x, p.h - 0.075, p.z);
+    cap.receiveShadow = true;
+    scene.add(cap);
+
+    // 네온 엣지 (데스크톱만, 모바일은 draw call 절감)
+    if (!isMobile) {
+      const capEdge = new THREE.LineSegments(
+          new THREE.EdgesGeometry(cap.geometry),
+          new THREE.LineBasicMaterial({ color: eCol, transparent: true, opacity: 0.08 }),
+      );
+      cap.add(capEdge);
     }
-  });
+  }
 }
+
+// ══════════════════════════════════════════
+// ── Trees (확장 배치) ──
+// ══════════════════════════════════════════
 
 function buildTrees(scene: THREE.Scene): void {
   const trees: [number, number, number, number][] = [
-    // [x, z, height, leafColor]
-    [-18, -6, 5, PK], [20, -3, 4, SK], [-14, -18, 6, GD],
-    [18, -18, 4, PK], [-24, -14, 5, SK], [8, -26, 4, GD],
-    [-5, -14, 5, PK], [24, -8, 3, SK],
+    // 스폰 근처
+    [-8, -4, 4, PK],   [9, -2, 3, SK],
+    // Zone0 주변
+    [-12, -14, 5, GD],  [12, -14, 4, PK],
+    // Zone0→Zone1 경로
+    [20, -20, 4, SK],   [30, -30, 3, GD],
+    // Zone0→Zone2 경로
+    [-20, -20, 4, PK],  [-32, -30, 5, SK],
+    // Zone3 언덕 주변 (숲 테마)
+    [-8, -52, 6, PK],   [8, -52, 5, GD],
+    [-5, -63, 4, SK],   [6, -64, 5, PK],
+    // 외곽
+    [-38, -48, 4, GD],  [38, -48, 4, SK],
+    [25, -55, 3, PK],   [-25, -55, 5, GD],
   ];
 
   trees.forEach(([tx, tz, h, lc]) => {
-    if (nearZone(tx, tz, 5.5)) return;
+    if (nearZone(tx, tz, 6)) return;
 
-    // Trunk — ★ 밝기 향상
     const trunkGeo = new THREE.BoxGeometry(0.6, h * 0.8, 0.6);
     const trunk = new THREE.Mesh(trunkGeo, new THREE.MeshStandardMaterial({
       color: 0x2a2018, emissive: 0x3a2a18, emissiveIntensity: 0.15,
       metalness: 0.2, roughness: 0.9,
     }));
-    trunk.position.set(tx, h * 0.4, tz);
+    // ★ 트리 Y를 주변 지면 높이에 맞춤
+    const baseH = getApproxHeight(tx, tz);
+    trunk.position.set(tx, baseH + h * 0.4, tz);
     trunk.castShadow = true;
     scene.add(trunk);
 
-    // Leaves — ★ 발광 강화
     const leafMat = new THREE.MeshStandardMaterial({
-      color: 0x121a14, emissive: lc, emissiveIntensity: 0.35,
+      color: 0x121a14, emissive: lc, emissiveIntensity: 0.5,
       metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.9,
     });
-    const leafEdge = new THREE.LineBasicMaterial({ color: lc, transparent: true, opacity: 0.3 });
-
-    const leafPositions = [
-      [0, 0, 0], [-1, 0, 0], [1, 0, 0], [0, 0, -1], [0, 0, 1],
-      [0, 1, 0], [-1, 0, 1], [1, 0, -1],
-    ];
-
+    const leafEdge = new THREE.LineBasicMaterial({ color: lc, transparent: true, opacity: 0.35 });
     const leafGeo = new THREE.BoxGeometry(1.2, 1.0, 1.2);
     const leafEdgeGeo = new THREE.EdgesGeometry(leafGeo);
 
-    leafPositions.forEach(([lx, ly, lz]) => {
+    [[0,0,0],[-1,0,0],[1,0,0],[0,0,-1],[0,0,1],[0,1,0],[-1,0,1],[1,0,-1]].forEach(([lx, ly, lz]) => {
       const leaf = new THREE.Mesh(leafGeo, leafMat);
-      leaf.position.set(tx + lx * 1.1, h * 0.8 + ly * 1.0 + 0.5, tz + lz * 1.1);
+      leaf.position.set(tx + lx * 1.1, baseH + h * 0.8 + ly * 1.0 + 0.5, tz + lz * 1.1);
       leaf.castShadow = true;
       leaf.add(new THREE.LineSegments(leafEdgeGeo, leafEdge));
       scene.add(leaf);
     });
-
-    // ★ 트리 라이트 강화
-    const treeLight = new THREE.PointLight(lc, 0.35, 6);
-    treeLight.position.set(tx, h * 0.8 + 1, tz);
-    scene.add(treeLight);
   });
 }
 
+/** 데코 배치용 대략적 지면 높이 (PLATFORMS 체크) */
+function getApproxHeight(x: number, z: number): number {
+  let maxH = 0;
+  for (const p of PLATFORMS) {
+    const hw = p.w / 2 + 1, hd = p.d / 2 + 1; // 살짝 여유
+    if (x >= p.x - hw && x <= p.x + hw && z >= p.z - hd && z <= p.z + hd) {
+      if (p.h > maxH) maxH = p.h;
+    }
+  }
+  return maxH;
+}
+
+// ══════════════════════════════════════════
+// ── Mushrooms (확장 배치) ──
+// ══════════════════════════════════════════
+
 function buildMushrooms(scene: THREE.Scene): void {
   const shrooms: [number, number, number][] = [
-    [-10, -3, PK], [12, -6, GD], [-16, -10, SK],
-    [6, -12, PK], [-3, -20, GD], [16, -14, SK],
-    [-20, -8, PK], [22, -16, GD], [-8, -26, SK],
-    [4, -4, PK], [-12, -14, GD], [10, -22, SK],
-    [20, -24, PK], [-22, -22, GD], [0, -16, SK],
+    [-5, -3, PK],   [7, -8, GD],    [-14, -12, SK],
+    [10, -20, PK],  [-9, -25, GD],  [19, -23, SK],
+    [-23, -32, PK], [26, -28, GD],  [-16, -44, SK],
+    [8, -36, PK],   [-30, -50, GD], [22, -53, SK],
+    [3, -50, PK],   [-6, -62, GD],  [12, -58, SK],
+    [-40, -38, PK], [40, -42, GD],
   ];
 
   const stemGeo = new THREE.BoxGeometry(0.15, 0.35, 0.15);
@@ -183,45 +191,48 @@ function buildMushrooms(scene: THREE.Scene): void {
   const capEdgeGeo = new THREE.EdgesGeometry(capGeo);
 
   shrooms.forEach(([sx, sz, color]) => {
-    if (nearZone(sx, sz, 4.5)) return;
+    if (nearZone(sx, sz, 5)) return;
+    const baseH = getApproxHeight(sx, sz);
 
     const stem = new THREE.Mesh(stemGeo, new THREE.MeshStandardMaterial({
       color: 0x1a1a1a, emissive: color, emissiveIntensity: 0.15,
       metalness: 0.2, roughness: 0.8,
     }));
-    stem.position.set(sx, 0.175, sz);
+    stem.position.set(sx, baseH + 0.175, sz);
     scene.add(stem);
 
-    // ★ 버섯 발광 강화
     const cap = new THREE.Mesh(capGeo, new THREE.MeshStandardMaterial({
-      color: 0x121218, emissive: color, emissiveIntensity: 0.8,
+      color: 0x121218, emissive: color, emissiveIntensity: 1.0,
       metalness: 0.3, roughness: 0.5,
     }));
-    cap.position.set(sx, 0.45, sz);
+    cap.position.set(sx, baseH + 0.45, sz);
     cap.add(new THREE.LineSegments(capEdgeGeo, new THREE.LineBasicMaterial({
-      color, transparent: true, opacity: 0.5,
+      color, transparent: true, opacity: 0.55,
     })));
     scene.add(cap);
-
-    // ★ 버섯 라이트 강화
-    const light = new THREE.PointLight(color, 0.2, 3.5);
-    light.position.set(sx, 0.6, sz);
-    scene.add(light);
   });
 }
 
+// ══════════════════════════════════════════
+// ── Lanterns (경로 표시) ──
+// ══════════════════════════════════════════
+
 function buildLanterns(scene: THREE.Scene): void {
   const lanterns: [number, number, number][] = [
-    [0, -4, GD], [0, -12, GD], [0, -20, GD],
-    [-6, -8, PK], [6, -8, PK],
-    [-6, -16, SK], [6, -16, SK],
-    [6, -24, GD], [-6, -24, GD],
+    // 스폰 → Zone 0
+    [0, -4, GD],    [0, -14, GD],
+    // Zone 0 → Zone 1
+    [10, -24, PK],  [17, -28, PK],  [22, -33, PK],
+    // Zone 0 → Zone 2
+    [-10, -24, SK], [-17, -28, SK], [-22, -33, SK],
+    // Zone 0 → Zone 3 (중앙)
+    [1, -30, GD],   [-1, -42, GD],  [0, -48, GD],
   ];
 
   lanterns.forEach(([lx, lz, color]) => {
-    if (nearZone(lx, lz, 4)) return;
+    if (nearZone(lx, lz, 4.5)) return;
+    const baseH = getApproxHeight(lx, lz);
 
-    // Post — ★ 약간 밝게
     const post = new THREE.Mesh(
         new THREE.BoxGeometry(0.12, 1.6, 0.12),
         new THREE.MeshStandardMaterial({
@@ -229,57 +240,53 @@ function buildLanterns(scene: THREE.Scene): void {
           metalness: 0.3, roughness: 0.8,
         }),
     );
-    post.position.set(lx, 0.8, lz);
+    post.position.set(lx, baseH + 0.8, lz);
     scene.add(post);
 
-    // ★ 랜턴 헤드 발광 강화
     const lamp = new THREE.Mesh(
         new THREE.BoxGeometry(0.3, 0.3, 0.3),
         new THREE.MeshStandardMaterial({
-          color: 0x121214, emissive: color, emissiveIntensity: 1.5,
+          color: 0x121214, emissive: color, emissiveIntensity: 2.0,
           metalness: 0.4, roughness: 0.4,
         }),
     );
-    lamp.position.set(lx, 1.75, lz);
+    lamp.position.set(lx, baseH + 1.75, lz);
     lamp.add(new THREE.LineSegments(
         new THREE.EdgesGeometry(lamp.geometry),
         new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 }),
     ));
     scene.add(lamp);
-
-    // ★ 랜턴 라이트 대폭 강화
-    const light = new THREE.PointLight(color, 0.8, 7);
-    light.position.set(lx, 1.9, lz);
-    scene.add(light);
   });
 }
 
 // ══════════════════════════════════════════
-// ── Zone ground patches ──
+// ── Zone patches + Paths ──
 // ══════════════════════════════════════════
 
 function buildZonePatches(scene: THREE.Scene): void {
   COMPANIES.forEach(co => {
-    // ★ 존 글로우 강화
-    const glow = new THREE.Mesh(
-        new THREE.CircleGeometry(8, 32),
-        new THREE.MeshBasicMaterial({
-          color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide,
-        }),
-    );
-    glow.rotation.x = -Math.PI / 2;
-    glow.position.set(co.position.x, 0.002, co.position.z);
-    scene.add(glow);
+    const h = 0;
+    for (const p of PLATFORMS) {
+      if (Math.abs(p.x - co.position.x) < 1 && Math.abs(p.z - co.position.z) < 1) {
+        // 존 플랫폼 높이 사용
+        const glow = new THREE.Mesh(
+            new THREE.CircleGeometry(8, 32),
+            new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide }),
+        );
+        glow.rotation.x = -Math.PI / 2;
+        glow.position.set(co.position.x, p.h + 0.01, co.position.z);
+        scene.add(glow);
 
-    const inner = new THREE.Mesh(
-        new THREE.CircleGeometry(5, 24),
-        new THREE.MeshBasicMaterial({
-          color: co.color, transparent: true, opacity: 0.035, side: THREE.DoubleSide,
-        }),
-    );
-    inner.rotation.x = -Math.PI / 2;
-    inner.position.set(co.position.x, 0.003, co.position.z);
-    scene.add(inner);
+        const inner = new THREE.Mesh(
+            new THREE.CircleGeometry(5, 24),
+            new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.035, side: THREE.DoubleSide }),
+        );
+        inner.rotation.x = -Math.PI / 2;
+        inner.position.set(co.position.x, p.h + 0.015, co.position.z);
+        scene.add(inner);
+        break;
+      }
+    }
   });
 }
 
@@ -288,9 +295,12 @@ function buildPathDots(scene: THREE.Scene): void {
   for (let i = 0; i < COMPANIES.length; i++) {
     for (let j = i + 1; j < COMPANIES.length; j++) {
       const a = COMPANIES[i].position, b = COMPANIES[j].position;
-      for (let s = 0; s < 12; s++) {
-        const t = s / 12;
+      const steps = Math.max(12, Math.round(Math.hypot(b.x - a.x, b.z - a.z) / 4));
+      for (let s = 0; s < steps; s++) {
+        const t = s / steps;
         if (s % 2 === 0) {
+          const px = a.x + (b.x - a.x) * t, pz = a.z + (b.z - a.z) * t;
+          const ph = getApproxHeight(px, pz);
           const dot = new THREE.Mesh(
               new THREE.BoxGeometry(0.15, 0.04, 0.15),
               new THREE.MeshStandardMaterial({
@@ -298,11 +308,7 @@ function buildPathDots(scene: THREE.Scene): void {
                 emissiveIntensity: 0.5, metalness: 0.5, roughness: 0.5,
               }),
           );
-          dot.position.set(
-              a.x + (b.x - a.x) * t,
-              0.02,
-              a.z + (b.z - a.z) * t,
-          );
+          dot.position.set(px, ph + 0.02, pz);
           scene.add(dot);
         }
       }
@@ -311,38 +317,20 @@ function buildPathDots(scene: THREE.Scene): void {
 }
 
 // ══════════════════════════════════════════
-// ★ Sky Gradient (반구형 하늘)
+// ── Sky ──
 // ══════════════════════════════════════════
 
 function buildSkyDome(scene: THREE.Scene): void {
-  const skyGeo = new THREE.SphereGeometry(80, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const skyGeo = new THREE.SphereGeometry(90, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
   const skyMat = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
+    side: THREE.BackSide, depthWrite: false,
     uniforms: {
       topColor: { value: new THREE.Color(0x0a0a1a) },
       midColor: { value: new THREE.Color(0x141428) },
       bottomColor: { value: new THREE.Color(0x1a1020) },
     },
-    vertexShader: `
-      varying float vY;
-      void main() {
-        vY = normalize(position).y;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 topColor;
-      uniform vec3 midColor;
-      uniform vec3 bottomColor;
-      varying float vY;
-      void main() {
-        float t = clamp(vY, 0.0, 1.0);
-        vec3 col = mix(bottomColor, midColor, smoothstep(0.0, 0.3, t));
-        col = mix(col, topColor, smoothstep(0.3, 1.0, t));
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
+    vertexShader: `varying float vY; void main() { vY = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform vec3 topColor; uniform vec3 midColor; uniform vec3 bottomColor; varying float vY; void main() { float t = clamp(vY, 0.0, 1.0); vec3 col = mix(bottomColor, midColor, smoothstep(0.0, 0.3, t)); col = mix(col, topColor, smoothstep(0.3, 1.0, t)); gl_FragColor = vec4(col, 1.0); }`,
   });
   const sky = new THREE.Mesh(skyGeo, skyMat);
   sky.renderOrder = -1;
@@ -355,118 +343,100 @@ function buildSkyDome(scene: THREE.Scene): void {
 
 export function createScene(isMobile: boolean): SceneContext {
   const scene = new THREE.Scene();
-  // ★ 안개 — 밀도 낮추고 색상 조정 (더 멀리 보이게)
-  scene.fog = new THREE.FogExp2(0x0e0e18, 0.008);
+  // ★ 넓은 맵에 맞춰 안개 줄임
+  scene.fog = new THREE.FogExp2(0x0e0e18, 0.006);
   const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  // ★ 톤매핑 노출 올리기
   renderer.toneMappingExposure = 1.6;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = !isMobile;
+  if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
 
-  // ── Terrain ──
-  buildGroundBlocks(scene);
-  buildRaisedTerrain(scene);
+  // ── Build world ──
+  buildGround(scene);
+  buildPlatforms(scene, isMobile);
   buildTrees(scene);
   buildMushrooms(scene);
   buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots(scene);
-  // ★ 하늘 그라디언트
   buildSkyDome(scene);
 
-  // ── Lights ── ★ 대폭 강화
-  // Ambient: 전체적 기본 밝기
+  // ── Lights ──
   scene.add(new THREE.AmbientLight(0x2a2040, 0.9));
-
-  // ★ HemisphereLight: 하늘/땅 색 차이로 자연스러운 입체감
   scene.add(new THREE.HemisphereLight(0x4466aa, 0x221122, 0.5));
 
-  // ★ DirectionalLight: 달빛 느낌, 강도 대폭 상향
   const dL = new THREE.DirectionalLight(0x9999cc, 1.2);
   dL.position.set(10, 20, 10);
-  dL.castShadow = true;
-  dL.shadow.mapSize.set(1024, 1024);
-  dL.shadow.camera.near = 1; dL.shadow.camera.far = 60;
-  dL.shadow.camera.left = -30; dL.shadow.camera.right = 30;
-  dL.shadow.camera.top = 30; dL.shadow.camera.bottom = -30;
+  if (!isMobile) {
+    dL.castShadow = true;
+    dL.shadow.mapSize.set(1024, 1024);
+    dL.shadow.camera.near = 1; dL.shadow.camera.far = 80;
+    dL.shadow.camera.left = -50; dL.shadow.camera.right = 50;
+    dL.shadow.camera.top = 50; dL.shadow.camera.bottom = -50;
+  }
   scene.add(dL);
 
-  // ★ 보조 Directional (반대쪽 Fill Light)
   const fillL = new THREE.DirectionalLight(0x553366, 0.35);
   fillL.position.set(-8, 12, -8);
   scene.add(fillL);
 
-  // ★ 컬러 에어리어 라이트 강화
-  const lights: [number, number, number, number, number, number][] = [
-    [PK, 1.5, 28, 0, 8, -4],
-    [SK, 1.0, 22, -10, 7, -10],
-    [GD, 1.0, 22, 8, 7, -18],
-    [PK, 0.8, 18, -14, 7, 7],
-    // ★ 추가 라이트 — 존 중심부 밝히기
-    [0xa78bfa, 0.6, 12, 0, 3, -8],
-    [0x6ee7b7, 0.5, 12, 13, 3, -16],
-    [0xfbbf24, 0.5, 12, -13, 3, -16],
-    [0xff6b9d, 0.5, 12, 0, 3, -24],
+  // ★ 존별 에어리어 라이트 (새 좌표)
+  const areaLights: [number, number, number, number, number, number][] = [
+    [0xa78bfa, 1.2, 22, 0, 8, -18],
+    [0x6ee7b7, 0.8, 20, 28, 7, -40],
+    [0xfbbf24, 0.8, 20, -28, 7, -40],
+    [0xff6b9d, 0.8, 20, 0, 8, -58],
   ];
-  lights.forEach(([c, i, d, x, y, z]) => {
+  areaLights.forEach(([c, i, d, x, y, z]) => {
     const l = new THREE.PointLight(c, i, d);
     l.position.set(x, y, z);
     scene.add(l);
   });
 
-  // ── Firefly particles ── ★ 약간 크고 밝게
-  const pCount = 250;
+  // ── Particles ──
+  const pCount = isMobile ? 120 : 250;
   const pGeo = new THREE.BufferGeometry();
   const pPos = new Float32Array(pCount * 3);
   for (let i = 0; i < pCount; i++) {
-    pPos[i * 3] = (Math.random() - 0.5) * 60;
-    pPos[i * 3 + 1] = 0.3 + Math.random() * 8;
-    pPos[i * 3 + 2] = (Math.random() - 0.5) * 60;
+    pPos[i * 3] = (Math.random() - 0.5) * 100;
+    pPos[i * 3 + 1] = 0.3 + Math.random() * 10;
+    pPos[i * 3 + 2] = -29 + (Math.random() - 0.5) * 80;
   }
   pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
   scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
     color: GD, size: 0.08, transparent: true, opacity: 0.55,
   })));
 
-  // ── Stars ── ★ 밝기 향상
-  const starCount = 500;
+  // ── Stars ──
+  const starCount = isMobile ? 250 : 500;
   const starGeo = new THREE.BufferGeometry();
   const starPos = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = 60 + Math.random() * 20;
+    const r = 70 + Math.random() * 20;
     starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     starPos[i * 3 + 1] = Math.abs(r * Math.cos(phi)) * 0.5 + 5;
     starPos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
     const tint = Math.random();
-    if (tint < 0.3) {
-      // Pink stars
-      starColors[i * 3] = 1.0; starColors[i * 3 + 1] = 0.42; starColors[i * 3 + 2] = 0.62;
-    } else if (tint < 0.5) {
-      // Gold stars
-      starColors[i * 3] = 0.98; starColors[i * 3 + 1] = 0.74; starColors[i * 3 + 2] = 0.14;
-    } else {
-      // White-ish
-      starColors[i * 3] = 0.8; starColors[i * 3 + 1] = 0.8; starColors[i * 3 + 2] = 0.88;
-    }
+    if (tint < 0.3) { starColors[i*3]=1.0; starColors[i*3+1]=0.42; starColors[i*3+2]=0.62; }
+    else if (tint < 0.5) { starColors[i*3]=0.98; starColors[i*3+1]=0.74; starColors[i*3+2]=0.14; }
+    else { starColors[i*3]=0.8; starColors[i*3+1]=0.8; starColors[i*3+2]=0.88; }
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
   scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-    size: 0.18, transparent: true, opacity: 0.6,
-    vertexColors: true, sizeAttenuation: true,
+    size: 0.18, transparent: true, opacity: 0.6, vertexColors: true, sizeAttenuation: true,
   })));
   const starBaseColors = new Float32Array(starColors);
 
-  // ── Connection lines between zones ──
-  const ptM = new THREE.LineBasicMaterial({ color: 0x1a1420, transparent: true, opacity: 0.15 });
+  // ── Connection lines ──
+  const ptM = new THREE.LineBasicMaterial({ color: 0x1a1420, transparent: true, opacity: 0.12 });
   for (let i = 0; i < COMPANIES.length; i++) {
     for (let j = i + 1; j < COMPANIES.length; j++) {
       const a = COMPANIES[i].position, b = COMPANIES[j].position;
@@ -478,7 +448,6 @@ export function createScene(isMobile: boolean): SceneContext {
     }
   }
 
-  // ── Resize ──
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
@@ -492,22 +461,19 @@ export function createScene(isMobile: boolean): SceneContext {
   };
 }
 
-/** 파티클 부유 + 별 트윙클 */
 export function updateEnvironment(
     t: number,
     particles: SceneContext['particles'],
     stars: SceneContext['stars'],
 ): void {
-  // Firefly drift
   const pa = particles.geo.attributes.position.array as Float32Array;
   for (let i = 0; i < particles.count; i++) {
     pa[i * 3 + 1] += Math.sin(t * 0.5 + i) * 0.002;
     pa[i * 3] += Math.cos(t * 0.3 + i * 0.7) * 0.001;
-    if (pa[i * 3 + 1] > 10) pa[i * 3 + 1] = 0.3;
+    if (pa[i * 3 + 1] > 12) pa[i * 3 + 1] = 0.3;
   }
   particles.geo.attributes.position.needsUpdate = true;
 
-  // Star twinkle
   const sOp = stars.geo.getAttribute('color');
   for (let i = 0; i < stars.count; i += 8) {
     const flicker = 0.4 + Math.sin(t * 1.5 + i * 0.3) * 0.3;

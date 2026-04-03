@@ -1,4 +1,5 @@
 // ─── 데이터 정의 ───
+// ★ Step 3: 맵 확대 + 높이차 레벨 디자인
 
 export interface CompanyData {
   name: string;
@@ -24,12 +25,83 @@ export interface ProjectData {
   minigame?: string;
 }
 
+// ★ 플랫폼 정의
+export interface Platform {
+  x: number; z: number;
+  w: number; d: number;
+  h: number;
+}
+
+// ★ 존 배치 — 간격 2~3배 확대
 export const COMPANIES: CompanyData[] = [
-  { name: '2025 - 2026', color: 0xa78bfa, position: { x: 0, z: -8 } },
-  { name: '2023', color: 0x6ee7b7, position: { x: 13, z: -16 } },
-  { name: '2026', color: 0xfbbf24, position: { x: -13, z: -16 } },
-  { name: '2019 - 2022', color: 0xff6b9d, position: { x: 0, z: -24 } },
+  { name: '2025 - 2026', color: 0xa78bfa, position: { x: 0, z: -18 } },
+  { name: '2023', color: 0x6ee7b7, position: { x: 28, z: -40 } },
+  { name: '2026', color: 0xfbbf24, position: { x: -28, z: -40 } },
+  { name: '2019 - 2022', color: 0xff6b9d, position: { x: 0, z: -58 } },
 ];
+
+// ★ 플랫폼 높이맵 — 존 + 경로 + 파쿠르
+export const PLATFORMS: Platform[] = [
+  // ── 스폰 ──
+  { x: 0, z: 0, w: 10, d: 8, h: 0 },
+
+  // ── Zone 0: 2025-2026 (살짝 올라감) ──
+  { x: 0, z: -18, w: 14, d: 10, h: 0.6 },
+
+  // ── Zone 1: 2023 (높은 절벽) ──
+  { x: 28, z: -40, w: 14, d: 10, h: 2.2 },
+
+  // ── Zone 2: 2026 (중간 메사) ──
+  { x: -28, z: -40, w: 14, d: 10, h: 1.6 },
+
+  // ── Zone 3: 2019-2022 (가장 높은 언덕) ──
+  { x: 0, z: -58, w: 14, d: 10, h: 3.0 },
+
+  // ── 스폰 → Zone 0 ──
+  { x: 0, z: -6, w: 5, d: 3, h: 0.2 },
+  { x: 0, z: -11, w: 5, d: 3, h: 0.4 },
+
+  // ── Zone 0 → Zone 1 (오른쪽 상승) ──
+  { x: 7, z: -22, w: 3.5, d: 3, h: 0.9 },
+  { x: 13, z: -26, w: 3, d: 3, h: 1.2 },
+  { x: 18, z: -30, w: 3, d: 3, h: 1.5 },
+  { x: 23, z: -35, w: 3, d: 3, h: 1.8 },
+
+  // ── Zone 0 → Zone 2 (왼쪽 상승) ──
+  { x: -7, z: -22, w: 3.5, d: 3, h: 0.9 },
+  { x: -13, z: -26, w: 3, d: 3, h: 1.1 },
+  { x: -18, z: -30, w: 3, d: 3, h: 1.3 },
+  { x: -23, z: -35, w: 3, d: 3, h: 1.5 },
+
+  // ── Zone 0 → Zone 3 (중앙 상승) ──
+  { x: 0, z: -27, w: 4, d: 3, h: 0.9 },
+  { x: 2, z: -33, w: 3, d: 3, h: 1.3 },
+  { x: -1, z: -39, w: 3, d: 3, h: 1.7 },
+  { x: 1, z: -45, w: 3, d: 3, h: 2.1 },
+  { x: 0, z: -51, w: 4, d: 3, h: 2.6 },
+
+  // ── Zone 1 → Zone 3 (오른쪽 경유) ──
+  { x: 20, z: -45, w: 3, d: 3, h: 2.4 },
+  { x: 13, z: -50, w: 3, d: 3, h: 2.6 },
+  { x: 7, z: -55, w: 3, d: 3, h: 2.8 },
+
+  // ── Zone 2 → Zone 3 (왼쪽 경유) ──
+  { x: -20, z: -45, w: 3, d: 3, h: 2.1 },
+  { x: -13, z: -50, w: 3, d: 3, h: 2.4 },
+  { x: -7, z: -55, w: 3, d: 3, h: 2.7 },
+];
+
+/** 위치 (x,z)의 지면 높이 반환 — 겹치는 플랫폼 중 가장 높은 값 */
+export function getGroundHeight(x: number, z: number): number {
+  let maxH = 0;
+  for (const p of PLATFORMS) {
+    const hw = p.w / 2, hd = p.d / 2;
+    if (x >= p.x - hw && x <= p.x + hw && z >= p.z - hd && z <= p.z + hd) {
+      if (p.h > maxH) maxH = p.h;
+    }
+  }
+  return maxH;
+}
 
 export const PROJECTS: ProjectData[] = [
   { co: '2025 - 2026', title: 'ETERNA', sub: '아고라 시스템', period: '2025.11 — 2026.04', role: '아키텍처 설계 · 구현 전담', badge: 'ARCHITECT', bc: '#6ee7b7', color: 0xa78bfa, coHex: '#a78bfa', desc: '디스코드형 커뮤니티 시스템. Service/Repository/State 3계층 아키텍처 직접 설계.', tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers'], details: ['아고라 CRUD·알림·검색·권한 전체 구현', '크로스플랫폼 STT 직접 구현', '한글 조합 커스텀 InputField', 'UaaL 양방향 통신 검증'], link: '/projects/eterna/', off: { x: -2.5, z: 0 } },

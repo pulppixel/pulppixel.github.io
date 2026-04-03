@@ -105,6 +105,8 @@ const title = 'pulppixel — 3D Explore';
     #zone-hint { position: absolute; left: 0; right: 0; top: 65%; height: 1px; background: linear-gradient(90deg, transparent 5%, rgba(110,231,183,0.1) 50%, transparent 95%); pointer-events: none; z-index: 3; opacity: 0; }
     .is-mobile #zone-hint { opacity: 1; animation: zoneHintFade 4s ease forwards 3s; }
     @keyframes zoneHintFade { to { opacity: 0; } }
+    .is-mobile #quest-log { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(10,10,11,0.95); }
+    .is-mobile #panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(8,8,10,0.99); }
     @media (max-width: 520px) { #panel { width: 100vw; padding: 2rem 1.25rem; } #quest-log { width: 170px; font-size: 10px; } }
   </style>
 </head>
@@ -120,7 +122,7 @@ const title = 'pulppixel — 3D Explore';
 
   <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer · 6 yrs · explore my projects</p></div>
   <div id="controls-hint">
-    <span class="desktop-hint">wasd — move · shift — run · space — jump · mouse — look · e — interact · alt — cursor</span>
+    <span class="desktop-hint">wasd — move · shift — run · space — jump · mouse — look · e — interact</span>
     <span class="mobile-hint">아래 — 이동 · 위 — 회전 · 핀치 — 줌 · 탭 — 점프</span>
   </div>
   <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>

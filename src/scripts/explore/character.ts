@@ -29,11 +29,14 @@ export function createCharacter(scene: THREE.Scene): Character {
 
   // ── HEAD ──
   const head = flat(0.50, 0.48, 0.48, SKIN); head.position.y = 1.24; ch.add(head);
+  // head top = 1.24 + 0.24 = 1.48
 
-  // Hood (z=-0.04 to avoid front Z-fight with face)
-  const hood = flat(0.54, 0.30, 0.46, LAV); hood.position.set(0, 1.33, -0.04); ch.add(hood);
+  // ★ Z-fighting 수정: hood top이 head top과 겹치지 않도록 +0.02
+  // hood top: 1.35 + 0.15 = 1.50 (head top 1.48보다 0.02 위)
+  const hood = flat(0.54, 0.30, 0.46, LAV); hood.position.set(0, 1.35, -0.04); ch.add(hood);
   const hoodRim = flat(0.55, 0.06, 0.49, LAVDK); hoodRim.position.set(0, 1.17, -0.03); ch.add(hoodRim);
-  const hoodBack = flat(0.50, 0.20, 0.08, LAVDK); hoodBack.position.set(0, 1.04, -0.28); ch.add(hoodBack);
+  // ★ Z-fighting 수정: hoodBack 뒷면이 head 뒷면(z=-0.24)과 겹치지 않도록 -0.01
+  const hoodBack = flat(0.50, 0.20, 0.08, LAVDK); hoodBack.position.set(0, 1.04, -0.29); ch.add(hoodBack);
 
   // Cat ears
   const earGeo = new THREE.BoxGeometry(0.12, 0.16, 0.10);
@@ -77,7 +80,7 @@ export function createCharacter(scene: THREE.Scene): Character {
   const armR = flat(0.13, 0.32, 0.14, LAV); armR.position.y = -0.16; armPivotR.add(armR);
   const handR = flat(0.09, 0.09, 0.09, SKIN); handR.position.y = -0.34; armPivotR.add(handR);
 
-  // ── LEGS (sole Y offset fixes Z-fight) ──
+  // ── LEGS ──
   const legPivotL = new THREE.Group(); legPivotL.position.set(-0.09, 0.58, 0); ch.add(legPivotL);
   const legL = flat(0.14, 0.32, 0.15, PANT); legL.position.y = -0.16; legPivotL.add(legL);
   const bootL = flat(0.16, 0.09, 0.19, BOOT); bootL.position.set(0, -0.345, 0.02); legPivotL.add(bootL);
@@ -106,16 +109,15 @@ export function createCharacter(scene: THREE.Scene): Character {
       new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }));
   cSh.rotation.x = -Math.PI / 2; cSh.position.y = 0.005; ch.add(cSh);
 
-  // ★ 착지 스쿼시 상태
+  // 착지 스쿼시 상태
   let squashT = 0;
 
   function landSquash(): void {
-    squashT = 0.18; // 0.18초간 스쿼시
+    squashT = 0.18;
   }
 
   // ════════════════════════════════════
   function animate(t: number, moving: boolean, sprinting = false): void {
-    // ★ 스프린트 시 애니메이션 속도/진폭 증가
     const animSpd = sprinting ? 13 : 9;
     const wp = moving ? t * animSpd : 0, sw = moving ? Math.sin(wp) : 0;
 
@@ -126,24 +128,26 @@ export function createCharacter(scene: THREE.Scene): Character {
     legPivotL.rotation.x = sw * swingLeg;
     legPivotR.rotation.x = -sw * swingLeg;
 
-    // ★ 스프린트 시 앞으로 살짝 기울기
     const leanTarget = sprinting ? 0.12 : 0;
     torso.rotation.x += (leanTarget - torso.rotation.x) * 0.15;
 
     const bob = moving ? Math.abs(Math.sin(wp)) * (sprinting ? 0.06 : 0.04) : Math.sin(t * 2) * 0.012;
 
-    // ★ 착지 스쿼시 (Y 스케일 줄이고 XZ 늘리기)
+    // 착지 스쿼시
     let sqY = 1, sqXZ = 1;
     if (squashT > 0) {
       const p = squashT / 0.18;
       sqY = 1 - p * 0.2;
       sqXZ = 1 + p * 0.12;
-      squashT = Math.max(0, squashT - 1 / 60 * 1.2); // ~60fps 기준
+      squashT = Math.max(0, squashT - 1 / 60 * 1.2);
     }
     ch.scale.set(sqXZ, sqY, sqXZ);
 
     head.position.y = 1.24 + bob;
-    hood.position.y = 1.33 + bob; hoodRim.position.y = 1.17 + bob; hoodBack.position.y = 1.04 + bob;
+    // ★ hood Y: 1.33 → 1.35 (Z-fighting 수정 반영)
+    hood.position.y = 1.35 + bob;
+    hoodRim.position.y = 1.17 + bob;
+    hoodBack.position.y = 1.04 + bob;
     earL.position.y = 1.54 + bob; earR.position.y = 1.54 + bob;
     earInL.position.y = 1.55 + bob; earInR.position.y = 1.55 + bob;
     torso.position.y = 0.76 + bob * 0.6;
@@ -173,7 +177,6 @@ export function createCharacter(scene: THREE.Scene): Character {
 
     (bpScreen.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8 + Math.sin(t * 2) * 0.2;
 
-    // ★ 스프린트 시 신발 발광 강화
     const soleBase = sprinting ? 1.2 : 0.5;
     const soleBoost = moving ? (sprinting ? 0.5 : 0.2) : 0;
     (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = soleBase + soleBoost;

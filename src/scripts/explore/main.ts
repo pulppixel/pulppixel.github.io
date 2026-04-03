@@ -102,7 +102,8 @@ export function init(): void {
   const BOUND_X = 50, BOUND_Z_MIN = -68, BOUND_Z_MAX = 10;
   // ★ 벽 충돌용 step height
   const STEP_H = 0.35;
-
+  const FOOT_OFFSET = 0.23;   // 캐릭터 발바닥 오프셋 (LEG_Y - sole)
+  let smoothGroundY = 0;       // 부드러운 지면 추적용
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
   let velocityY = 0;
@@ -164,11 +165,12 @@ export function init(): void {
 
       // ★ 벽 충돌 — stepHeight 이상 높은 플랫폼은 벽 처리, 축 분리 슬라이딩
       const curY = character.group.position.y;
+      const footY = character.group.position.y + FOOT_OFFSET;
       const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
 
       const ghBoth = getGroundHeight(nx, nz);
-      if (ghBoth <= curY + STEP_H) {
+      if (ghBoth <= footY + STEP_H) {
         // 양 축 모두 이동 가능
         character.group.position.x = nx;
         character.group.position.z = nz;
@@ -200,17 +202,30 @@ export function init(): void {
       input.keys['Space'] = false;
     }
 
-    // ── 중력 + 지면 충돌 ──
+    // ── 중력 + 지면 충돌 ── 전체 교체
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
-    const groundH = getGroundHeight(character.group.position.x, character.group.position.z);
+
+    const rawGroundH = getGroundHeight(character.group.position.x, character.group.position.z);
+    const groundH = rawGroundH - FOOT_OFFSET;  // 발바닥이 지면에 닿도록 보정
+
     if (character.group.position.y <= groundH) {
-      character.group.position.y = groundH;
-      if (velocityY < -2 && !wasGrounded) character.landSquash();
+      if (wasGrounded && velocityY > -3) {
+        // 걸어서 높이 변화 → lerp (톡톡 방지)
+        smoothGroundY += (groundH - smoothGroundY) * Math.min(1, 14 * dt);
+        character.group.position.y = smoothGroundY;
+      } else {
+        // 낙하 착지 → 즉시 + squash
+        character.group.position.y = groundH;
+        smoothGroundY = groundH;
+        if (velocityY < -2) character.landSquash();
+      }
       velocityY = 0;
       isGrounded = true;
     } else {
       isGrounded = false;
+      // 공중일 때도 smoothGroundY 동기화 (착지 시 튐 방지)
+      smoothGroundY = character.group.position.y;
     }
     wasGrounded = isGrounded;
 

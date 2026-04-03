@@ -3,10 +3,10 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 ---
 
 <ProjectLayout
-  title="ETERNA — 아고라 시스템"
+  title="ETERNA - 아고라 시스템"
   subtitle="디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. 소프트런칭에 필요한 소셜 기능 전체를 완성했습니다."
-  period="2025.11 — 2026.04"
-  role="아키텍처 설계 · 구현 전담"
+  period="2025.11 - 2026.04"
+  role="아키텍처 설계, 구현 전담"
   team="시니어 1 + 본인 + 주니어 3 (서브 리드)"
   tags={['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM SDK', 'FlatBuffers', 'Whisper', 'UaaL']}
   links={[
@@ -31,10 +31,10 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 </p>
 
 <ul>
-  <li><code>Repository</code> — 네트워크 I/O 추상화. 인터페이스로 분리. Observable(서버 Push) + Request 메서드</li>
-  <li><code>Service</code> — 비즈니스 로직, 알림 생성, IM 콜백 구독, Repository 이벤트 → State 반영</li>
-  <li><code>State</code> — 순수 상태 보관. ReactiveProperty/Subject로 UI 바인딩. 로직 없음</li>
-  <li><code>ServiceProvider</code> — static lazy singleton. 인스턴스 생성·초기화·Dispose 관리</li>
+  <li><code>Repository</code> - 네트워크 I/O 추상화. 인터페이스로 분리. Observable(서버 Push) + Request 메서드</li>
+  <li><code>Service</code> - 비즈니스 로직, 알림 생성, IM 콜백 구독, Repository 이벤트 -> State 반영</li>
+  <li><code>State</code> - 순수 상태 보관. ReactiveProperty/Subject로 UI 바인딩. 로직 없음</li>
+  <li><code>ServiceProvider</code> - static lazy singleton. 인스턴스 생성, 초기화, Dispose 관리</li>
 </ul>
 
 <p>
@@ -48,8 +48,8 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 <h2>구현</h2>
 
 <ul>
-  <li>아고라 생성·가입·초대·채널 관리·실시간 알림·검색·권한 관리 전체 구현</li>
-  <li>크로스플랫폼 STT 직접 구현 — Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍·녹음도 별도 라이브러리 없이 제작</li>
+  <li>아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리 전체 구현</li>
+  <li>크로스플랫폼 STT 직접 구현 - Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍, 녹음도 별도 라이브러리 없이 제작</li>
   <li>한글 조합 입력 문제 분석 및 커스텀 InputField 제작</li>
   <li>UaaL(Unity as a Library) 양방향 통신 적용 가능성 검증</li>
 </ul>

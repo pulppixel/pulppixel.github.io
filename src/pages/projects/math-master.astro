@@ -5,8 +5,8 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 <ProjectLayout
   title="Math Master (일프로연산)"
   subtitle="초등 수학 라이브 서비스. 분수 도메인 타입 설계, 미로 생성(Recursive Backtracker) + 탐색(A*) 알고리즘, 자체 Tween 라이브러리까지 직접 구현."
-  period="2021.06 — 2022.06"
-  role="게임 로직 · 스테이지 개발 · 2D 최적화"
+  period="2021.06 - 2022.06"
+  role="게임 로직, 스테이지 개발, 2D 최적화"
   team="약 20명 (클라이언트 8~10, 아트 다수, 기획자)"
   tags={['Unity', 'C#', 'UGUI', 'DOTween', 'UniRx', 'UniTask', 'Odin Inspector']}
   links={[
@@ -23,7 +23,7 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 
 <div class="media-placeholder">📸 일프로연산 스테이지 화면 (추가 예정)</div>
 
-<h2>분수 도메인 타입 — Fraction struct</h2>
+<h2>분수 도메인 타입 - Fraction struct</h2>
 <p>
   분수를 <code>struct</code>로 완전히 구현했습니다.
   초등 수학의 분수 연산, 약분, 채점까지 이 타입 하나로 처리할 수 있도록 설계했습니다.
@@ -32,18 +32,18 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
   <li>대분수/진분수/자연수 자동 분류 (<code>FSort</code> enum)</li>
   <li>연산자 오버로딩: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></li>
   <li>GCD(유클리드 호제법), LCM</li>
-  <li><code>IsReducible()</code> — 약분 가능 여부 + 정답 채점 로직 내장</li>
-  <li><code>Reduce()</code> — 기약분수 변환</li>
+  <li><code>IsReducible()</code> - 약분 가능 여부 + 정답 채점 로직 내장</li>
+  <li><code>Reduce()</code> - 기약분수 변환</li>
   <li><code>IEquatable&lt;Fraction&gt;</code>, <code>params</code> 오버로드 <code>Max</code>/<code>Min</code></li>
 </ul>
 
-<h2>미로 알고리즘 — 생성 + 탐색</h2>
+<h2>미로 알고리즘 - 생성 + 탐색</h2>
 <p>
   미로 탈출 스테이지를 위해 생성과 탐색 알고리즘을 직접 구현했습니다.
 </p>
 <ul>
-  <li><strong>MazeGenerator</strong> — Recursive Backtracker로 미로 생성. <code>WallState</code>를 <code>[Flags]</code> enum(비트마스크)으로 표현. <code>ignores</code> 배열로 특정 셀 사전 고정 가능</li>
-  <li><strong>MazePathFinder</strong> — A* 알고리즘으로 생성된 미로의 최단 경로 탐색. 대각선 이동을 무시하는 커스텀 Heuristic 적용</li>
+  <li><strong>MazeGenerator</strong> - Recursive Backtracker로 미로 생성. <code>WallState</code>를 <code>[Flags]</code> enum(비트마스크)으로 표현. <code>ignores</code> 배열로 특정 셀 사전 고정 가능</li>
+  <li><strong>MazePathFinder</strong> - A* 알고리즘으로 생성된 미로의 최단 경로 탐색. 대각선 이동을 무시하는 커스텀 Heuristic 적용</li>
 </ul>
 
 <h2>자체 Tween 라이브러리</h2>

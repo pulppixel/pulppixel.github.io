@@ -17,7 +17,7 @@ import Footer from '../components/Footer.astro';
 const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
 ---
 
-<BaseLayout title={`${title} — Pulppixel`}>
+<BaseLayout title={`${title} - Pulppixel`}>
   <Nav showBackLink={true} />
 
   <article class="project-detail">
@@ -208,7 +208,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
     position: relative;
   }
   .detail-content :global(li::before) {
-    content: '—';
+    content: '-';
     position: absolute;
     left: 0;
     color: var(--text-tertiary);

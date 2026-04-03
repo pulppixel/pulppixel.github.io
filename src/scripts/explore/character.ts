@@ -4,7 +4,9 @@ import * as THREE from 'three';
 
 export interface Character {
   group: THREE.Group;
-  animate(t: number, moving: boolean): void;
+  animate(t: number, moving: boolean, sprinting?: boolean): void;
+  /** 착지 스쿼시 트리거 */
+  landSquash(): void;
 }
 
 export function createCharacter(scene: THREE.Scene): Character {
@@ -104,16 +106,41 @@ export function createCharacter(scene: THREE.Scene): Character {
       new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }));
   cSh.rotation.x = -Math.PI / 2; cSh.position.y = 0.005; ch.add(cSh);
 
+  // ★ 착지 스쿼시 상태
+  let squashT = 0;
+
+  function landSquash(): void {
+    squashT = 0.18; // 0.18초간 스쿼시
+  }
+
   // ════════════════════════════════════
-  function animate(t: number, moving: boolean): void {
-    const wp = moving ? t * 9 : 0, sw = moving ? Math.sin(wp) : 0;
+  function animate(t: number, moving: boolean, sprinting = false): void {
+    // ★ 스프린트 시 애니메이션 속도/진폭 증가
+    const animSpd = sprinting ? 13 : 9;
+    const wp = moving ? t * animSpd : 0, sw = moving ? Math.sin(wp) : 0;
 
-    armPivotL.rotation.x = moving ? -sw * 0.55 : Math.sin(t * 1.2) * 0.05;
-    armPivotR.rotation.x = moving ? sw * 0.55 : -Math.sin(t * 1.2) * 0.05;
-    legPivotL.rotation.x = sw * 0.45;
-    legPivotR.rotation.x = -sw * 0.45;
+    const swingArm = sprinting ? 0.75 : 0.55;
+    const swingLeg = sprinting ? 0.65 : 0.45;
+    armPivotL.rotation.x = moving ? -sw * swingArm : Math.sin(t * 1.2) * 0.05;
+    armPivotR.rotation.x = moving ? sw * swingArm : -Math.sin(t * 1.2) * 0.05;
+    legPivotL.rotation.x = sw * swingLeg;
+    legPivotR.rotation.x = -sw * swingLeg;
 
-    const bob = moving ? Math.abs(Math.sin(wp)) * 0.04 : Math.sin(t * 2) * 0.012;
+    // ★ 스프린트 시 앞으로 살짝 기울기
+    const leanTarget = sprinting ? 0.12 : 0;
+    torso.rotation.x += (leanTarget - torso.rotation.x) * 0.15;
+
+    const bob = moving ? Math.abs(Math.sin(wp)) * (sprinting ? 0.06 : 0.04) : Math.sin(t * 2) * 0.012;
+
+    // ★ 착지 스쿼시 (Y 스케일 줄이고 XZ 늘리기)
+    let sqY = 1, sqXZ = 1;
+    if (squashT > 0) {
+      const p = squashT / 0.18;
+      sqY = 1 - p * 0.2;
+      sqXZ = 1 + p * 0.12;
+      squashT = Math.max(0, squashT - 1 / 60 * 1.2); // ~60fps 기준
+    }
+    ch.scale.set(sqXZ, sqY, sqXZ);
 
     head.position.y = 1.24 + bob;
     hood.position.y = 1.33 + bob; hoodRim.position.y = 1.17 + bob; hoodBack.position.y = 1.04 + bob;
@@ -140,14 +167,18 @@ export function createCharacter(scene: THREE.Scene): Character {
     const twitch = t % 5 > 4.7 && t % 5 < 4.9;
     earR.rotation.z = twitch ? -0.35 : -0.15; earInR.rotation.z = twitch ? -0.35 : -0.15;
 
-    const ta = moving ? 2 : 1;
+    const ta = moving ? (sprinting ? 3 : 2) : 1;
     tailParts.forEach((tp, i) => { tp.position.x = Math.sin(t * 2.5 + i * 0.8) * 0.08 * (i + 1) * 0.5 * ta; });
     tailTip.position.x = Math.sin(t * 2.5 + 3.2) * 0.08 * 2 * ta * 1.2;
 
     (bpScreen.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8 + Math.sin(t * 2) * 0.2;
-    (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + (moving ? 0.2 : 0);
-    (soleR.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + (moving ? 0.2 : 0);
+
+    // ★ 스프린트 시 신발 발광 강화
+    const soleBase = sprinting ? 1.2 : 0.5;
+    const soleBoost = moving ? (sprinting ? 0.5 : 0.2) : 0;
+    (soleL.material as THREE.MeshStandardMaterial).emissiveIntensity = soleBase + soleBoost;
+    (soleR.material as THREE.MeshStandardMaterial).emissiveIntensity = soleBase + soleBoost;
   }
 
-  return { group: ch, animate };
+  return { group: ch, animate, landSquash };
 }

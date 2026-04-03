@@ -1,5 +1,5 @@
 // ─── 씬 · 복셀 지형 · 환경 ───
-// Night Minecraft + Kawaii Neon
+// Night Minecraft + Kawaii Neon — ★ 라이팅 대폭 강화
 import * as THREE from 'three';
 import { COMPANIES } from './data';
 
@@ -37,8 +37,9 @@ function nearZone(x: number, z: number, r: number): boolean {
 function buildGroundBlocks(scene: THREE.Scene): void {
   const S = 2; // block size
   const geo = new THREE.BoxGeometry(S - 0.06, 0.15, S - 0.06);
+  // ★ 지면 밝기 향상
   const mat = new THREE.MeshStandardMaterial({
-    color: 0x141418, emissive: PK, emissiveIntensity: 0.008,
+    color: 0x1c1c24, emissive: PK, emissiveIntensity: 0.015,
     metalness: 0.3, roughness: 0.88,
   });
 
@@ -58,9 +59,9 @@ function buildGroundBlocks(scene: THREE.Scene): void {
   mesh.instanceMatrix.needsUpdate = true;
   scene.add(mesh);
 
-  // Subtle edge grid
-  const grid = new THREE.GridHelper(62, 31, 0x1e1420, 0x12101a);
-  (grid.material as THREE.Material).opacity = 0.25;
+  // Subtle edge grid — ★ 약간 더 밝게
+  const grid = new THREE.GridHelper(62, 31, 0x2a2030, 0x1a1824);
+  (grid.material as THREE.Material).opacity = 0.3;
   (grid.material as THREE.Material).transparent = true;
   scene.add(grid);
 }
@@ -68,14 +69,13 @@ function buildGroundBlocks(scene: THREE.Scene): void {
 function buildRaisedTerrain(scene: THREE.Scene): void {
   const geo = new THREE.BoxGeometry(1.9, 1, 1.9);
 
-  // Grass block: dark green top
+  // ★ 머티리얼 밝기 향상
   const grassMat = new THREE.MeshStandardMaterial({
-    color: 0x0e1a14, emissive: 0x1a3a28, emissiveIntensity: 0.15,
+    color: 0x162e1e, emissive: 0x2a5a38, emissiveIntensity: 0.22,
     metalness: 0.2, roughness: 0.85,
   });
-  // Stone block
   const stoneMat = new THREE.MeshStandardMaterial({
-    color: 0x161620, emissive: 0x222233, emissiveIntensity: 0.08,
+    color: 0x1e1e2a, emissive: 0x2a2a3a, emissiveIntensity: 0.12,
     metalness: 0.4, roughness: 0.8,
   });
 
@@ -92,7 +92,7 @@ function buildRaisedTerrain(scene: THREE.Scene): void {
     [-12, -22, 1, 1, 2], [14, -20, 1, 1, 1],
   ];
 
-  const edgeMat = new THREE.LineBasicMaterial({ color: PK, transparent: true, opacity: 0.06 });
+  const edgeMat = new THREE.LineBasicMaterial({ color: PK, transparent: true, opacity: 0.08 });
   const edgeGeo = new THREE.EdgesGeometry(geo);
 
   clusters.forEach(([cx, cz, w, dp, maxH]) => {
@@ -129,22 +129,22 @@ function buildTrees(scene: THREE.Scene): void {
   trees.forEach(([tx, tz, h, lc]) => {
     if (nearZone(tx, tz, 5.5)) return;
 
-    // Trunk
+    // Trunk — ★ 밝기 향상
     const trunkGeo = new THREE.BoxGeometry(0.6, h * 0.8, 0.6);
     const trunk = new THREE.Mesh(trunkGeo, new THREE.MeshStandardMaterial({
-      color: 0x1a1210, emissive: 0x2a1a10, emissiveIntensity: 0.1,
+      color: 0x2a2018, emissive: 0x3a2a18, emissiveIntensity: 0.15,
       metalness: 0.2, roughness: 0.9,
     }));
     trunk.position.set(tx, h * 0.4, tz);
     trunk.castShadow = true;
     scene.add(trunk);
 
-    // Leaves (cluster of cubes)
+    // Leaves — ★ 발광 강화
     const leafMat = new THREE.MeshStandardMaterial({
-      color: 0x0e1210, emissive: lc, emissiveIntensity: 0.25,
-      metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.88,
+      color: 0x121a14, emissive: lc, emissiveIntensity: 0.35,
+      metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.9,
     });
-    const leafEdge = new THREE.LineBasicMaterial({ color: lc, transparent: true, opacity: 0.2 });
+    const leafEdge = new THREE.LineBasicMaterial({ color: lc, transparent: true, opacity: 0.3 });
 
     const leafPositions = [
       [0, 0, 0], [-1, 0, 0], [1, 0, 0], [0, 0, -1], [0, 0, 1],
@@ -162,8 +162,8 @@ function buildTrees(scene: THREE.Scene): void {
       scene.add(leaf);
     });
 
-    // Subtle tree light
-    const treeLight = new THREE.PointLight(lc, 0.15, 4);
+    // ★ 트리 라이트 강화
+    const treeLight = new THREE.PointLight(lc, 0.35, 6);
     treeLight.position.set(tx, h * 0.8 + 1, tz);
     scene.add(treeLight);
   });
@@ -186,23 +186,25 @@ function buildMushrooms(scene: THREE.Scene): void {
     if (nearZone(sx, sz, 4.5)) return;
 
     const stem = new THREE.Mesh(stemGeo, new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a, emissive: color, emissiveIntensity: 0.1,
+      color: 0x1a1a1a, emissive: color, emissiveIntensity: 0.15,
       metalness: 0.2, roughness: 0.8,
     }));
     stem.position.set(sx, 0.175, sz);
     scene.add(stem);
 
+    // ★ 버섯 발광 강화
     const cap = new THREE.Mesh(capGeo, new THREE.MeshStandardMaterial({
-      color: 0x0e0e14, emissive: color, emissiveIntensity: 0.6,
+      color: 0x121218, emissive: color, emissiveIntensity: 0.8,
       metalness: 0.3, roughness: 0.5,
     }));
     cap.position.set(sx, 0.45, sz);
     cap.add(new THREE.LineSegments(capEdgeGeo, new THREE.LineBasicMaterial({
-      color, transparent: true, opacity: 0.4,
+      color, transparent: true, opacity: 0.5,
     })));
     scene.add(cap);
 
-    const light = new THREE.PointLight(color, 0.12, 2.5);
+    // ★ 버섯 라이트 강화
+    const light = new THREE.PointLight(color, 0.2, 3.5);
     light.position.set(sx, 0.6, sz);
     scene.add(light);
   });
@@ -219,33 +221,34 @@ function buildLanterns(scene: THREE.Scene): void {
   lanterns.forEach(([lx, lz, color]) => {
     if (nearZone(lx, lz, 4)) return;
 
-    // Post
+    // Post — ★ 약간 밝게
     const post = new THREE.Mesh(
         new THREE.BoxGeometry(0.12, 1.6, 0.12),
         new THREE.MeshStandardMaterial({
-          color: 0x1a1610, emissive: 0x2a1a10, emissiveIntensity: 0.1,
+          color: 0x2a2018, emissive: 0x3a2a18, emissiveIntensity: 0.12,
           metalness: 0.3, roughness: 0.8,
         }),
     );
     post.position.set(lx, 0.8, lz);
     scene.add(post);
 
-    // Lamp head
+    // ★ 랜턴 헤드 발광 강화
     const lamp = new THREE.Mesh(
         new THREE.BoxGeometry(0.3, 0.3, 0.3),
         new THREE.MeshStandardMaterial({
-          color: 0x0e0e10, emissive: color, emissiveIntensity: 1.2,
+          color: 0x121214, emissive: color, emissiveIntensity: 1.5,
           metalness: 0.4, roughness: 0.4,
         }),
     );
     lamp.position.set(lx, 1.75, lz);
     lamp.add(new THREE.LineSegments(
         new THREE.EdgesGeometry(lamp.geometry),
-        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5 }),
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 }),
     ));
     scene.add(lamp);
 
-    const light = new THREE.PointLight(color, 0.5, 5);
+    // ★ 랜턴 라이트 대폭 강화
+    const light = new THREE.PointLight(color, 0.8, 7);
     light.position.set(lx, 1.9, lz);
     scene.add(light);
   });
@@ -257,11 +260,11 @@ function buildLanterns(scene: THREE.Scene): void {
 
 function buildZonePatches(scene: THREE.Scene): void {
   COMPANIES.forEach(co => {
-    // Glowing ring
+    // ★ 존 글로우 강화
     const glow = new THREE.Mesh(
         new THREE.CircleGeometry(8, 32),
         new THREE.MeshBasicMaterial({
-          color: co.color, transparent: true, opacity: 0.012, side: THREE.DoubleSide,
+          color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide,
         }),
     );
     glow.rotation.x = -Math.PI / 2;
@@ -271,7 +274,7 @@ function buildZonePatches(scene: THREE.Scene): void {
     const inner = new THREE.Mesh(
         new THREE.CircleGeometry(5, 24),
         new THREE.MeshBasicMaterial({
-          color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide,
+          color: co.color, transparent: true, opacity: 0.035, side: THREE.DoubleSide,
         }),
     );
     inner.rotation.x = -Math.PI / 2;
@@ -292,7 +295,7 @@ function buildPathDots(scene: THREE.Scene): void {
               new THREE.BoxGeometry(0.15, 0.04, 0.15),
               new THREE.MeshStandardMaterial({
                 color: 0x0e0e14, emissive: pathColors[(i + j) % 4],
-                emissiveIntensity: 0.4, metalness: 0.5, roughness: 0.5,
+                emissiveIntensity: 0.5, metalness: 0.5, roughness: 0.5,
               }),
           );
           dot.position.set(
@@ -308,18 +311,59 @@ function buildPathDots(scene: THREE.Scene): void {
 }
 
 // ══════════════════════════════════════════
+// ★ Sky Gradient (반구형 하늘)
+// ══════════════════════════════════════════
+
+function buildSkyDome(scene: THREE.Scene): void {
+  const skyGeo = new THREE.SphereGeometry(80, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: {
+      topColor: { value: new THREE.Color(0x0a0a1a) },
+      midColor: { value: new THREE.Color(0x141428) },
+      bottomColor: { value: new THREE.Color(0x1a1020) },
+    },
+    vertexShader: `
+      varying float vY;
+      void main() {
+        vY = normalize(position).y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 topColor;
+      uniform vec3 midColor;
+      uniform vec3 bottomColor;
+      varying float vY;
+      void main() {
+        float t = clamp(vY, 0.0, 1.0);
+        vec3 col = mix(bottomColor, midColor, smoothstep(0.0, 0.3, t));
+        col = mix(col, topColor, smoothstep(0.3, 1.0, t));
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+  });
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  sky.renderOrder = -1;
+  scene.add(sky);
+}
+
+// ══════════════════════════════════════════
 // ── Main ──
 // ══════════════════════════════════════════
 
 export function createScene(isMobile: boolean): SceneContext {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0a0a0b, 0.012);
+  // ★ 안개 — 밀도 낮추고 색상 조정 (더 멀리 보이게)
+  scene.fog = new THREE.FogExp2(0x0e0e18, 0.008);
   const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  // ★ 톤매핑 노출 올리기
+  renderer.toneMappingExposure = 1.6;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
@@ -332,11 +376,18 @@ export function createScene(isMobile: boolean): SceneContext {
   buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots(scene);
+  // ★ 하늘 그라디언트
+  buildSkyDome(scene);
 
-  // ── Lights ──
-  scene.add(new THREE.AmbientLight(0x1a1520, 0.45));
+  // ── Lights ── ★ 대폭 강화
+  // Ambient: 전체적 기본 밝기
+  scene.add(new THREE.AmbientLight(0x2a2040, 0.9));
 
-  const dL = new THREE.DirectionalLight(0x7766aa, 0.35);
+  // ★ HemisphereLight: 하늘/땅 색 차이로 자연스러운 입체감
+  scene.add(new THREE.HemisphereLight(0x4466aa, 0x221122, 0.5));
+
+  // ★ DirectionalLight: 달빛 느낌, 강도 대폭 상향
+  const dL = new THREE.DirectionalLight(0x9999cc, 1.2);
   dL.position.set(10, 20, 10);
   dL.castShadow = true;
   dL.shadow.mapSize.set(1024, 1024);
@@ -345,12 +396,22 @@ export function createScene(isMobile: boolean): SceneContext {
   dL.shadow.camera.top = 30; dL.shadow.camera.bottom = -30;
   scene.add(dL);
 
-  // Colored area lights
+  // ★ 보조 Directional (반대쪽 Fill Light)
+  const fillL = new THREE.DirectionalLight(0x553366, 0.35);
+  fillL.position.set(-8, 12, -8);
+  scene.add(fillL);
+
+  // ★ 컬러 에어리어 라이트 강화
   const lights: [number, number, number, number, number, number][] = [
-    [PK, 1.0, 22, 0, 6, -4],
-    [SK, 0.6, 16, -10, 5, -10],
-    [GD, 0.6, 16, 8, 5, -18],
-    [PK, 0.5, 14, -14, 5, 7],
+    [PK, 1.5, 28, 0, 8, -4],
+    [SK, 1.0, 22, -10, 7, -10],
+    [GD, 1.0, 22, 8, 7, -18],
+    [PK, 0.8, 18, -14, 7, 7],
+    // ★ 추가 라이트 — 존 중심부 밝히기
+    [0xa78bfa, 0.6, 12, 0, 3, -8],
+    [0x6ee7b7, 0.5, 12, 13, 3, -16],
+    [0xfbbf24, 0.5, 12, -13, 3, -16],
+    [0xff6b9d, 0.5, 12, 0, 3, -24],
   ];
   lights.forEach(([c, i, d, x, y, z]) => {
     const l = new THREE.PointLight(c, i, d);
@@ -358,7 +419,7 @@ export function createScene(isMobile: boolean): SceneContext {
     scene.add(l);
   });
 
-  // ── Firefly particles ──
+  // ── Firefly particles ── ★ 약간 크고 밝게
   const pCount = 250;
   const pGeo = new THREE.BufferGeometry();
   const pPos = new Float32Array(pCount * 3);
@@ -369,10 +430,10 @@ export function createScene(isMobile: boolean): SceneContext {
   }
   pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
   scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-    color: GD, size: 0.06, transparent: true, opacity: 0.45,
+    color: GD, size: 0.08, transparent: true, opacity: 0.55,
   })));
 
-  // ── Stars ──
+  // ── Stars ── ★ 밝기 향상
   const starCount = 500;
   const starGeo = new THREE.BufferGeometry();
   const starPos = new Float32Array(starCount * 3);
@@ -393,13 +454,13 @@ export function createScene(isMobile: boolean): SceneContext {
       starColors[i * 3] = 0.98; starColors[i * 3 + 1] = 0.74; starColors[i * 3 + 2] = 0.14;
     } else {
       // White-ish
-      starColors[i * 3] = 0.75; starColors[i * 3 + 1] = 0.75; starColors[i * 3 + 2] = 0.8;
+      starColors[i * 3] = 0.8; starColors[i * 3 + 1] = 0.8; starColors[i * 3 + 2] = 0.88;
     }
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
   scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-    size: 0.15, transparent: true, opacity: 0.5,
+    size: 0.18, transparent: true, opacity: 0.6,
     vertexColors: true, sizeAttenuation: true,
   })));
   const starBaseColors = new Float32Array(starColors);

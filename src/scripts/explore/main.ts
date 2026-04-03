@@ -56,6 +56,33 @@ export function init(): void {
   const SP = 4.8;
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
+
+  // ★ 점프 상태
+  let velocityY = 0;
+  let isGrounded = true;
+  let wasGrounded = true;
+  const GRAVITY = -22;
+  const JUMP_FORCE = 8.2;
+
+  // ★ 스프린트 상태
+  let isSprinting = false;
+  const SPRINT_MULT = 1.7;
+
+  // ★ 스프린트 더스트 파티클
+  const DUST_MAX = 80;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(DUST_MAX * 3);
+  const dustAlpha = new Float32Array(DUST_MAX); // CPU-side alpha tracking
+  const dustVel = new Float32Array(DUST_MAX * 3);
+  let dustCount = 0;
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+    color: 0x9B8EC4, size: 0.08, transparent: true, opacity: 0.5,
+    sizeAttenuation: true, depthWrite: false,
+  }));
+  scene.add(dustPts);
+  let dustSpawnT = 0;
+
   const camLookOffset = new THREE.Vector3(0, 0.8, 0);
   const camPos = character.group.position.clone().add(new THREE.Vector3(0, 3, 5));
   const camLookAt = character.group.position.clone().add(camLookOffset);
@@ -88,11 +115,17 @@ export function init(): void {
     if (input.keys['KeyD'] || input.keys['ArrowRight']) mv.x += 1;
     if (input.moveTid !== null) { mv.x += input.jIn.x; mv.z += input.jIn.y; }
 
+    // ★ 스프린트 감지
+    const wantSprint = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
+    isSprinting = false;
+
     if (mv.length() > 0.12) {
       if (!started) { started = true; hud.heroLabel.classList.add('hidden'); }
+      isSprinting = wantSprint && isGrounded;
+      const speed = isSprinting ? SP * SPRINT_MULT : SP;
       mv.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
-      character.group.position.x = Math.max(-30, Math.min(30, character.group.position.x + mv.x * SP * dt));
-      character.group.position.z = Math.max(-30, Math.min(30, character.group.position.z + mv.z * SP * dt));
+      character.group.position.x = Math.max(-30, Math.min(30, character.group.position.x + mv.x * speed * dt));
+      character.group.position.z = Math.max(-30, Math.min(30, character.group.position.z + mv.z * speed * dt));
       const tr = Math.atan2(mv.x, mv.z);
       let df = tr - character.group.rotation.y;
       while (df > Math.PI) df -= Math.PI * 2;
@@ -101,8 +134,64 @@ export function init(): void {
       moving = true;
     }
 
+    // ★ 점프
+    if (input.keys['Space'] && isGrounded) {
+      velocityY = JUMP_FORCE;
+      isGrounded = false;
+      input.keys['Space'] = false; // 한 번만
+    }
+
+    // ★ 중력 적용
+    velocityY += GRAVITY * dt;
+    character.group.position.y += velocityY * dt;
+    if (character.group.position.y <= 0) {
+      character.group.position.y = 0;
+      velocityY = 0;
+      isGrounded = true;
+      // ★ 착지 순간 스쿼시
+      if (!wasGrounded) {
+        character.landSquash();
+      }
+    }
+    wasGrounded = isGrounded;
+
     // ── 캐릭터 애니메이션 ──
-    character.animate(t, moving);
+    character.animate(t, moving, isSprinting);
+
+    // ★ 스프린트 더스트 파티클 업데이트
+    dustSpawnT -= dt;
+    if (isSprinting && moving && dustSpawnT <= 0 && dustCount < DUST_MAX) {
+      // 새 파티클 스폰 (캐릭터 발 뒤쪽)
+      const backDir = -character.group.rotation.y;
+      const bx = character.group.position.x + Math.sin(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
+      const bz = character.group.position.z + Math.cos(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
+      const idx = dustCount * 3;
+      dustPos[idx] = bx;
+      dustPos[idx + 1] = 0.05 + Math.random() * 0.15;
+      dustPos[idx + 2] = bz;
+      dustVel[idx] = (Math.random() - 0.5) * 0.5;
+      dustVel[idx + 1] = 0.3 + Math.random() * 0.4;
+      dustVel[idx + 2] = (Math.random() - 0.5) * 0.5;
+      dustAlpha[dustCount] = 1.0;
+      dustCount++;
+      dustSpawnT = 0.03;
+    }
+    // 파티클 이동 + 페이드
+    let writeIdx = 0;
+    for (let i = 0; i < dustCount; i++) {
+      dustAlpha[i] -= dt * 2.5;
+      if (dustAlpha[i] <= 0) continue;
+      const si = i * 3, wi = writeIdx * 3;
+      dustPos[wi] = dustPos[si] + dustVel[si] * dt;
+      dustPos[wi + 1] = dustPos[si + 1] + dustVel[si + 1] * dt;
+      dustPos[wi + 2] = dustPos[si + 2] + dustVel[si + 2] * dt;
+      dustVel[wi] = dustVel[si]; dustVel[wi + 1] = dustVel[si + 1] * 0.95; dustVel[wi + 2] = dustVel[si];
+      dustAlpha[writeIdx] = dustAlpha[i];
+      writeIdx++;
+    }
+    dustCount = writeIdx;
+    dustGeo.setDrawRange(0, dustCount);
+    dustGeo.attributes.position.needsUpdate = true;
 
     // ── 가장 가까운 프로젝트 ──
     nearestProject = null;
@@ -128,7 +217,7 @@ export function init(): void {
     // ── 존 · 큐브 · 데코레이션 업데이트 ──
     updateZones(t, dt, character.group.position, nearestProject);
 
-    // ── 카메라 ──
+    // ── 카메라 (★ pitch 반영) ──
     const camH = input.camDist * 0.55 + input.pitch * input.camDist * 0.8;
     const camZ = input.camDist * Math.cos(input.pitch * 0.5);
     const dO = new THREE.Vector3(0, Math.max(1.5, camH), camZ).applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
@@ -136,6 +225,13 @@ export function init(): void {
     camLookAt.lerp(character.group.position.clone().add(camLookOffset), 6 * dt);
     camera.position.copy(camPos);
     camera.lookAt(camLookAt);
+
+    // ★ 스프린트 FOV 변화 (속도감)
+    const targetFov = isSprinting && moving ? 58 : 50;
+    if (Math.abs(camera.fov - targetFov) > 0.15) {
+      camera.fov += (targetFov - camera.fov) * 3.5 * dt;
+      camera.updateProjectionMatrix();
+    }
 
     // ── 파티클 · 별 ──
     updateEnvironment(t, particles, stars);

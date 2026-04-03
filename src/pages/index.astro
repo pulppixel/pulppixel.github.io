@@ -8,8 +8,8 @@ import Footer from '../components/Footer.astro';
 const projects = [
   {
     slug: 'eterna',
-    title: 'ETERNA — 아고라 시스템',
-    period: '2025.11 — 2026.04',
+    title: 'ETERNA - 아고라 시스템',
+    period: '2025.11 - 2026.04',
     description: '디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. Service/Repository/State 3계층 아키텍처 직접 설계.',
     tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers'],
     badge: 'ARCHITECT',
@@ -17,32 +17,32 @@ const projects = [
   },
   {
     slug: 'reiw',
-    title: 'REIW — 3D 메타버스',
-    period: '2025.06 — 2025.11',
-    description: 'Tencent IM 기반 채팅·친구 시스템 재설계, 하우징 프로토타입, NPC 퀘스트 구현. ETERNA 아키텍처의 토대.',
+    title: 'REIW - 3D 메타버스',
+    period: '2025.06 - 2025.11',
+    description: 'Tencent IM 기반 채팅/친구 시스템 재설계, 하우징 프로토타입, NPC 퀘스트 구현. ETERNA 아키텍처의 토대.',
     tags: ['Unity', 'C#', 'R3', 'UniTask', 'DOTween'],
   },
   {
     slug: 'iw-zombie',
-    title: 'IW Zombie — 팀 서바이벌',
-    period: '2025.02 — 2025.06',
+    title: 'IW Zombie - 팀 서바이벌',
+    period: '2025.02 - 2025.06',
     description: '5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입. 3D 사운드 풀링, 전투 로직, AI NPC, 범용 디버그 치트 시스템.',
     tags: ['Unity', 'C#', 'Tencent IM', 'DOTween'],
   },
   {
     slug: 'stelsi-wallet',
     title: 'STELSI Wallet',
-    period: '2023.02 — 2023.08',
-    description: 'Unity → Flutter 스택 전환을 주도하고 개발. Web3.js + 스마트 컨트랙트 연동, App Store / Google Play 출시.',
+    period: '2023.02 - 2023.08',
+    description: 'Unity -> Flutter 스택 전환을 주도하고 1인 개발. Web3.js + 스마트 컨트랙트 연동, App Store / Google Play 출시.',
     tags: ['Flutter', 'Dart', 'Web3.js', 'ABI'],
     badge: 'SOLO',
     badgeColor: 'green' as const,
   },
   {
     slug: 'haul',
-    title: 'HAUL — 2D PvPvE Extraction',
-    period: '2025.10 — 현재',
-    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계·구현.',
+    title: 'HAUL - 2D PvPvE Extraction',
+    period: '2025.10 - 현재',
+    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계/구현.',
     tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],
     badge: 'IN PROGRESS',
     badgeColor: 'yellow' as const,
@@ -50,7 +50,7 @@ const projects = [
   {
     slug: 'nomads-planet',
     title: 'Nomads Planet',
-    period: '2023.06 — 2023.09',
+    period: '2023.06 - 2023.09',
     description: 'Unity Netcode + Vivox 기반 멀티플레이어 메타버스. K-메타버스 경진대회 장려상 수상.',
     tags: ['Unity', 'C#', 'Netcode', 'Vivox'],
     badge: '수상',
@@ -58,18 +58,18 @@ const projects = [
   },
   {
     slug: 'spody',
-    title: 'SPODY — XR 유아 교육',
-    period: '2020.01 — 2021.06',
+    title: 'SPODY - XR 유아 교육',
+    period: '2020.01 - 2021.06',
     description: 'Kinect/ASTRA 센서 + OpenCV 캘리브레이션 기반 XR 교육 콘텐츠. 유일한 개발자로 시작, 양산 체계 구축. 공공기관 납품.',
     tags: ['Unity', 'C#', 'OpenCV', 'Kinect', 'ASTRA'],
-    badge: 'SOLO → LEAD',
+    badge: 'SOLO -> LEAD',
     badgeColor: 'green' as const,
   },
   {
     slug: 'ruby-adventure',
     title: '루비의 모험',
-    period: '2019.09 — 2019.11',
-    description: '1인 개발 3D 액션 RPG. 콤보·스킬 전투, BT 기반 몬스터 AI, 2페이즈 보스, Timeline 연출. 졸업전시 우수상.',
+    period: '2019.09 - 2019.11',
+    description: '1인 개발 3D 액션 RPG. 콤보/스킬 전투, BT 기반 몬스터 AI, 2페이즈 보스, Timeline 연출. 졸업전시 우수상.',
     tags: ['Unity', 'C#', 'NavMesh', 'Timeline'],
     badge: '우수상',
     badgeColor: 'purple' as const,
@@ -79,42 +79,42 @@ const projects = [
 const timeline = [
   {
     company: 'VOYAGER',
-    role: 'Game Client Engineer · 서브 리드',
-    period: '2025.02 — 2026.04 · 1년 3개월',
+    role: 'Game Client Engineer / 서브 리드',
+    period: '2025.02 - 2026.04 / 1년 3개월',
     projects: [
-      'ETERNA — 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
-      'REIW — 3D 메타버스 (채팅 재설계, 하우징)',
-      'IW Zombie — 팀 서바이벌 (게임 루프 전반)',
+      'ETERNA - 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
+      'REIW - 3D 메타버스 (채팅 재설계, 하우징)',
+      'IW Zombie - 팀 서바이벌 (게임 루프 전반)',
     ],
     current: true,
   },
   {
     company: 'VERS.',
     role: 'Unity Client Developer',
-    period: '2022.08 — 2024.12 · 2년 5개월',
+    period: '2022.08 - 2024.12 / 2년 5개월',
     projects: [
-      'STELSI Wallet — 이더리움 지갑 앱 (Flutter)',
-      'Nine to Six — 텔레그램 미니 게임 (WebGL)',
-      'STELSI — UE5 메타버스 (RPM 아바타 동기화, Dedicated Server, 외주 관리)',
+      'STELSI Wallet - 이더리움 지갑 앱 (Flutter)',
+      'Nine to Six - 텔레그램 미니 게임 (WebGL)',
+      'STELSI - UE5 메타버스 (RPM 아바타 동기화, Dedicated Server, 외주 관리)',
     ],
   },
   {
     company: 'Math Master',
     role: 'Unity Client Developer',
-    period: '2021.06 — 2022.06 · 1년 1개월',
+    period: '2021.06 - 2022.06 / 1년 1개월',
     projects: [
-      '일프로연산 — 초등 수학 라이브 서비스 (SKT ZEM 선정)',
-      '분수 도메인 타입 설계 (연산자 오버로딩, GCD/LCM, 약분·채점 로직)',
+      '일프로연산 - 초등 수학 라이브 서비스 (SKT ZEM 선정)',
+      '분수 도메인 타입 설계 (연산자 오버로딩, GCD/LCM, 약분/채점 로직)',
       '미로 생성(Recursive Backtracker) + 탐색(A*) 알고리즘 구현',
       '자체 Tween 라이브러리 (Ease/Loop/Coroutine 기반, DOTween 대체)',
     ],
   },
   {
     company: 'VVR',
-    role: 'Unity Client Developer · 초기 1인',
-    period: '2020.01 — 2021.06 · 1년 6개월',
+    role: 'Unity Client Developer / 초기 1인',
+    period: '2020.01 - 2021.06 / 1년 6개월',
     projects: [
-      '스포디 — XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)',
+      '스포디 - XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)',
       'Kinect/ASTRA 센서 파이프라인 + OpenCV 자동 캘리브레이션 설계',
     ],
   },
@@ -124,12 +124,12 @@ const education = [
   {
     school: '홍익대학교',
     major: '게임학부 게임소프트웨어전공',
-    period: '2014 — 2020',
+    period: '2014 - 2020',
   },
   {
     school: '백신고등학교',
     major: '인문계 (이과)',
-    period: '2010 — 2013',
+    period: '2010 - 2013',
   },
 ];
 
@@ -166,14 +166,14 @@ const awards = [
       </div>
       <div class="timeline">
         {timeline.map((item, i) => (
-          <div class={`timeline-item ${i === 0 ? 'current' : ''}`}>
-            <div class="timeline-company">{item.company}</div>
-            <div class="timeline-role">{item.role}</div>
-            <div class="timeline-period">{item.period}</div>
-            <div class="timeline-projects">
-              {item.projects.map(p => <span>{p}</span>)}
+            <div class={`timeline-item ${i === 0 ? 'current' : ''}`}>
+              <div class="timeline-company">{item.company}</div>
+              <div class="timeline-role">{item.role}</div>
+              <div class="timeline-period">{item.period}</div>
+              <div class="timeline-projects">
+                {item.projects.map(p => <span>{p}</span>)}
+              </div>
             </div>
-          </div>
         ))}
       </div>
     </div>
@@ -229,27 +229,27 @@ const awards = [
             <h2 class="section-title">학력</h2>
           </div>
           {education.map(e => (
-            <div class="edu-item">
-              <div class="edu-school">{e.school}</div>
-              <div class="edu-major">{e.major}</div>
-              <div class="edu-period">{e.period}</div>
-            </div>
+              <div class="edu-item">
+                <div class="edu-school">{e.school}</div>
+                <div class="edu-major">{e.major}</div>
+                <div class="edu-period">{e.period}</div>
+              </div>
           ))}
         </div>
         <div>
           <div class="section-header">
             <div class="section-label">Awards & Cert</div>
-            <h2 class="section-title">수상 · 자격</h2>
+            <h2 class="section-title">수상 / 자격</h2>
           </div>
           <div class="awards-list">
             {awards.map(a => (
-              <div class="award-item">
-                <span class="award-year">{a.year}</span>
-                <div>
-                  <div class="award-title">{a.title}</div>
-                  <div class="award-org">{a.org}</div>
+                <div class="award-item">
+                  <span class="award-year">{a.year}</span>
+                  <div>
+                    <div class="award-title">{a.title}</div>
+                    <div class="award-org">{a.org}</div>
+                  </div>
                 </div>
-              </div>
             ))}
           </div>
         </div>
@@ -340,7 +340,7 @@ const awards = [
     font-weight: 300;
   }
   .timeline-projects span::before {
-    content: '→ ';
+    content: '-> ';
     color: var(--text-tertiary);
   }
 

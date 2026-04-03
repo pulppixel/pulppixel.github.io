@@ -240,7 +240,8 @@ export function init(): void {
     }
     wasGrounded = isGrounded;
 
-    character.animate(t, moving, isSprinting);
+    const groundHForShadow = getGroundHeight(character.group.position.x, character.group.position.z);
+    character.animate(t, moving, isSprinting, groundHForShadow);
 
     // ── 더스트 파티클 ──
     dustSpawnT -= dt;

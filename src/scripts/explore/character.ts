@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 export interface Character {
   group: THREE.Group;
-  animate(t: number, moving: boolean, sprinting?: boolean): void;
+  animate(t: number, moving: boolean, sprinting? : boolean, groundY?: number): void;
   landSquash(): void;
   skinName: string;
 }
@@ -492,7 +492,7 @@ export function createCharacter(scene: THREE.Scene): Character {
     squashT = 0.18;
   }
 
-  function animate(t: number, moving: boolean, sprinting = false): void {
+  function animate(t: number, moving: boolean, sprinting = false, groundY?: number): void {
     const animSpd = sprinting ? 13 : 9;
     const wp = moving ? t * animSpd : 0;
     const sw = moving ? Math.sin(wp) : 0;
@@ -515,6 +515,11 @@ export function createCharacter(scene: THREE.Scene): Character {
     const bob = moving
         ? Math.abs(Math.sin(wp)) * (sprinting ? 0.055 : 0.035)
         : Math.sin(t * 2) * 0.01;
+
+    // 그림자를 지면에 고정
+    shadow.position.y = groundY !== undefined
+        ? groundY - ch.position.y + 0.01
+        : 0.005;
 
     // Squash (landing)
     let sqY = 1, sqXZ = 1;

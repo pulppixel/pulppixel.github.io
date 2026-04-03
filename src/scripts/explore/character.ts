@@ -474,7 +474,7 @@ export function createCharacter(scene: THREE.Scene): Character {
   // ── Shadow ──
   const shadow = new THREE.Mesh(
       new THREE.CircleGeometry(0.32, 16),
-      new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }),
+      new THREE.MeshBasicMaterial({color: 0x080810, transparent: true, opacity: 0.3}),
   );
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.y = 0.005;
@@ -559,5 +559,5 @@ export function createCharacter(scene: THREE.Scene): Character {
     if (parts.extra) parts.extra(t, moving, sprinting);
   }
 
-  return { group: ch, animate, landSquash, skinName: skin.name };
+  return {group: ch, animate, landSquash, skinName: skin.name};
 }

@@ -15,7 +15,7 @@ export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) document.body.classList.add('is-mobile');
 
-  const { scene, camera, renderer, particles, stars } = createScene(isMobile);
+  const { scene, camera, renderer, particles, stars, clouds } = createScene(isMobile);
   const character = createCharacter(scene);
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
@@ -28,10 +28,33 @@ export function init(): void {
     isGrounded = false;
   });
 
+  // ── 아케이드 트랜지션 오버레이 ──
+  const arcadeOverlay = document.createElement('div');
+  arcadeOverlay.style.cssText = `
+    position:fixed; inset:0; background:#0a0a0b; opacity:0;
+    pointer-events:none; transition:opacity 0.45s ease;
+    z-index:24; /* above 3D (z:0~20), below minigame (z:25) */
+  `;
+  document.body.appendChild(arcadeOverlay);
+
   // ── 미니게임 ──
   const mgContainer = document.getElementById('minigame-container')!;
   let inMinigame = false;
-  const exitMg = () => { inMinigame = false; if (!isMobile) renderer.domElement.requestPointerLock(); };
+  let mgTransitioning = false;
+
+  const exitMg = () => {
+    // Minigame just closed → screen is dark (overlay still opacity:1 from enter)
+    // Fade out to reveal 3D world
+    inMinigame = false;
+    arcadeOverlay.style.opacity = '1';
+    arcadeOverlay.style.pointerEvents = 'auto';
+    setTimeout(() => {
+      arcadeOverlay.style.opacity = '0';
+      arcadeOverlay.style.pointerEvents = 'none';
+      if (!isMobile) renderer.domElement.requestPointerLock();
+    }, 100);
+  };
+
   const minigames: Record<string, { start(): void; stop(): void }> = {
     spody: createSpodyGame(mgContainer, exitMg),
     ruby: createRubyGame(mgContainer, exitMg),
@@ -40,10 +63,21 @@ export function init(): void {
   };
 
   function enterMinigame(key: string): void {
-    if (!minigames[key]) return;
-    inMinigame = true;
+    if (!minigames[key] || mgTransitioning) return;
+    mgTransitioning = true;
+
     if (!isMobile) document.exitPointerLock();
-    minigames[key].start();
+
+    // Phase 1: Fade to black (0.45s)
+    arcadeOverlay.style.opacity = '1';
+    arcadeOverlay.style.pointerEvents = 'auto';
+
+    // Phase 2: After fade complete, start minigame
+    setTimeout(() => {
+      inMinigame = true;
+      mgTransitioning = false;
+      minigames[key].start();
+    }, 480);
   }
 
   // ★ 인터랙트 — 미니게임은 바로 시작, 나머지는 링크 열기
@@ -252,7 +286,7 @@ export function init(): void {
       camera.updateProjectionMatrix();
     }
 
-    updateEnvironment(t, particles, stars);
+    updateEnvironment(t, particles, stars, clouds);
     renderer.render(scene, camera);
 
     frameCount++;

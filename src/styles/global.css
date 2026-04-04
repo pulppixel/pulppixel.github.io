@@ -7,8 +7,8 @@
   --border: #222225;
   --border-hover: #333338;
   --text-primary: #e8e8ec;
-  --text-secondary: #8f8f9a;
-  --text-tertiary: #5a5a66;
+  --text-secondary: #a8a8b3;
+  --text-tertiary: #6a6a76;
   --accent: #6ee7b7;
   --accent-dim: rgba(110, 231, 183, 0.1);
   --accent-mid: rgba(110, 231, 183, 0.2);
@@ -26,8 +26,8 @@
   --border: #e5e5e0;
   --border-hover: #d0d0ca;
   --text-primary: #1a1a1e;
-  --text-secondary: #6b6b76;
-  --text-tertiary: #9b9ba6;
+  --text-secondary: #555560;
+  --text-tertiary: #8a8a96;
   --accent: #059669;
   --accent-dim: rgba(5, 150, 105, 0.06);
   --accent-mid: rgba(5, 150, 105, 0.12);
@@ -41,7 +41,7 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  font-family: 'Noto Sans KR', 'Outfit', -apple-system, sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', 'Outfit', -apple-system, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.7;
@@ -63,7 +63,7 @@ section { padding: 5rem 0; }
   margin-bottom: 0.75rem;
 }
 .section-title {
-  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-family: 'Outfit', 'Pretendard Variable', sans-serif;
   font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em;
 }
 
@@ -79,6 +79,13 @@ section { padding: 5rem 0; }
 .fade-in:nth-child(2) { transition-delay: 0.08s; }
 .fade-in:nth-child(3) { transition-delay: 0.16s; }
 .fade-in:nth-child(4) { transition-delay: 0.24s; }
+
+/* 뒤로가기로 돌아왔을 때 애니메이션 스킵 */
+.no-intro .fade-in { opacity: 1; transform: none; transition: none; }
+.no-intro .hero-label,
+.no-intro .hero h1,
+.no-intro .hero p,
+.no-intro .hero-links { opacity: 1; animation: none; }
 
 @media (max-width: 768px) {
   .container { padding: 0 1.25rem; }

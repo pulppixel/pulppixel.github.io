@@ -15,6 +15,26 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 
 const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
+
+// 프로젝트 순서 (index.astro와 동일)
+const projectOrder = [
+  { slug: 'eterna', title: 'ETERNA' },
+  { slug: 'reiw', title: 'REIW' },
+  { slug: 'iw-zombie', title: 'IW Zombie' },
+  { slug: 'stelsi-wallet', title: 'STELSI Wallet' },
+  { slug: 'stelsi', title: 'STELSI UE5' },
+  { slug: 'frenzy-circle', title: 'Nine to Six' },
+  { slug: 'haul', title: 'HAUL' },
+  { slug: 'nomads-planet', title: 'Nomads Planet' },
+  { slug: 'math-master', title: 'Math Master' },
+  { slug: 'spody', title: 'SPODY' },
+  { slug: 'ruby-adventure', title: '루비의 모험' },
+];
+
+const currentSlug = Astro.url.pathname.replace(/^\/projects\//, '').replace(/\/$/, '');
+const currentIdx = projectOrder.findIndex(p => p.slug === currentSlug);
+const prev = currentIdx > 0 ? projectOrder[currentIdx - 1] : null;
+const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1] : null;
 ---
 
 <BaseLayout title={`${title} - Pulppixel`}>
@@ -65,6 +85,22 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
         <slot />
       </div>
 
+      <!-- PREV / NEXT -->
+      <nav class="project-nav">
+        {prev ? (
+          <a href={`/projects/${prev.slug}/`} class="nav-prev">
+            <span class="nav-dir">이전</span>
+            <span class="nav-title">{prev.title}</span>
+          </a>
+        ) : <div />}
+        {next ? (
+          <a href={`/projects/${next.slug}/`} class="nav-next">
+            <span class="nav-dir">다음</span>
+            <span class="nav-title">{next.title}</span>
+          </a>
+        ) : <div />}
+      </nav>
+
     </div>
   </article>
 
@@ -104,7 +140,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
   }
 
   .detail-header h1 {
-    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-family: 'Outfit', 'Pretendard Variable', sans-serif;
     font-size: clamp(2rem, 4vw, 2.75rem);
     font-weight: 700;
     letter-spacing: -0.03em;
@@ -114,7 +150,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
   .detail-subtitle {
     font-size: 1.05rem;
     color: var(--text-secondary);
-    font-weight: 300;
+    font-weight: 400;
     line-height: 1.7;
     max-width: 640px;
   }
@@ -176,7 +212,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
     max-width: 720px;
   }
   .detail-content :global(h2) {
-    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    font-family: 'Outfit', 'Pretendard Variable', sans-serif;
     font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -191,7 +227,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
     font-size: 0.92rem;
     color: var(--text-secondary);
     line-height: 1.8;
-    font-weight: 300;
+    font-weight: 400;
     margin-bottom: 1rem;
   }
   .detail-content :global(ul) {
@@ -203,7 +239,7 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
     font-size: 0.88rem;
     color: var(--text-secondary);
     line-height: 1.75;
-    font-weight: 300;
+    font-weight: 400;
     padding-left: 1rem;
     position: relative;
   }
@@ -238,8 +274,49 @@ const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
     margin: 1.5rem 0;
   }
 
+  /* PREV / NEXT NAV */
+  .project-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .project-nav a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all 0.2s;
+    min-width: 140px;
+  }
+  .project-nav a:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-card);
+  }
+  .nav-prev { align-items: flex-start; }
+  .nav-next { align-items: flex-end; }
+  .nav-dir {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    letter-spacing: 0.04em;
+  }
+  .nav-title {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .project-nav a:hover .nav-title { color: var(--accent); }
+
   @media (max-width: 768px) {
     .info-item { flex-direction: column; gap: 0.25rem; }
     .info-label { min-width: auto; }
+    .project-nav { flex-direction: column; }
+    .nav-next { align-items: flex-start; }
   }
 </style>

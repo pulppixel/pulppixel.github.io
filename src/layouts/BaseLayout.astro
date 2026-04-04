@@ -22,9 +22,11 @@ const ogImage = 'https://pulppixel.github.io/og.png';
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://pulppixel.github.io" />
   <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script is:inline>
     const saved = localStorage.getItem('theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
@@ -39,6 +41,12 @@ const ogImage = 'https://pulppixel.github.io/og.png';
       html.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
     }
+
+    // 메인 페이지 재방문 시 fade 애니메이션 스킵
+    if (performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+      document.documentElement.classList.add('no-intro');
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }

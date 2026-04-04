@@ -85,11 +85,29 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const cx = co.position.x, cz = co.position.z;
     const ph = zoneHeight(cx, cz);
 
-    // Zone platform overlay (light stone)
-    const pf = nb(7.6, 0.15, 7.6, PEDESTAL);
-    pf.position.set(cx, ph + 0.12, cz);
+    // Zone-colored ground accent (존별 테마 적용)
+    const pf = new THREE.Mesh(
+        new THREE.BoxGeometry(7.6, 0.06, 7.6),
+        new THREE.MeshStandardMaterial({
+          color: co.color, metalness: 0.15, roughness: 0.7,
+          emissive: new THREE.Color(co.color), emissiveIntensity: 0.03,
+          transparent: true, opacity: 0.2,
+        }),
+    );
+    pf.position.set(cx, ph + 0.04, cz);
     pf.receiveShadow = true;
     scene.add(pf);
+
+    // Zone ground rune ring
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const rs = nb(0.5, 0.04, 0.5, co.color);
+      (rs.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(co.color);
+      (rs.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.08;
+      rs.position.set(cx + Math.cos(a) * 2.8, ph + 0.03, cz + Math.sin(a) * 2.8);
+      rs.rotation.y = a;
+      scene.add(rs);
+    }
 
     // Zone ring (colored, on grass)
     const rn = new THREE.Mesh(
@@ -191,130 +209,209 @@ export function createZones(scene: THREE.Scene): ZonesContext {
   });
 
   // ═══════════════════════════════════════
-  // ── Zone Decorations (Nature) ──
+  // ── Zone Decorations — Monuments ──
   // ═══════════════════════════════════════
 
-  // Zone 0: The Nether (2025-2026) — Garden with flower arch
+  // Zone 0: The Nether (2025-2026) — Purple Portal Arch
   _zIdx = 0;
   {
     const cx = COMPANIES[0].position.x, cz = COMPANIES[0].position.z;
     const ph = zoneHeight(cx, cz);
+    const COL = 0xa78bfa, COL_DK = 0x7c5cbf;
 
-    // Wooden arch
-    const archL = nb(0.2, 1.8, 0.2, WOOD);
-    archL.position.set(cx + 6.2, ph + 0.9, cz); scene.add(archL);
-    const archR = nb(0.2, 1.8, 0.2, WOOD);
-    archR.position.set(cx + 7.6, ph + 0.9, cz); scene.add(archR);
-    const archTop = nb(1.6, 0.15, 0.25, WOOD);
-    archTop.position.set(cx + 6.9, ph + 1.85, cz); scene.add(archTop);
-    // Flowers on arch
-    const archFlower = gem(0.25, 0.25, 0.25, PINK, 0.15);
-    archFlower.position.set(cx + 6.9, ph + 2.0, cz); scene.add(archFlower);
-    za({ mesh: archFlower, type: 'float', baseY: ph + 2.0, range: 0.08, speed: 1.0, phase: 0 });
+    // 포탈 기둥 2개 (높이 3.5)
+    const pillarL = nb(0.4, 3.5, 0.4, COL_DK);
+    pillarL.position.set(cx - 1.8, ph + 1.75, cz - 5); scene.add(pillarL);
+    const pillarR = nb(0.4, 3.5, 0.4, COL_DK);
+    pillarR.position.set(cx + 1.8, ph + 1.75, cz - 5); scene.add(pillarR);
 
-    // Wooden well
-    const wellBase = nb(0.8, 0.5, 0.8, WOOD_LT);
-    wellBase.position.set(cx - 6, ph + 0.25, cz + 1); scene.add(wellBase);
-    const wellWater = gem(0.5, 0.1, 0.5, TEAL, 0.3);
-    wellWater.position.set(cx - 6, ph + 0.52, cz + 1); scene.add(wellWater);
-    za({ mesh: wellWater, type: 'pulse', baseEi: 0.3, range: 0.15 });
+    // 포탈 가로대
+    const crossbar = nb(4.0, 0.35, 0.35, COL_DK);
+    crossbar.position.set(cx, ph + 3.7, cz - 5); scene.add(crossbar);
+
+    // 포탈 내부 빛 (큰 면)
+    const portalFill = gem(3.2, 3.0, 0.08, COL, 0.4);
+    (portalFill.material as THREE.MeshStandardMaterial).transparent = true;
+    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.15;
+    portalFill.position.set(cx, ph + 2.0, cz - 5); scene.add(portalFill);
+    za({ mesh: portalFill, type: 'pulse', baseOp: 0.15, range: 0.08 });
+
+    // 떠 있는 크리스탈 3개
+    const cryPositions: [number, number, number][] = [
+      [cx, ph + 4.5, cz - 5],
+      [cx - 3.2, ph + 2.0, cz - 3.5],
+      [cx + 3.2, ph + 2.0, cz - 3.5],
+    ];
+    cryPositions.forEach(([x, y, z], i) => {
+      const cry = gem(0.4, 0.6, 0.4, COL, 0.5);
+      cry.rotation.set(Math.PI / 4, 0, Math.PI / 4);
+      cry.position.set(x, y, z); scene.add(cry);
+      za({ mesh: cry, type: 'spin', axis: 'y', speed: 0.6 + i * 0.3, baseY: y, float: 0.15 + i * 0.05 });
+    });
+
+    // 바닥 룬 조각
+    [[-2, -3], [2, -3], [-3, -1], [3, -1]].forEach(([ox, oz]) => {
+      const rune = gem(0.3, 0.08, 0.3, COL, 0.2);
+      rune.position.set(cx + ox, ph + 0.04, cz + oz); rune.rotation.y = Math.PI / 4;
+      scene.add(rune);
+    });
+
+    // 포탈 포인트 라이트
+    const portalLight = new THREE.PointLight(COL, 0.8, 8);
+    portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
   }
 
-  // Zone 1: Treasure Isle (2023) — Treasure chest & gold
+  // Zone 1: Treasure Isle (2023) — Ship Monument
   _zIdx = 1;
   {
     const cx = COMPANIES[1].position.x, cz = COMPANIES[1].position.z;
     const ph = zoneHeight(cx, cz);
+    const COL = 0x6ee7b7, GOLD = 0xf5c870;
 
-    // Treasure chest
-    const chestBody = nb(0.7, 0.4, 0.45, WOOD);
-    chestBody.position.set(cx + 6, ph + 0.2, cz); scene.add(chestBody);
-    const lid = nb(0.72, 0.15, 0.47, WOOD_LT);
-    lid.position.set(cx + 6, ph + 0.47, cz); lid.rotation.x = -0.2; scene.add(lid);
+    // 돛대 (4 units)
+    const mast = nb(0.2, 4.0, 0.2, WOOD);
+    mast.position.set(cx, ph + 2.0, cz - 4.5); scene.add(mast);
 
-    // Gold blocks
-    [[0, 0, 0], [0.55, 0, 0], [0, 0, 0.55], [0.25, 0.55, 0.25]].forEach(([gx, gy, gz], i) => {
-      const g = gem(0.5, 0.5, 0.5, WARM, 0.25);
-      g.position.set(cx + 6 + gx - 0.3, ph + 0.25 + gy, cz - 2 + gz); scene.add(g);
-      if (i === 3) za({ mesh: g, type: 'float', baseY: ph + 0.8, range: 0.12, speed: 0.8, phase: 0 });
+    // 깃발 (삼각형 근사)
+    const flag = gem(1.2, 0.8, 0.05, COL, 0.3);
+    flag.position.set(cx + 0.7, ph + 3.5, cz - 4.5); scene.add(flag);
+    za({ mesh: flag, type: 'float', baseY: ph + 3.5, range: 0.06, speed: 1.5, phase: 0 });
+
+    // 보물 더미 (중앙, 크게)
+    const chestBody = nb(1.2, 0.7, 0.8, WOOD);
+    chestBody.position.set(cx, ph + 0.35, cz - 3.5); scene.add(chestBody);
+    const lid = nb(1.25, 0.2, 0.85, WOOD_LT);
+    lid.position.set(cx, ph + 0.8, cz - 3.5); lid.rotation.x = -0.25; scene.add(lid);
+
+    // 넘치는 금괴
+    [[0, 0.9, 0], [-0.5, 0.2, 0.6], [0.5, 0.2, 0.6], [0, 0.2, -0.6], [0.3, 1.2, 0.2]].forEach(([gx, gy, gz], i) => {
+      const g = gem(0.45, 0.45, 0.45, GOLD, 0.3);
+      g.position.set(cx + gx, ph + gy, cz - 3.5 + gz); scene.add(g);
+      if (i === 4) za({ mesh: g, type: 'float', baseY: ph + 1.2, range: 0.15, speed: 0.7, phase: 0 });
     });
 
-    // Floating emerald
-    const emerald = gem(0.3, 0.3, 0.3, 0x50c878, 0.4);
+    // 떠 있는 에메랄드 (크게)
+    const emerald = gem(0.5, 0.5, 0.5, 0x50c878, 0.5);
     emerald.rotation.set(Math.PI / 4, 0, Math.PI / 4);
-    emerald.position.set(cx - 5.5, ph + 1.5, cz); scene.add(emerald);
-    za({ mesh: emerald, type: 'spin', axis: 'y', speed: 1.0, baseY: ph + 1.5, float: 0.2 });
+    emerald.position.set(cx + 3.5, ph + 2.5, cz - 3); scene.add(emerald);
+    za({ mesh: emerald, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 2.5, float: 0.25 });
+
+    // 보물 라이트
+    const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
+    treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
+
+    // 바닥 동전
+    [[-2, -2], [2, -2], [-3, 0], [3, 0], [-1, -5], [1, -5]].forEach(([ox, oz]) => {
+      const coin = gem(0.25, 0.06, 0.25, GOLD, 0.2);
+      coin.position.set(cx + ox, ph + 0.03, cz + oz);
+      scene.add(coin);
+    });
   }
 
-  // Zone 2: Beacon Peak (2026) — Crystal beacon
+  // Zone 2: Beacon Peak (2026) — Crystal Beacon Tower
   _zIdx = 2;
   {
     const cx = COMPANIES[2].position.x, cz = COMPANIES[2].position.z;
     const ph = zoneHeight(cx, cz);
+    const COL = 0xfbbf24, CRYSTAL = 0x50c8d8;
 
-    // Beacon base (stone stack)
-    const base1 = nb(0.9, 0.4, 0.9, STONE_LT);
-    base1.position.set(cx + 5, ph + 0.2, cz); scene.add(base1);
-    const base2 = nb(0.7, 0.3, 0.7, STONE_LT);
-    base2.position.set(cx + 5, ph + 0.55, cz); scene.add(base2);
+    // 타워 베이스 (3단)
+    const b1 = nb(1.6, 0.5, 1.6, STONE_LT);
+    b1.position.set(cx, ph + 0.25, cz - 4.5); scene.add(b1);
+    const b2 = nb(1.2, 0.5, 1.2, STONE_LT);
+    b2.position.set(cx, ph + 0.75, cz - 4.5); scene.add(b2);
+    const b3 = nb(0.8, 0.5, 0.8, STONE_LT);
+    b3.position.set(cx, ph + 1.25, cz - 4.5); scene.add(b3);
 
-    // Crystal on top
-    const crystal = gem(0.35, 0.5, 0.35, TEAL, 0.5);
+    // 크리스탈 (큰 다이아몬드)
+    const crystal = gem(0.7, 1.0, 0.7, CRYSTAL, 0.6);
     crystal.rotation.set(Math.PI / 4, 0, Math.PI / 4);
-    crystal.position.set(cx + 5, ph + 1.1, cz); scene.add(crystal);
-    za({ mesh: crystal, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 1.1, float: 0.15 });
+    crystal.position.set(cx, ph + 2.2, cz - 4.5); scene.add(crystal);
+    za({ mesh: crystal, type: 'spin', axis: 'y', speed: 0.6, baseY: ph + 2.2, float: 0.2 });
 
-    // Beacon beam
-    const beamMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.1, 6, 0.1),
-        new THREE.MeshBasicMaterial({ color: TEAL, transparent: true, opacity: 0.06 }),
+    // 빔 (하늘까지)
+    const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 12, 0.15),
+        new THREE.MeshBasicMaterial({ color: CRYSTAL, transparent: true, opacity: 0.08 }),
     );
-    beamMesh.position.set(cx + 5, ph + 4, cz); scene.add(beamMesh);
-    za({ mesh: beamMesh, type: 'pulse', baseOp: 0.06, range: 0.03 });
+    beam.position.set(cx, ph + 8, cz - 4.5); scene.add(beam);
+    za({ mesh: beam, type: 'pulse', baseOp: 0.08, range: 0.05 });
 
-    // Stone steps
-    for (let i = 0; i < 3; i++) {
-      const step = nb(0.8, 0.25, 0.8, STONE_LT);
-      step.position.set(cx - 4.5 + i * 0.85, ph + 0.125, cz + 1.5); scene.add(step);
-    }
+    // 주변 크리스탈 군집
+    [[-2.5, 1.0, -3], [2.5, 0.8, -3], [-1.5, 0.6, -6], [1.5, 0.6, -6]].forEach(([ox, h, oz], i) => {
+      const c = gem(0.3, h, 0.3, CRYSTAL, 0.35);
+      c.rotation.set(0, i * 0.7, (i % 2 === 0 ? 0.15 : -0.15));
+      c.position.set(cx + ox, ph + h / 2, cz + oz); scene.add(c);
+    });
+
+    // 비콘 라이트
+    const beaconLight = new THREE.PointLight(COL, 0.7, 8);
+    beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
   }
 
-  // Zone 3: Overworld (2019-2022) — Campfire & flower garden
+  // Zone 3: Overworld (2019-2022) — Sacred Tree + Campfire Circle
   _zIdx = 3;
   {
     const cx = COMPANIES[3].position.x, cz = COMPANIES[3].position.z;
     const ph = zoneHeight(cx, cz);
+    const COL = 0xff6b9d, LEAF = 0xf0a0b8;
 
-    // Campfire
-    const log1 = nb(0.6, 0.12, 0.12, WOOD);
-    log1.rotation.y = 0.4; log1.position.set(cx + 5, ph + 0.06, cz + 1); scene.add(log1);
-    const log2 = nb(0.6, 0.12, 0.12, WOOD);
-    log2.rotation.y = -0.4; log2.position.set(cx + 5, ph + 0.16, cz + 1); scene.add(log2);
-    const fire = gem(0.2, 0.35, 0.2, 0xf08030, 0.8);
-    fire.position.set(cx + 5, ph + 0.35, cz + 1); scene.add(fire);
-    za({ mesh: fire, type: 'pulse', baseEi: 0.8, range: 0.4 });
-
-    // Campfire light
-    const fireLight = new THREE.PointLight(0xf5a040, 0.6, 4);
-    fireLight.position.set(cx + 5, ph + 0.8, cz + 1); scene.add(fireLight);
-
-    // Flower garden (colorful small blocks)
-    const flowerColors = [PINK, 0xf5d060, 0x88c8e8, PINK, 0xe888a0];
-    [[-6, 0.5], [-5.5, -1.2], [-6.5, -0.3], [-5.8, 1.8], [-6.8, 1]].forEach(([fx, fz], i) => {
-      const stem = nb(0.06, 0.3, 0.06, 0x48a048);
-      stem.position.set(cx + fx, ph + 0.15, cz + fz); scene.add(stem);
-      const petal = gem(0.2, 0.2, 0.2, flowerColors[i], 0.15);
-      petal.position.set(cx + fx, ph + 0.38, cz + fz); petal.rotation.y = Math.PI / 4; scene.add(petal);
-      za({ mesh: petal, type: 'float', baseY: ph + 0.38, range: 0.04, speed: 1.2, phase: i * 1.3 });
+    // 큰 나무 (특별한 나무 — 일반 나무보다 크고 핑크)
+    const trunk = nb(0.6, 4.0, 0.6, 0x6a4a2a);
+    trunk.position.set(cx, ph + 2.0, cz - 4.5); scene.add(trunk);
+    // 잎 클러스터 (8개, 핑크)
+    const leafGeo = new THREE.BoxGeometry(1.5, 1.2, 1.5);
+    const leafCols = [LEAF, 0xe888a0, LEAF, 0xf5c8d8];
+    [
+      [0, 0, 0], [-1.3, -0.2, 0], [1.3, -0.2, 0], [0, -0.2, -1.3],
+      [0, -0.2, 1.3], [0, 1.1, 0], [-1, 0.8, 1], [1, 0.8, -1],
+    ].forEach(([lx, ly, lz], i) => {
+      const leaf = new THREE.Mesh(leafGeo,
+          new THREE.MeshStandardMaterial({ color: leafCols[i % leafCols.length], metalness: 0.05, roughness: 0.85 }));
+      leaf.castShadow = true;
+      leaf.position.set(cx + lx * 1.1, ph + 4.2 + ly, cz - 4.5 + lz * 1.1);
+      scene.add(leaf);
     });
 
-    // Wooden cart
-    const cartBase = nb(0.8, 0.15, 0.5, WOOD_LT);
-    cartBase.position.set(cx - 6.5, ph + 0.25, cz - 1.5); scene.add(cartBase);
-    const cartSide1 = nb(0.05, 0.3, 0.5, WOOD);
-    cartSide1.position.set(cx - 6.9, ph + 0.4, cz - 1.5); scene.add(cartSide1);
-    const cartSide2 = nb(0.05, 0.3, 0.5, WOOD);
-    cartSide2.position.set(cx - 6.1, ph + 0.4, cz - 1.5); scene.add(cartSide2);
+    // 떨어지는 꽃잎 (부유 아이템)
+    [[-1.5, 2.8, -3], [1.5, 3.2, -3], [0, 3.5, -5.5]].forEach(([ox, h, oz], i) => {
+      const petal = gem(0.2, 0.2, 0.2, COL, 0.3);
+      petal.rotation.y = Math.PI / 4;
+      petal.position.set(cx + ox, ph + h, cz + oz); scene.add(petal);
+      za({ mesh: petal, type: 'float', baseY: ph + h, range: 0.2, speed: 0.5 + i * 0.2, phase: i * 2.0 });
+    });
+
+    // 스톤 서클 (캠프파이어 주변)
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const stone = nb(0.4, 0.25, 0.4, STONE_LT);
+      stone.position.set(cx + Math.cos(a) * 1.6, ph + 0.12, cz - 2 + Math.sin(a) * 1.6);
+      stone.rotation.y = a; scene.add(stone);
+    }
+
+    // 캠프파이어 (중앙 근처)
+    const log1 = nb(0.7, 0.15, 0.15, WOOD);
+    log1.rotation.y = 0.4; log1.position.set(cx, ph + 0.08, cz - 2); scene.add(log1);
+    const log2 = nb(0.7, 0.15, 0.15, WOOD);
+    log2.rotation.y = -0.4; log2.position.set(cx, ph + 0.2, cz - 2); scene.add(log2);
+    const fire = gem(0.3, 0.5, 0.3, 0xf08030, 0.9);
+    fire.position.set(cx, ph + 0.5, cz - 2); scene.add(fire);
+    za({ mesh: fire, type: 'pulse', baseEi: 0.9, range: 0.5 });
+
+    // 캠프파이어 라이트
+    const fireLight = new THREE.PointLight(0xf5a040, 0.8, 6);
+    fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
+
+    // 꽃들 (나무 주변)
+    const flowerCols = [COL, 0xf5d060, 0x88c8e8, 0xe888a0];
+    [[-2.5, -3], [2.5, -3], [-3, -5.5], [3, -5.5]].forEach(([fx, fz], i) => {
+      const stem = nb(0.06, 0.4, 0.06, 0x48a048);
+      stem.position.set(cx + fx, ph + 0.2, cz + fz); scene.add(stem);
+      const fl = gem(0.25, 0.25, 0.25, flowerCols[i], 0.2);
+      fl.position.set(cx + fx, ph + 0.48, cz + fz); fl.rotation.y = Math.PI / 4;
+      scene.add(fl);
+      za({ mesh: fl, type: 'float', baseY: ph + 0.48, range: 0.06, speed: 1.0, phase: i * 1.5 });
+    });
   }
 
   // ═══════════════════════════════════════

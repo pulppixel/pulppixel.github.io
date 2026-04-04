@@ -8,11 +8,11 @@ import type { GameAudio } from '../system/audio';
 const RING_W = 22;
 const MIN_R = 22;
 const RING_GAP = 36;
-const BASE_SHRINK = 14;
+const BASE_SHRINK = 20;
 const BASE_ROT = 0.8;
 const JUMP_DUR = 0.14;
 const PLAYER_R = 7;
-const COMBO_WIN = 3.0;
+const COMBO_WIN = 2.5;
 const TAU = Math.PI * 2;
 
 const RCOLS = [C.accent, C.cyan, C.blue, C.purple, C.yellow, C.pink];
@@ -53,7 +53,7 @@ type Phase = 'intro' | 'play' | 'dead' | 'result';
 
 // --- Game ---
 class NineToSixGame extends MinigameBase {
-    protected readonly title = 'NINE TO SIX';
+    protected readonly title = 'FRENZY CIRCLE';
     protected readonly titleColor = C.accent;
 
     private phase: Phase = 'intro';
@@ -128,7 +128,7 @@ class NineToSixGame extends MinigameBase {
             r += RING_GAP;
         }
 
-        // Start player on the MIDDLE of the first ring's first safe arc
+        // Start player in the MIDDLE of the first ring's first safe arc
         const first = this.rings[0];
         this.pAngle = first.arcs[0].s + (first.arcs[0].e - first.arcs[0].s) / 2;
 
@@ -255,9 +255,9 @@ class NineToSixGame extends MinigameBase {
         this.elapsed += dt;
 
         // Difficulty scaling
-        this.shrinkSpd = BASE_SHRINK + this.elapsed * 0.35;
+        this.shrinkSpd = BASE_SHRINK + this.elapsed * 0.5;
         this.spdMul = 1.0 + this.elapsed * 0.015;
-        this.safeRatio = Math.max(0.30, 0.52 - this.elapsed * 0.003);
+        this.safeRatio = Math.max(0.25, 0.52 - this.elapsed * 0.004);
 
         // Shrink all rings toward center
         for (const r of this.rings) r.radius -= this.shrinkSpd * dt;
@@ -273,11 +273,13 @@ class NineToSixGame extends MinigameBase {
         }
 
         // Spawn new rings at outer edge
+        // Guarantee: always 2+ rings ahead of player (even beyond screen edge)
         while (true) {
             const outerR = this.rings.length > 0
                 ? this.rings[this.rings.length - 1].radius
                 : MIN_R;
-            if (outerR >= this.maxR + RING_GAP) break;
+            const ringsAhead = this.rings.length - 1 - this.pRing;
+            if (outerR >= this.maxR + RING_GAP && ringsAhead >= 2) break;
             this.rings.push(mkRing(outerR + RING_GAP, this.safeRatio, this.spdMul, this.ringCounter++));
         }
 
@@ -526,7 +528,7 @@ class NineToSixGame extends MinigameBase {
         }
 
         if (this.phase === 'intro') {
-            this.drawIntro(this.phT, 'NINE TO SIX',
+            this.drawIntro(this.phT, 'FRENZY CIRCLE',
                 this.mob ? 'TAP = JUMP OUTWARD' : 'SPACE / CLICK = JUMP',
                 'Wait for the green dot, then jump!');
         }

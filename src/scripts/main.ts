@@ -11,7 +11,7 @@ import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
-import { createNineToSixGame } from './minigames/ninetosix';
+import { createNineToSixGame } from './minigames/circles.ts';
 import { createAudio } from './system/audio';
 import { createTimeWeather } from './world/timeweather';
 import { createPostFX } from './system/postfx';

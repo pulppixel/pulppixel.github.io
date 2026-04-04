@@ -326,21 +326,27 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     // Project cube animation
     projectMeshes.forEach((m, i) => {
-      m.position.y = m.userData.baseY + Math.sin(t * 1.5 + i * 0.8) * 0.18;
-      m.rotation.y = t * 0.5;
+      const zi = m.userData.zone ?? -1;
+      const zp = zi >= 0 ? zones[zi].proximity : 1;
 
+      // proximity 기반 스케일 (0.05 → 1.0) + 가까울 때 확대
       const isNearest = m === nearestMesh;
-      const ts = isNearest ? 1.35 : 1;
+      const baseScale = 0.05 + zp * 0.95;
+      const ts = isNearest ? baseScale * 1.35 : baseScale;
       m.scale.setScalar(m.scale.x + (ts - m.scale.x) * 0.08);
 
-      const zi = m.userData.zone ?? -1;
-      const zp = zi >= 0 ? zones[zi].proximity : 0.3;
-      const tei = isNearest ? 0.6 + Math.sin(t * 4) * 0.2 : 0.1 + zp * 0.2;
+      // 부유 + 회전도 proximity 비례
+      m.position.y = m.userData.baseY + Math.sin(t * 1.5 + i * 0.8) * 0.18 * zp;
+      m.rotation.y = t * 0.5 * (0.2 + zp * 0.8);
+
+      // glow 강화 (멀면 거의 안 보임, 가까우면 빛남)
+      const tei = isNearest ? 0.7 + Math.sin(t * 4) * 0.25 : 0.02 + zp * 0.45;
       (m.material as THREE.MeshStandardMaterial).emissiveIntensity +=
           (tei - (m.material as THREE.MeshStandardMaterial).emissiveIntensity) * 0.1;
 
+      // 와이어프레임 opacity
       if (m.children[0] && (m.children[0] as THREE.LineSegments).material)
-        ((m.children[0] as THREE.LineSegments).material as THREE.LineBasicMaterial).opacity = 0.2 + zp * 0.2;
+        ((m.children[0] as THREE.LineSegments).material as THREE.LineBasicMaterial).opacity = zp * 0.4;
     });
 
     // Zone proximity
@@ -376,7 +382,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     // Decoration animations
     zoneAnims.forEach(a => {
       const m = a.mesh, p = zones[a.zone].proximity;
-      const targetScale = 0.3 + p * 0.7;
+      const targetScale = p * p;
       if (m.scale) m.scale.setScalar(m.scale.x + (targetScale - m.scale.x) * 3 * dt);
 
       if ((m as THREE.Mesh).material) {

@@ -7,6 +7,7 @@ export interface Character {
   animate(t: number, moving: boolean, sprinting? : boolean, groundY?: number): void;
   landSquash(): void;
   skinName: string;
+  skinIndex: number;
 }
 
 // ═══════════════════════════════════════
@@ -434,16 +435,19 @@ const SKINS: { name: string; light: number; build: Builder }[] = [
   { name: 'Penguin', light: 0x9999bb, build: buildPenguin },
 ];
 
+export const SKIN_INFO = SKINS.map((s, i) => ({ index: i, name: s.name, emoji: ['🐰', '🐸', '🐻', '🤖', '🐧'][i] }));
+
 // ═══════════════════════════════════════
 // ── Create Character ──
 // ═══════════════════════════════════════
 
-export function createCharacter(scene: THREE.Scene): Character {
+export function createCharacter(scene: THREE.Scene, skinIndex?: number): Character {
   const ch = new THREE.Group();
   scene.add(ch);
 
   // Random skin selection
-  const skin = SKINS[Math.floor(Math.random() * SKINS.length)];
+  const idx = skinIndex !== undefined ? skinIndex % SKINS.length : Math.floor(Math.random() * SKINS.length);
+  const skin = SKINS[idx];
 
   // ── Build skeleton ──
   const headGrp = new THREE.Group();
@@ -564,5 +568,5 @@ export function createCharacter(scene: THREE.Scene): Character {
     if (parts.extra) parts.extra(t, moving, sprinting);
   }
 
-  return {group: ch, animate, landSquash, skinName: skin.name};
+  return {group: ch, animate, landSquash, skinName: skin.name, skinIndex: idx};
 }

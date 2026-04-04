@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { getGroundHeight, isFenceBlocked, getSurface } from './data';
 import { createScene, updateEnvironment } from './scene';
-import { createCharacter } from './character';
+import { createCharacter, SKIN_INFO } from './character';
 import { createZones } from './zones';
 import { createInput } from './input';
 import { createWarp, createHUD } from './ui';
@@ -23,7 +23,21 @@ export function init(): void {
   const { scene, camera, renderer, particles, stars, clouds, water,
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
   } = createScene(isMobile);
-  const character = createCharacter(scene);
+  let character = createCharacter(scene);
+
+  // 초기 스킨 하이라이트
+  const initBtn = document.querySelector(`[data-skin="${character.skinIndex}"]`);
+  if (initBtn) initBtn.classList.add('sk-on');
+
+  // 스킨 교체
+  function swapSkin(index: number): void {
+    const pos = character.group.position.clone();
+    const rot = character.group.rotation.y;
+    scene.remove(character.group);
+    character = createCharacter(scene, index);
+    character.group.position.copy(pos);
+    character.group.rotation.y = rot;
+  }
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const animals = createAnimals(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
@@ -35,6 +49,16 @@ export function init(): void {
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
     water,
   }, isMobile);
+
+  // ── 캐릭터 선택 UI ──
+  document.querySelectorAll('[data-skin]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt((btn as HTMLElement).dataset.skin!);
+      swapSkin(idx);
+      document.querySelectorAll('[data-skin]').forEach(b => b.classList.remove('sk-on'));
+      btn.classList.add('sk-on');
+    });
+  });
 
   // ── 포스트 프로세싱 ──
   const postfx = createPostFX(renderer, scene, camera, isMobile);

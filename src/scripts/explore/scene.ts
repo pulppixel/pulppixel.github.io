@@ -10,6 +10,13 @@ export interface SceneContext {
   particles: { geo: THREE.BufferGeometry; count: number };
   stars: { geo: THREE.BufferGeometry; baseColors: Float32Array; count: number };
   clouds: THREE.Group[];
+  water: THREE.Mesh;
+  skyUniforms: Record<string, { value: any }>;
+  sunLight: THREE.DirectionalLight;
+  ambientLight: THREE.AmbientLight;
+  hemiLight: THREE.HemisphereLight;
+  fillLight: THREE.DirectionalLight;
+  starMaterial: THREE.PointsMaterial;
 }
 
 // ═══════════════════════════════════════
@@ -39,48 +46,162 @@ function box(w: number, h: number, d: number, c: number): THREE.Mesh {
 }
 
 // ═══════════════════════════════════════
-// ── Ocean (base water plane) ──
+// ── Ocean (animated water shader) ──
 // ═══════════════════════════════════════
 
-function buildOcean(scene: THREE.Scene): void {
-  // Deep ocean floor (dark)
+function buildOcean(scene: THREE.Scene, isMobile: boolean): THREE.Mesh {
+  // Deep ocean floor
   const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(160, 120),
-      nat(0x2088a0, 0.6),
+      nat(0x1a6878, 0.6),
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, -1.5, -29);
+  floor.position.set(0, -1.8, -29);
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // Water surface (translucent, at y=0)
-  const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x48c0d8,
-    metalness: 0.1,
-    roughness: 0.25,
+  // ── Water surface (custom shader) ──
+  const seg = isMobile ? 64 : 128;
+  const waterGeo = new THREE.PlaneGeometry(160, 120, seg, seg);
+
+  const waterMat = new THREE.ShaderMaterial({
     transparent: true,
-    opacity: 0.78,
+    depthWrite: false,
+    uniforms: {
+      uTime: { value: 0 },
+      uDeep: { value: new THREE.Color(0x1a7888) },
+      uShallow: { value: new THREE.Color(0x58d8e8) },
+      uFoam: { value: new THREE.Color(0xc8f0f5) },
+      uSunDir: { value: new THREE.Vector3(0.4, 0.8, 0.3).normalize() },
+      uOpacity: { value: 0.82 },
+    },
+    vertexShader: `
+      uniform float uTime;
+      varying vec2 vUv;
+      varying float vWaveH;
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+
+      // 다중 사인파 중첩 — 자연스러운 파도
+      float wave(vec2 p, float t) {
+        float w = 0.0;
+        // 큰 파도
+        w += sin(p.x * 0.35 + t * 0.6) * 0.18;
+        w += sin(p.y * 0.28 + t * 0.45) * 0.15;
+        // 중간 파도 (대각선)
+        w += sin((p.x * 0.6 + p.y * 0.4) + t * 0.9) * 0.08;
+        w += sin((p.x * 0.3 - p.y * 0.7) + t * 0.7) * 0.06;
+        // 잔물결
+        w += sin(p.x * 1.8 + t * 1.8) * 0.025;
+        w += sin(p.y * 2.1 - t * 1.5) * 0.02;
+        w += sin((p.x + p.y) * 2.5 + t * 2.2) * 0.015;
+        return w;
+      }
+
+      void main() {
+        vUv = uv;
+        vec3 pos = position;
+
+        float h = wave(pos.xy, uTime);
+        pos.z += h;
+        vWaveH = h;
+
+        // 노멀 근사 (편미분)
+        float eps = 0.5;
+        float hx = wave(pos.xy + vec2(eps, 0.0), uTime);
+        float hz = wave(pos.xy + vec2(0.0, eps), uTime);
+        vec3 tangentX = vec3(eps, 0.0, hx - h);
+        vec3 tangentZ = vec3(0.0, eps, hz - h);
+        vNormal = normalize(cross(tangentZ, tangentX));
+
+        vec4 worldPos = modelMatrix * vec4(pos, 1.0);
+        vWorldPos = worldPos.xyz;
+
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uDeep;
+      uniform vec3 uShallow;
+      uniform vec3 uFoam;
+      uniform vec3 uSunDir;
+      uniform float uOpacity;
+
+      varying vec2 vUv;
+      varying float vWaveH;
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+
+      // 코스틱 패턴 (간단한 보로노이 근사)
+      float caustic(vec2 p, float t) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        float md = 1.0;
+        for (int x = -1; x <= 1; x++) {
+          for (int y = -1; y <= 1; y++) {
+            vec2 n = vec2(float(x), float(y));
+            vec2 o = vec2(
+              sin(dot(i + n, vec2(127.1, 311.7))) * 43758.5453,
+              sin(dot(i + n, vec2(269.5, 183.3))) * 43758.5453
+            );
+            o = fract(o);
+            o = 0.5 + 0.5 * sin(t * 0.8 + 6.2831 * o);
+            float d = length(n + o - f);
+            md = min(md, d);
+          }
+        }
+        return md;
+      }
+
+      void main() {
+        // 깊이 기반 색상 블렌딩
+        float depthFactor = smoothstep(-0.15, 0.2, vWaveH);
+        vec3 baseCol = mix(uDeep, uShallow, depthFactor);
+
+        // 코스틱
+        float c1 = caustic(vWorldPos.xz * 0.4, uTime);
+        float c2 = caustic(vWorldPos.xz * 0.3 + 5.0, uTime * 0.7);
+        float caustics = smoothstep(0.15, 0.0, c1) * 0.3
+                       + smoothstep(0.2, 0.0, c2) * 0.15;
+        baseCol += uShallow * caustics * 0.6;
+
+        // 거품 (파도 높은 곳)
+        float foam = smoothstep(0.15, 0.30, vWaveH);
+        foam += smoothstep(0.22, 0.35, vWaveH) * 0.4;
+        // 가장자리 거품 패턴
+        float foamNoise = sin(vWorldPos.x * 3.0 + uTime * 1.2)
+                        * sin(vWorldPos.z * 2.8 - uTime * 0.9);
+        foam *= 0.5 + foamNoise * 0.5;
+        baseCol = mix(baseCol, uFoam, clamp(foam * 0.35, 0.0, 0.3));
+
+        // 프레넬 근사 (가장자리에서 반사감)
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        float fresnel = pow(1.0 - max(0.0, dot(vNormal, viewDir)), 3.0);
+        baseCol += vec3(0.15, 0.22, 0.25) * fresnel * 0.4;
+
+        // 태양 스펙큘러 (반짝임)
+        vec3 halfDir = normalize(uSunDir + viewDir);
+        float spec = pow(max(0.0, dot(vNormal, halfDir)), 120.0);
+        baseCol += vec3(1.0, 0.95, 0.85) * spec * 0.5;
+
+        // 잔잔한 빛줄기 (물 위 하이라이트)
+        float shimmer = sin(vWorldPos.x * 1.5 + uTime * 0.5)
+                      * sin(vWorldPos.z * 1.2 - uTime * 0.4);
+        baseCol += uShallow * max(0.0, shimmer) * 0.05;
+
+        gl_FragColor = vec4(baseCol, uOpacity);
+      }
+    `,
   });
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(160, 120), waterMat);
+
+  const water = new THREE.Mesh(waterGeo, waterMat);
   water.rotation.x = -Math.PI / 2;
   water.position.set(0, -0.05, -29);
-  water.receiveShadow = true;
+  water.renderOrder = 1;
   scene.add(water);
 
-  // Surface highlight strips (shimmering feel)
-  const shineMat = new THREE.MeshBasicMaterial({
-    color: 0xa0ecf5, transparent: true, opacity: 0.08,
-  });
-  const strips: [number, number, number, number][] = [
-    [-15, -10, 12, 1.5], [20, -35, 10, 1], [-25, -50, 8, 1.2],
-    [10, -20, 6, 0.8], [-8, -55, 9, 1.3], [30, -25, 7, 1],
-  ];
-  strips.forEach(([x, z, w, d]) => {
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(w, d), shineMat);
-    s.rotation.x = -Math.PI / 2;
-    s.position.set(x, -0.02, z);
-    scene.add(s);
-  });
+  return water;
 }
 
 // ═══════════════════════════════════════
@@ -588,7 +709,7 @@ function buildPathDots(scene: THREE.Scene): void {
 // ── Sky Dome ──
 // ═══════════════════════════════════════
 
-function buildSkyDome(scene: THREE.Scene): void {
+function buildSkyDome(scene: THREE.Scene): Record<string, { value: any }> {
   const skyGeo = new THREE.SphereGeometry(90, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
@@ -621,6 +742,7 @@ function buildSkyDome(scene: THREE.Scene): void {
   const sky = new THREE.Mesh(skyGeo, skyMat);
   sky.renderOrder = -1;
   scene.add(sky);
+  return skyMat.uniforms;
 }
 
 // ═══════════════════════════════════════
@@ -643,7 +765,6 @@ export function createScene(isMobile: boolean): SceneContext {
   document.body.appendChild(renderer.domElement);
 
   // ── Build world ──
-  buildOcean(scene);
   buildPlatforms(scene, isMobile);
   buildTrees(scene);
   buildFlowers(scene);
@@ -652,12 +773,15 @@ export function createScene(isMobile: boolean): SceneContext {
   buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots(scene);
-  buildSkyDome(scene);
+  const skyUniforms = buildSkyDome(scene);
+  const water = buildOcean(scene, isMobile);
   const clouds = buildClouds(scene);
 
   // ── Lighting (bright, warm) ──
-  scene.add(new THREE.AmbientLight(0x8899bb, 1.2));
-  scene.add(new THREE.HemisphereLight(0x88bbff, 0x446633, 0.7));
+  const ambientLight = new THREE.AmbientLight(0x8899bb, 1.2);
+  scene.add(ambientLight);
+  const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x446633, 0.7);
+  scene.add(hemiLight);
 
   const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
   sun.position.set(15, 25, 10);
@@ -723,9 +847,10 @@ export function createScene(isMobile: boolean): SceneContext {
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+  const starMat = new THREE.PointsMaterial({
     size: 0.08, transparent: true, opacity: 0.15, vertexColors: true, sizeAttenuation: true,
-  })));
+  });
+  scene.add(new THREE.Points(starGeo, starMat));
   const starBaseColors = new Float32Array(starColors);
 
   // ── Zone connection lines (subtle) ──
@@ -751,7 +876,8 @@ export function createScene(isMobile: boolean): SceneContext {
     scene, camera, renderer,
     particles: { geo: pGeo, count: pCount },
     stars: { geo: starGeo, baseColors: starBaseColors, count: starCount },
-    clouds,
+    clouds, water,
+    skyUniforms, sunLight: sun, ambientLight, hemiLight, fillLight: fill, starMaterial: starMat,
   };
 }
 
@@ -764,6 +890,7 @@ export function updateEnvironment(
     particles: SceneContext['particles'],
     stars: SceneContext['stars'],
     clouds?: THREE.Group[],
+    water?: THREE.Mesh,
 ): void {
   // Pollen float
   const pa = particles.geo.attributes.position.array as Float32Array;
@@ -790,5 +917,10 @@ export function updateEnvironment(
       c.position.x += 0.15 * (0.5 + (i % 3) * 0.2) * (1 / 60);
       if (c.position.x > 55) c.position.x = -55;
     });
+  }
+
+  // Water animation
+  if (water) {
+    (water.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
   }
 }

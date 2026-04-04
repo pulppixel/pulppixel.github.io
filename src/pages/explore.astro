@@ -117,6 +117,24 @@ const title = 'pulppixel - 3D Explore';
       transition: all 0.2s;
     }
     #sound-toggle:hover { border-color: #6ee7b7; background: rgba(110,231,183,0.12); }
+    #tw-panel {
+      position: absolute; bottom: 20px; left: 20px;
+      background: rgba(10,10,11,0.88); border: 1px solid rgba(110,231,183,0.15);
+      border-radius: 6px; padding: 8px 10px; backdrop-filter: blur(8px);
+      z-index: 12; font-size: 10px;
+    }
+    .tw-label { color: #5a5a66; font-size: 9px; letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 4px; }
+    .tw-label:first-child { margin-top: 0; }
+    .tw-row { display: flex; gap: 4px; }
+    .tw-row button {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      color: #5a5a66; font-size: 10px; padding: 3px 8px; border-radius: 3px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .tw-row button:hover { border-color: rgba(110,231,183,0.3); color: #8a8a9a; }
+    .tw-row button.tw-on { border-color: rgba(110,231,183,0.4); color: #6ee7b7; background: rgba(110,231,183,0.08); }
+    .is-mobile #tw-panel { bottom: 12px; left: 12px; }
+    @media (max-width: 520px) { #tw-panel { font-size: 9px; } .tw-row button { padding: 3px 6px; } }
   </style>
 </head>
 <body>
@@ -145,6 +163,23 @@ const title = 'pulppixel - 3D Explore';
     <div id="quest-list"></div>
     <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
     <button id="quest-reset">↻ reset</button>
+  </div>
+
+  <div id="tw-panel">
+    <div class="tw-label">◐ TIME</div>
+    <div class="tw-row">
+      <button data-time="auto" class="tw-on">Auto</button>
+      <button data-time="dawn">🌅</button>
+      <button data-time="day">☀</button>
+      <button data-time="sunset">🌇</button>
+      <button data-time="night">🌙</button>
+    </div>
+    <div class="tw-label">☁ WEATHER</div>
+    <div class="tw-row">
+      <button data-weather="clear" class="tw-on">맑음</button>
+      <button data-weather="rain">🌧</button>
+      <button data-weather="snow">❄</button>
+    </div>
   </div>
 
   <div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>

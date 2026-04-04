@@ -12,16 +12,26 @@ import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
 import { createAudio } from './audio';
+import { createTimeWeather } from './timeweather';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) document.body.classList.add('is-mobile');
 
-  const { scene, camera, renderer, particles, stars, clouds } = createScene(isMobile);
+  const { scene, camera, renderer, particles, stars, clouds, water,
+    skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
+  } = createScene(isMobile);
   const character = createCharacter(scene);
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
+
+  // ── 시간대 + 날씨 ──
+  const tw = createTimeWeather({
+    scene, renderer,
+    skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
+    water,
+  }, isMobile);
 
   // ── 사운드 ──
   const audio = createAudio();
@@ -42,6 +52,22 @@ export function init(): void {
     const m = audio.toggleMute();
     soundBtn.textContent = m ? '♪̸' : '♪';
   };
+
+  // ── 시간/날씨 UI ──
+  document.querySelectorAll('[data-time]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tw.setTime((btn as HTMLElement).dataset.time as any);
+      document.querySelectorAll('[data-time]').forEach(b => b.classList.remove('tw-on'));
+      btn.classList.add('tw-on');
+    });
+  });
+  document.querySelectorAll('[data-weather]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tw.setWeather((btn as HTMLElement).dataset.weather as any);
+      document.querySelectorAll('[data-weather]').forEach(b => b.classList.remove('tw-on'));
+      btn.classList.add('tw-on');
+    });
+  });
 
   // 워프 — 캐릭터 텔레포트 콜백
   const warp = createWarp((x: number, z: number, h: number) => {
@@ -364,8 +390,9 @@ export function init(): void {
       camera.updateProjectionMatrix();
     }
 
-    updateEnvironment(t, particles, stars, clouds);
+    updateEnvironment(t, particles, stars, clouds, water);
     audio.update(dt);
+    tw.update(dt);
     renderer.render(scene, camera);
 
     frameCount++;

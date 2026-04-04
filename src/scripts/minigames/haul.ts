@@ -1,5 +1,4 @@
 // HAUL v2: 2D PvPvE Extraction
-// "다르면 차별한다"  - 동물별 완전히 다른 플레이 경험
 // 비둘기(안전/느림), 고양이(변수/밸런스), 들쥐(위험/보상+지하세계)
 import { MinigameBase, rgba, C } from './base';
 import type { GameAudio } from '../system/audio';

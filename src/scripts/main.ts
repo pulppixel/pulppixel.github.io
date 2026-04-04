@@ -301,14 +301,16 @@ export function init(): void {
 
   const fpsEl = document.getElementById('fps')!;
   let frameCount = 0, fpsLastTime = performance.now();
-  const timer = new THREE.Timer();
+  let _prevTime = performance.now();
 
   // --- Main loop ---
 
   function animate(): void {
     requestAnimationFrame(animate);
-    const dt = Math.min(timer.getDelta(), 0.05);
-    const t = timer.getElapsed();
+    const curTime = performance.now();
+    const dt = Math.min((curTime - _prevTime) / 1000, 0.05);
+    _prevTime = curTime;
+    const t = curTime / 1000;
 
     if (inMinigame) { renderer.render(scene, camera); return; }
 

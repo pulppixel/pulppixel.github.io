@@ -1,34 +1,57 @@
-// Nine to Six (Frenzy Circle): Concentric ring timing game
-// Land on colored arcs, avoid the black gaps. One-button gameplay.
+// Nine to Six (Frenzy Circle): Concentric rings shrink to center.
+// Each ring rotates at its own speed. Player rotates WITH current ring.
+// Jump outward when a safe arc aligns. Land on color, avoid gaps. Survive!
 import { MinigameBase, rgba, C } from './base';
 import type { GameAudio } from '../system/audio';
 
+// --- Constants ---
 const RING_W = 22;
-const MIN_R = 28;
-const ORBIT_BASE = 2.2;
-const JUMP_DUR = 0.18;
-const COMBO_WIN = 1.5;
+const MIN_R = 22;
+const RING_GAP = 36;
+const BASE_SHRINK = 14;
+const BASE_ROT = 0.8;
+const JUMP_DUR = 0.14;
 const PLAYER_R = 7;
+const COMBO_WIN = 3.0;
+const TAU = Math.PI * 2;
 
-const STAGES = [
-    { rings: 5, safe: 0.55, rotBase: 0.6, rotVar: 0.5, arcsMin: 2, arcsMax: 3 },
-    { rings: 6, safe: 0.45, rotBase: 0.8, rotVar: 0.6, arcsMin: 2, arcsMax: 3 },
-    { rings: 7, safe: 0.38, rotBase: 1.0, rotVar: 0.8, arcsMin: 2, arcsMax: 4 },
-    { rings: 8, safe: 0.30, rotBase: 1.2, rotVar: 1.0, arcsMin: 3, arcsMax: 4 },
-];
+const RCOLS = [C.accent, C.cyan, C.blue, C.purple, C.yellow, C.pink];
 
-const RCOLS = [C.accent, C.cyan, C.blue, C.purple, C.yellow, C.pink, C.accent, C.cyan];
-
+// --- Ring ---
 interface Ring {
     radius: number;
-    rotSpd: number;
-    angle: number;
+    rotSpd: number;   // per-ring rotation speed (rad/s)
+    angle: number;     // per-ring accumulated rotation
     arcs: { s: number; e: number }[];
     color: string;
 }
 
+function mkRing(radius: number, safeRatio: number, speedMul: number, idx: number): Ring {
+    const nArcs = 2 + Math.floor(Math.random() * 2);
+    const totalSafe = TAU * safeRatio;
+    const arcLen = totalSafe / nArcs;
+    const gap = (TAU - totalSafe) / nArcs;
+    const arcs: { s: number; e: number }[] = [];
+    const off = Math.random() * TAU;
+    for (let j = 0; j < nArcs; j++) {
+        const s = off + j * (arcLen + gap);
+        arcs.push({ s, e: s + arcLen });
+    }
+    // Alternate direction, slight speed variation -> looks like gears
+    const dir = idx % 2 === 0 ? 1 : -1;
+    const spd = BASE_ROT * speedMul * dir * (0.85 + Math.random() * 0.3);
+    return {
+        radius,
+        rotSpd: spd,
+        angle: Math.random() * TAU,
+        arcs,
+        color: RCOLS[idx % RCOLS.length],
+    };
+}
+
 type Phase = 'intro' | 'play' | 'dead' | 'result';
 
+// --- Game ---
 class NineToSixGame extends MinigameBase {
     protected readonly title = 'NINE TO SIX';
     protected readonly titleColor = C.accent;
@@ -37,53 +60,78 @@ class NineToSixGame extends MinigameBase {
     private phT = 0;
     private gcx = 0;
     private gcy = 0;
-    private rings: Ring[] = [];
-    private rIdx = 0;
-    private pA = -Math.PI / 2;
-    private oDir = 1;
+
+    private shrinkSpd = BASE_SHRINK;
+    private spdMul = 1.0;          // global speed multiplier (increases over time)
+
+    // Player: pAngle = LOCAL angle on current ring (relative to ring rotation)
+    private pAngle = 0;
+    private pRing = 0;
     private jumping = false;
     private jT = 0;
     private jFromR = 0;
     private jToR = 0;
+    private jFromAngle = 0;        // absolute angle at jump start
+
+    // Player visual = absolute angle = pAngle + currentRing.angle
+    private get vA(): number {
+        if (this.pRing < this.rings.length) return this.pAngle + this.rings[this.pRing].angle;
+        return this.pAngle;
+    }
+
+    private rings: Ring[] = [];
+    private maxR = 0;
+    private safeRatio = 0.52;
+    private ringCounter = 0;       // total rings created (for alternating direction)
+
     private score = 0;
     private best = 0;
-    private stage = 0;
-    private clears = 0;
+    private jumps = 0;
+    private elapsed = 0;
+    private alive = true;
     private combo = 0;
     private maxCombo = 0;
-    private lastJT = -10;
-    private alive = true;
-    private elapsed = 0;
-    private spdMul = 1;
+    private lastJumpT = -10;
     private shX = 0;
     private shY = 0;
-    private trails: { x: number; y: number; a: number }[] = [];
-    private cPulse = 0;
+
+    // --- Lifecycle ---
 
     protected resetGame(): void {
         this.gcx = this.W / 2;
         this.gcy = this.H / 2;
-        this.score = 0;
-        this.stage = 0;
-        this.clears = 0;
-        this.combo = 0;
-        this.maxCombo = 0;
-        this.lastJT = -10;
-        this.alive = true;
-        this.elapsed = 0;
-        this.spdMul = 1;
+        this.maxR = Math.min(this.W, this.H) * 0.42;
+        this.shrinkSpd = BASE_SHRINK;
+        this.spdMul = 1.0;
+        this.safeRatio = 0.52;
+        this.pRing = 0;
         this.jumping = false;
         this.jT = 0;
-        this.rIdx = 0;
-        this.pA = -Math.PI / 2;
-        this.oDir = 1;
+        this.score = 0;
+        this.jumps = 0;
+        this.elapsed = 0;
+        this.alive = true;
+        this.combo = 0;
+        this.maxCombo = 0;
+        this.lastJumpT = -10;
         this.shX = 0;
         this.shY = 0;
-        this.trails = [];
-        this.cPulse = 0;
         this.pts = [];
         this.pops = [];
-        this.mkRings();
+        this.ringCounter = 0;
+
+        // Build initial rings
+        this.rings = [];
+        let r = MIN_R + RING_GAP;
+        while (r < this.maxR + RING_GAP * 2) {
+            this.rings.push(mkRing(r, this.safeRatio, this.spdMul, this.ringCounter++));
+            r += RING_GAP;
+        }
+
+        // Start player on the MIDDLE of the first ring's first safe arc
+        const first = this.rings[0];
+        this.pAngle = first.arcs[0].s + (first.arcs[0].e - first.arcs[0].s) / 2;
+
         this.phase = 'intro';
         this.phT = 1.3;
     }
@@ -91,165 +139,170 @@ class NineToSixGame extends MinigameBase {
     protected onResized(): void {
         this.gcx = this.W / 2;
         this.gcy = this.H / 2;
-        if (this.rings.length) this.mkRings();
+        this.maxR = Math.min(this.W, this.H) * 0.42;
     }
 
-    private mkRings(): void {
-        const s = STAGES[Math.min(this.stage, STAGES.length - 1)];
-        const maxR = Math.min(this.W, this.H) * 0.38;
-        const gap = (maxR - MIN_R) / s.rings;
-        this.rings = [];
-        for (let i = 0; i < s.rings; i++) {
-            const r = maxR - i * gap;
-            if (r < MIN_R) break;
-            const nArcs = s.arcsMin + Math.floor(Math.random() * (s.arcsMax - s.arcsMin + 1));
-            const totalSafe = Math.PI * 2 * s.safe;
-            const arcLen = totalSafe / nArcs;
-            const arcGap = (Math.PI * 2 - totalSafe) / nArcs;
-            const arcs: { s: number; e: number }[] = [];
-            const off = Math.random() * Math.PI * 2;
-            for (let j = 0; j < nArcs; j++) {
-                const start = off + j * (arcLen + arcGap);
-                arcs.push({ s: start, e: start + arcLen });
-            }
-            const dir = i % 2 === 0 ? 1 : -1;
-            this.rings.push({
-                radius: r,
-                rotSpd: (s.rotBase + Math.random() * s.rotVar) * dir,
-                angle: Math.random() * Math.PI * 2,
-                arcs,
-                color: RCOLS[i % RCOLS.length],
-            });
-        }
-        this.rIdx = 0;
-        this.pA = -Math.PI / 2;
-        this.oDir = 1;
-        this.jumping = false;
-    }
-
-    private isSafe(ring: Ring, ga: number): boolean {
-        let rel = ((ga - ring.angle) % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2);
+    // --- Safety check ---
+    // absAngle = player's absolute angle on screen
+    // Converts to ring-local coords by subtracting ring.angle
+    private isSafe(ring: Ring, absAngle: number): boolean {
+        let rel = ((absAngle - ring.angle) % TAU + TAU * 2) % TAU;
         for (const a of ring.arcs) {
-            let s = (a.s % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2);
-            let e = (a.e % (Math.PI * 2) + Math.PI * 4) % (Math.PI * 2);
+            let s = (a.s % TAU + TAU * 2) % TAU;
+            let e = (a.e % TAU + TAU * 2) % TAU;
             if (s <= e) { if (rel >= s && rel <= e) return true; }
             else { if (rel >= s || rel <= e) return true; }
         }
         return false;
     }
 
+    // --- Jump (outward) ---
     private doJump(): void {
         if (this.jumping || !this.alive || this.phase !== 'play') return;
-        if (this.rIdx >= this.rings.length - 1) return;
+        if (this.pRing + 1 >= this.rings.length) return;
         this.jumping = true;
         this.jT = 0;
-        this.jFromR = this.rings[this.rIdx].radius;
-        this.jToR = this.rings[this.rIdx + 1].radius;
+        this.jFromR = this.rings[this.pRing].radius;
+        this.jToR = this.rings[this.pRing + 1].radius;
+        this.jFromAngle = this.vA;  // freeze absolute angle at jump moment
         this.audio?.mgShoot();
     }
 
     private land(): void {
-        this.rIdx++;
+        const targetIdx = this.pRing + 1;
         this.jumping = false;
-        const now = this.elapsed;
+        this.jumps++;
 
-        // Cleared all rings -> next round
-        if (this.rIdx >= this.rings.length) {
-            const bonus = 50 + this.stage * 25;
-            this.score += bonus;
-            this.clears++;
-            if (this.clears % 2 === 0) this.stage = Math.min(this.stage + 1, STAGES.length - 1);
-            this.spdMul += 0.08;
-            this.addPop(this.gcx, this.gcy, `CLEAR! +${bonus}`, true, 1.5);
-            this.audio?.mgWaveClear();
-            this.cPulse = 1;
-            this.mkRings();
-            return;
-        }
+        if (targetIdx >= this.rings.length) { this.die('NO RING!'); return; }
 
-        const ring = this.rings[this.rIdx];
-        if (this.isSafe(ring, this.pA)) {
-            // Safe landing
-            this.oDir = -this.oDir;
-            this.combo = (now - this.lastJT < COMBO_WIN) ? this.combo + 1 : 1;
+        const targetRing = this.rings[targetIdx];
+        const landAngle = this.jFromAngle;  // absolute angle preserved during jump
+
+        if (this.isSafe(targetRing, landAngle)) {
+            // -- Safe landing --
+            this.pRing = targetIdx;
+            // Recalculate local angle for the new ring
+            this.pAngle = ((landAngle - targetRing.angle) % TAU + TAU * 2) % TAU;
+
+            const now = this.elapsed;
+            this.combo = (now - this.lastJumpT < COMBO_WIN) ? this.combo + 1 : 1;
             if (this.combo > this.maxCombo) this.maxCombo = this.combo;
-            this.lastJT = now;
-            const pts = 10 * Math.min(this.combo, 8);
+            this.lastJumpT = now;
+
+            const pts = 10 + Math.floor(this.elapsed * 0.5) + (this.combo >= 2 ? this.combo * 5 : 0);
             this.score += pts;
-            const px = this.gcx + Math.cos(this.pA) * ring.radius;
-            const py = this.gcy + Math.sin(this.pA) * ring.radius;
-            this.addBurst(px, py, ring.color, 6, 70);
+
+            const px = this.gcx + Math.cos(landAngle) * targetRing.radius;
+            const py = this.gcy + Math.sin(landAngle) * targetRing.radius;
+            this.addBurst(px, py, targetRing.color, 6, 70);
             this.addPop(px, py - 22, `+${pts}`);
             this.audio?.mgCoin(this.combo);
+
             if (this.combo >= 3) {
                 this.addPop(px, py - 44, `x${this.combo}`, true, 1.0);
                 this.audio?.mgCombo(this.combo);
             }
         } else {
-            // Hit a gap -> die
-            this.alive = false;
-            const px = this.gcx + Math.cos(this.pA) * ring.radius;
-            const py = this.gcy + Math.sin(this.pA) * ring.radius;
-            this.shX = 8 * (Math.random() > 0.5 ? 1 : -1);
-            this.shY = 6 * (Math.random() - 0.5);
-            this.addBurst(px, py, C.red, 14, 150);
-            this.addPop(px, py - 30, 'MISS!', true, 1.2);
-            if (this.score > this.best) this.best = this.score;
-            this.audio?.mgFail();
-            this.phase = 'dead';
-            this.phT = 1.0;
+            // -- Landed on gap --
+            this.pRing = targetIdx;
+            this.pAngle = ((landAngle - targetRing.angle) % TAU + TAU * 2) % TAU;
+            this.die('MISS!');
         }
     }
 
-    protected updateGame(dt: number): void {
-        // Rotate rings always (slower during death)
-        const rotDt = this.phase === 'dead' ? dt * 0.3 : dt;
-        for (const r of this.rings) r.angle += r.rotSpd * this.spdMul * rotDt;
+    private die(msg: string): void {
+        this.alive = false;
+        const absA = this.vA;
+        const r = this.pRing < this.rings.length ? this.rings[this.pRing].radius : MIN_R;
+        const px = this.gcx + Math.cos(absA) * r;
+        const py = this.gcy + Math.sin(absA) * r;
+        this.shX = 8 * (Math.random() > 0.5 ? 1 : -1);
+        this.shY = 6 * (Math.random() - 0.5);
+        this.addBurst(px, py, C.red, 14, 150);
+        this.addPop(px, py - 30, msg, true, 1.2);
+        if (this.score > this.best) this.best = this.score;
+        this.audio?.mgFail();
+        this.phase = 'dead';
+        this.phT = 1.0;
+    }
 
-        if (this.phase === 'intro') { this.phT -= dt; if (this.phT <= 0) this.phase = 'play'; return; }
+    // --- Update ---
+
+    protected updateGame(dt: number): void {
+        // Rotate each ring individually (always, even during intro/dead)
+        const rdt = this.phase === 'dead' ? dt * 0.3 : dt;
+        for (const r of this.rings) r.angle += r.rotSpd * rdt;
+
+        if (this.phase === 'intro') {
+            for (const r of this.rings) r.radius -= this.shrinkSpd * rdt * 0.3;
+            this.phT -= dt;
+            if (this.phT <= 0) this.phase = 'play';
+            return;
+        }
+
         if (this.phase === 'dead') {
             this.phT -= dt;
-            this.shX *= 0.85; this.shY *= 0.85;
-            this.updatePts(dt, 100); this.updatePops(dt);
+            this.shX *= 0.85;
+            this.shY *= 0.85;
+            this.updatePts(dt, 100);
+            this.updatePops(dt);
             if (this.phT <= 0) this.phase = 'result';
             return;
         }
+
         if (this.phase !== 'play') return;
 
         this.elapsed += dt;
-        this.cPulse = Math.max(0, this.cPulse - dt * 2);
 
-        // Player orbit on current ring
-        if (!this.jumping && this.rIdx < this.rings.length) {
-            const spd = ORBIT_BASE * this.spdMul * (1 + this.rIdx * 0.12);
-            this.pA += spd * this.oDir * dt;
-            const ring = this.rings[this.rIdx];
-            this.trails.push({
-                x: this.gcx + Math.cos(this.pA) * ring.radius,
-                y: this.gcy + Math.sin(this.pA) * ring.radius,
-                a: 0.5,
-            });
+        // Difficulty scaling
+        this.shrinkSpd = BASE_SHRINK + this.elapsed * 0.35;
+        this.spdMul = 1.0 + this.elapsed * 0.015;
+        this.safeRatio = Math.max(0.30, 0.52 - this.elapsed * 0.003);
+
+        // Shrink all rings toward center
+        for (const r of this.rings) r.radius -= this.shrinkSpd * dt;
+
+        // Remove rings that reached center
+        while (this.rings.length > 0 && this.rings[0].radius < MIN_R) {
+            if (this.pRing === 0) {
+                this.die('TOO SLOW!');
+                return;
+            }
+            this.rings.shift();
+            this.pRing--;
+        }
+
+        // Spawn new rings at outer edge
+        while (true) {
+            const outerR = this.rings.length > 0
+                ? this.rings[this.rings.length - 1].radius
+                : MIN_R;
+            if (outerR >= this.maxR + RING_GAP) break;
+            this.rings.push(mkRing(outerR + RING_GAP, this.safeRatio, this.spdMul, this.ringCounter++));
         }
 
         // Jump animation
-        if (this.jumping) { this.jT += dt; if (this.jT >= JUMP_DUR) this.land(); }
-
-        // Keyboard input
-        if (this.keys['Space']) { this.doJump(); this.keys['Space'] = false; }
-
-        // Combo decay
-        if (this.elapsed - this.lastJT > COMBO_WIN) this.combo = 0;
-
-        // Trail fade
-        let i = this.trails.length;
-        while (i-- > 0) {
-            this.trails[i].a -= dt * 2;
-            if (this.trails[i].a <= 0) { this.trails[i] = this.trails[this.trails.length - 1]; this.trails.pop(); }
+        if (this.jumping) {
+            this.jT += dt;
+            if (this.jT >= JUMP_DUR) this.land();
         }
 
-        this.shX *= 0.85; this.shY *= 0.85;
-        this.updatePts(dt, 100); this.updatePops(dt);
+        // Input
+        if (this.keys['Space']) {
+            this.doJump();
+            this.keys['Space'] = false;
+        }
+
+        // Combo decay
+        if (this.elapsed - this.lastJumpT > COMBO_WIN) this.combo = 0;
+
+        this.shX *= 0.85;
+        this.shY *= 0.85;
+        this.updatePts(dt, 100);
+        this.updatePops(dt);
     }
+
+    // --- Render ---
 
     protected renderGame(now: number): void {
         const { W, H } = this;
@@ -262,143 +315,178 @@ class NineToSixGame extends MinigameBase {
         this.drawGrid(0.012);
 
         // Radial bg glow
-        const grad = c.createRadialGradient(gx, gy, 0, gx, gy, Math.min(W, H) * 0.42);
-        grad.addColorStop(0, rgba(C.accent, 0.025));
+        const grad = c.createRadialGradient(gx, gy, MIN_R, gx, gy, this.maxR);
+        grad.addColorStop(0, rgba(C.red, 0.03));
+        grad.addColorStop(0.3, rgba(C.accent, 0.015));
         grad.addColorStop(1, 'transparent');
         c.fillStyle = grad;
         c.fillRect(0, 0, W, H);
 
-        // --- Rings ---
+        // --- Rings (each with own rotation) ---
         c.lineCap = 'butt';
         for (let ri = 0; ri < this.rings.length; ri++) {
             const ring = this.rings[ri];
-            const isCur = ri === this.rIdx;
-            const isNext = ri === this.rIdx + 1;
-            const isPast = ri < this.rIdx;
+            if (ring.radius < MIN_R - RING_W || ring.radius > this.maxR + RING_W * 2) continue;
+
+            const isCur = ri === this.pRing;
+            const isNext = ri === this.pRing + 1;
+            const isPast = ri < this.pRing;
 
             // Dark background ring
             c.beginPath();
-            c.arc(gx, gy, ring.radius, 0, Math.PI * 2);
-            c.strokeStyle = rgba('#1a1a1f', isPast ? 0.15 : 0.45);
+            c.arc(gx, gy, ring.radius, 0, TAU);
+            c.strokeStyle = rgba('#1a1a1f', isPast ? 0.12 : 0.45);
             c.lineWidth = RING_W;
             c.stroke();
 
-            // Safe arc segments
+            // Colored safe arcs (each ring uses its OWN angle)
             for (const arc of ring.arcs) {
                 const gs = arc.s + ring.angle;
                 const ge = arc.e + ring.angle;
-                const alpha = isPast ? 0.1 : isCur ? 0.55 : isNext ? 0.35 + Math.sin(now * 3) * 0.08 : 0.2;
+                const alpha = isPast ? 0.08
+                    : isCur ? 0.55
+                        : isNext ? 0.35 + Math.sin(now * 3) * 0.08
+                            : 0.18;
 
-                // Outer glow
                 if (!isPast) {
                     c.beginPath();
                     c.arc(gx, gy, ring.radius, gs, ge);
-                    c.strokeStyle = rgba(ring.color, alpha * 0.3);
+                    c.strokeStyle = rgba(ring.color, alpha * 0.25);
                     c.lineWidth = RING_W + 8;
                     c.stroke();
                 }
 
-                // Main colored arc
                 c.beginPath();
                 c.arc(gx, gy, ring.radius, gs, ge);
                 c.strokeStyle = rgba(ring.color, alpha);
                 c.lineWidth = RING_W;
                 c.stroke();
 
-                // Inner edge highlight
                 c.beginPath();
                 c.arc(gx, gy, ring.radius - RING_W / 2 + 1, gs, ge);
-                c.strokeStyle = rgba(ring.color, alpha * 0.4);
+                c.strokeStyle = rgba(ring.color, alpha * 0.35);
                 c.lineWidth = 1.5;
                 c.stroke();
             }
-        }
 
-        // Safety indicator dot on next ring (shows if current angle is safe to jump)
-        if (this.phase === 'play' && !this.jumping && this.rIdx < this.rings.length - 1) {
-            const nextRing = this.rings[this.rIdx + 1];
-            const safe = this.isSafe(nextRing, this.pA);
-            const ix = gx + Math.cos(this.pA) * nextRing.radius;
-            const iy = gy + Math.sin(this.pA) * nextRing.radius;
-            if (safe) {
-                // Green indicator = safe to jump now
+            // Urgency pulse when current ring nears death
+            if (isCur && ring.radius < MIN_R + RING_GAP * 0.6) {
+                const urgency = 1 - (ring.radius - MIN_R) / (RING_GAP * 0.6);
                 c.beginPath();
-                c.arc(ix, iy, 4, 0, Math.PI * 2);
-                c.fillStyle = rgba(C.accent, 0.4 + Math.sin(now * 6) * 0.2);
-                c.fill();
-            } else {
-                // Red indicator = danger
-                c.beginPath();
-                c.arc(ix, iy, 3, 0, Math.PI * 2);
-                c.fillStyle = rgba(C.red, 0.15 + Math.sin(now * 4) * 0.05);
-                c.fill();
+                c.arc(gx, gy, ring.radius, 0, TAU);
+                c.strokeStyle = rgba(C.red, urgency * 0.3 + Math.sin(now * 8) * urgency * 0.15);
+                c.lineWidth = RING_W + 4;
+                c.stroke();
             }
         }
 
-        // Center zone
-        const ca = 0.06 + this.cPulse * 0.25;
+        // --- Safety indicator on next ring ---
+        if (this.phase === 'play' && !this.jumping && this.pRing + 1 < this.rings.length) {
+            const nextRing = this.rings[this.pRing + 1];
+            const absA = this.vA;
+            const safe = this.isSafe(nextRing, absA);
+            const ix = gx + Math.cos(absA) * nextRing.radius;
+            const iy = gy + Math.sin(absA) * nextRing.radius;
+
+            c.beginPath();
+            c.arc(ix, iy, safe ? 5 : 3, 0, TAU);
+            c.fillStyle = safe
+                ? rgba(C.accent, 0.5 + Math.sin(now * 6) * 0.2)
+                : rgba(C.red, 0.15 + Math.sin(now * 4) * 0.05);
+            c.fill();
+
+            // Connecting line
+            if (this.pRing < this.rings.length) {
+                const curR = this.rings[this.pRing].radius;
+                const ppx = gx + Math.cos(absA) * curR;
+                const ppy = gy + Math.sin(absA) * curR;
+                c.beginPath();
+                c.moveTo(ppx, ppy);
+                c.lineTo(ix, iy);
+                c.strokeStyle = rgba(safe ? C.accent : C.red, safe ? 0.15 : 0.05);
+                c.lineWidth = 1;
+                c.setLineDash([3, 4]);
+                c.stroke();
+                c.setLineDash([]);
+            }
+        }
+
+        // --- Center death zone ---
         c.beginPath();
-        c.arc(gx, gy, MIN_R, 0, Math.PI * 2);
-        c.fillStyle = rgba(C.accent, ca * 0.5);
+        c.arc(gx, gy, MIN_R, 0, TAU);
+        c.fillStyle = rgba(C.red, 0.04 + Math.sin(now * 2) * 0.02);
         c.fill();
-        c.strokeStyle = rgba(C.accent, ca + 0.1);
+        c.strokeStyle = rgba(C.red, 0.15);
         c.lineWidth = 1.5;
         c.stroke();
-        c.font = '500 8px "JetBrains Mono"';
-        c.fillStyle = rgba(C.accent, 0.35);
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.fillText('GOAL', gx, gy);
+        const xSz = 6;
+        c.strokeStyle = rgba(C.red, 0.2);
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(gx - xSz, gy - xSz);
+        c.lineTo(gx + xSz, gy + xSz);
+        c.moveTo(gx + xSz, gy - xSz);
+        c.lineTo(gx - xSz, gy + xSz);
+        c.stroke();
 
-        // Trails
-        for (const t of this.trails) {
-            c.beginPath();
-            c.arc(t.x, t.y, 1.5, 0, Math.PI * 2);
-            c.fillStyle = rgba(C.accent, t.a * 0.35);
-            c.fill();
-        }
-
-        // Player
+        // --- Player ---
         if (this.alive || this.phase === 'dead') {
             let pr: number;
+            let drawAngle: number;
+
             if (this.jumping) {
                 const p = this.jT / JUMP_DUR;
-                const eased = 1 - (1 - p) * (1 - p); // ease-out quad
+                const eased = 1 - (1 - p) * (1 - p);
                 pr = this.jFromR + (this.jToR - this.jFromR) * eased;
-            } else if (this.rIdx < this.rings.length) {
-                pr = this.rings[this.rIdx].radius;
+                drawAngle = this.jFromAngle;  // frozen during jump
+            } else if (this.pRing < this.rings.length) {
+                pr = this.rings[this.pRing].radius;
+                drawAngle = this.vA;          // rotates with ring
             } else {
                 pr = MIN_R;
+                drawAngle = this.pAngle;
             }
-            const px = gx + Math.cos(this.pA) * pr;
-            const py = gy + Math.sin(this.pA) * pr;
+
+            const px = gx + Math.cos(drawAngle) * pr;
+            const py = gy + Math.sin(drawAngle) * pr;
             const blink = this.phase === 'dead' && Math.sin(now * 20) > 0;
 
             if (!blink) {
-                // Glow
                 c.beginPath();
-                c.arc(px, py, PLAYER_R + 5, 0, Math.PI * 2);
+                c.arc(px, py, PLAYER_R + 5, 0, TAU);
                 c.fillStyle = rgba(C.accent, 0.08);
                 c.fill();
 
-                // Body
                 c.beginPath();
-                c.arc(px, py, PLAYER_R, 0, Math.PI * 2);
+                c.arc(px, py, PLAYER_R, 0, TAU);
                 c.fillStyle = rgba(C.accent, 0.25);
                 c.fill();
-                c.strokeStyle = rgba(C.accent, 0.75);
+                c.strokeStyle = rgba(C.accent, 0.8);
                 c.lineWidth = 2;
                 c.stroke();
 
-                // Eyes (facing orbit direction)
-                const fA = this.pA + this.oDir * 0.5;
+                // Eyes (look outward)
                 c.fillStyle = '#e8e8ec';
                 c.beginPath();
-                c.arc(px + Math.cos(fA - 0.3) * 3, py + Math.sin(fA - 0.3) * 3, 1.5, 0, Math.PI * 2);
+                c.arc(px + Math.cos(drawAngle - 0.3) * 3, py + Math.sin(drawAngle - 0.3) * 3, 1.5, 0, TAU);
                 c.fill();
                 c.beginPath();
-                c.arc(px + Math.cos(fA + 0.3) * 3, py + Math.sin(fA + 0.3) * 3, 1.5, 0, Math.PI * 2);
+                c.arc(px + Math.cos(drawAngle + 0.3) * 3, py + Math.sin(drawAngle + 0.3) * 3, 1.5, 0, TAU);
                 c.fill();
+
+                // Direction arrow
+                if (this.phase === 'play' && !this.jumping) {
+                    const aR = PLAYER_R + 10;
+                    const ax = gx + Math.cos(drawAngle) * (pr + aR);
+                    const ay = gy + Math.sin(drawAngle) * (pr + aR);
+                    c.beginPath();
+                    c.moveTo(ax + Math.cos(drawAngle) * 4, ay + Math.sin(drawAngle) * 4);
+                    c.lineTo(ax + Math.cos(drawAngle - 0.5) * -3, ay + Math.sin(drawAngle - 0.5) * -3);
+                    c.lineTo(ax + Math.cos(drawAngle + 0.5) * -3, ay + Math.sin(drawAngle + 0.5) * -3);
+                    c.closePath();
+                    c.fillStyle = rgba(C.accent, 0.2 + Math.sin(now * 4) * 0.1);
+                    c.fill();
+                }
             }
         }
 
@@ -409,30 +497,46 @@ class NineToSixGame extends MinigameBase {
         // --- HUD ---
         this.drawHudTitle();
         this.drawHudLine(`SCORE  ${this.score}`, 46);
-        this.drawHudLine(`STAGE ${this.stage + 1}  RING ${this.rIdx + 1}/${this.rings.length}`, 62, '#3a3a44');
+        const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
+        this.drawHudLine(`TIME  ${ts}  JUMPS  ${this.jumps}`, 62, '#3a3a44');
         if (this.best > 0) this.drawHudLine(`BEST  ${this.best}`, 78, '#3a3a44');
+
+        // Time-to-death indicator
+        if (this.phase === 'play' && this.pRing < this.rings.length) {
+            const curR = this.rings[this.pRing].radius;
+            const tLeft = Math.max(0, (curR - MIN_R) / this.shrinkSpd);
+            const urgent = tLeft < 1.5;
+            c.font = `600 ${urgent ? 14 : 12}px "JetBrains Mono"`;
+            c.fillStyle = urgent
+                ? rgba(C.red, 0.7 + Math.sin(now * 8) * 0.2)
+                : rgba(C.accent, 0.4);
+            c.textAlign = 'center';
+            c.fillText(`${tLeft.toFixed(1)}s`, W / 2, 32);
+        }
+
         this.drawComboHud(this.combo, now, W / 2, H - 50);
         this.drawCloseBtn();
 
-        // Controls hint (fades out)
-        if (this.phase === 'play' && this.elapsed < 4) {
+        // Controls hint
+        if (this.phase === 'play' && this.elapsed < 5) {
             c.font = '400 9px "JetBrains Mono"';
-            c.fillStyle = rgba(C.accent, Math.max(0, 1 - this.elapsed / 4) * 0.5);
+            c.fillStyle = rgba(C.accent, Math.max(0, 1 - this.elapsed / 5) * 0.5);
             c.textAlign = 'center';
-            c.fillText(this.mob ? 'TAP to jump inward' : 'SPACE / CLICK to jump', W / 2, H - 20);
+            c.fillText(this.mob ? 'TAP when green dot appears' : 'SPACE / CLICK when green dot appears', W / 2, H - 16);
         }
 
-        // Phase overlays
         if (this.phase === 'intro') {
             this.drawIntro(this.phT, 'NINE TO SIX',
-                this.mob ? 'TAP = JUMP' : 'SPACE / CLICK = JUMP',
-                'Land on arcs, avoid gaps!');
+                this.mob ? 'TAP = JUMP OUTWARD' : 'SPACE / CLICK = JUMP',
+                'Wait for the green dot, then jump!');
         }
         if (this.phase === 'result') this.renderRes();
     }
 
+    // --- Result ---
+
     private renderRes(): void {
-        const ok = this.score >= 100;
+        const ok = this.jumps >= 10;
         const { bx, by } = this.drawResultBg(ok ? 'GREAT RUN!' : 'GAME OVER', ok ? C.accent : C.red);
         const c = this.cx;
         c.font = '700 32px "JetBrains Mono"';
@@ -442,12 +546,15 @@ class NineToSixGame extends MinigameBase {
         c.font = '400 10px "JetBrains Mono"';
         c.fillStyle = '#5a5a66';
         c.fillText('POINTS', bx, by);
-        c.fillText(`STAGE ${this.stage + 1} · CLEARS ${this.clears} · COMBO x${this.maxCombo}`, bx, by + 18);
+        const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
+        c.fillText(`${ts} survived · ${this.jumps} jumps · x${this.maxCombo} combo`, bx, by + 18);
         if (this.best > 0) { c.fillStyle = C.accent; c.fillText(`BEST: ${this.best}`, bx, by + 36); }
         this.drawResultBtns(bx, by + 56);
     }
 
     private get resBY(): number { return this.H / 2 + 56; }
+
+    // --- Input ---
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result') {

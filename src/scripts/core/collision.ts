@@ -57,6 +57,7 @@ function computeColliders(): FenceCollider[] {
 
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
+    if (p.w < 10) continue;
     const hw = p.w / 2, hd = p.d / 2;
     const isMain = p.w >= 14;
     const fenceTop = p.h + (isMain ? 0.85 : 0.70);

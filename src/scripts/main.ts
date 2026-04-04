@@ -274,6 +274,7 @@ export function init(): void {
   let isSprinting = false;
   let isWalking = false; // 산책 모드 (V키 토글)
   let smoothGroundY = 0;
+  let lastSafePos = { x: SPAWN.x, y: SPAWN.y, z: SPAWN.z };
 
   const camLookOffset = new THREE.Vector3(0, 0.8, 0);
   const camPos = character.group.position.clone().add(new THREE.Vector3(0, 3, 5));
@@ -357,9 +358,9 @@ export function init(): void {
 
     if (character.group.position.y < WATER_Y) {
       audio.splash();
-      character.group.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+      character.group.position.set(lastSafePos.x, lastSafePos.y + 0.5, lastSafePos.z);
       velocityY = 0;
-      smoothGroundY = SPAWN.y;
+      smoothGroundY = lastSafePos.y;
       isGrounded = false;
       wasGrounded = false;
       return;
@@ -382,6 +383,11 @@ export function init(): void {
       smoothGroundY = character.group.position.y;
     }
     wasGrounded = isGrounded;
+    if (isGrounded) {
+      lastSafePos.x = character.group.position.x;
+      lastSafePos.y = character.group.position.y;
+      lastSafePos.z = character.group.position.z;
+    }
 
     const groundHForShadow = getGroundHeight(character.group.position.x, character.group.position.z);
     character.animate(t, moving, isSprinting, groundHForShadow);

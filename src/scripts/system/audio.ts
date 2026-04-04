@@ -14,6 +14,8 @@ export interface GameAudio {
   startAmbient(): void;
   update(dt: number): void;
   toggleMute(): boolean;
+  // --- BGM ---
+  setBGMMood(timeLabel: string): void;
   // --- Minigame sounds ---
   mgCoin(pitch?: number): void;
   mgHit(): void;
@@ -43,6 +45,90 @@ export function createAudio(): GameAudio {
   let birdTimer = 2 + Math.random() * 5;
   let footCd = 0;
   let tickCd = 0;
+
+  // --- BGM system ---
+  interface BGMPreset {
+    notes: number[];    // MIDI note pool
+    tempo: number;      // seconds between events
+    noteLen: number;    // note duration
+    vol: number;        // volume
+    type: OscillatorType;
+    restChance: number; // probability of silence
+    chordChance: number;// probability of 2-note chord
+    delayMix: number;   // echo amount (0-1)
+  }
+
+  const BGM_PRESETS: Record<string, BGMPreset> = {
+    dawn:   { notes: [60,62,64,67,69,72,74], tempo: 2.2, noteLen: 1.8, vol: 0.018, type: 'sine',     restChance: 0.35, chordChance: 0.2, delayMix: 0.4 },
+    day:    { notes: [67,69,71,74,76,79,81], tempo: 1.6, noteLen: 1.2, vol: 0.015, type: 'triangle', restChance: 0.25, chordChance: 0.3, delayMix: 0.3 },
+    sunset: { notes: [65,67,69,72,74,77,72], tempo: 2.0, noteLen: 1.6, vol: 0.018, type: 'sine',     restChance: 0.30, chordChance: 0.25, delayMix: 0.5 },
+    night:  { notes: [57,60,62,64,67,69,72], tempo: 3.0, noteLen: 2.4, vol: 0.014, type: 'sine',     restChance: 0.45, chordChance: 0.15, delayMix: 0.6 },
+  };
+
+  let bgmPreset: BGMPreset = BGM_PRESETS.day;
+  let bgmTimer = 1.0;
+  let bgmGain: GainNode | null = null;
+  let bgmLastNote = -1;
+  let bgmActive = false;
+
+  function midiToHz(midi: number): number { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+  function bgmPlayNote(preset: BGMPreset): void {
+    if (!ctx || !bgmGain) return;
+    const now = ctx.currentTime;
+
+    // Pick a note different from last
+    let idx = Math.floor(Math.random() * preset.notes.length);
+    if (idx === bgmLastNote && preset.notes.length > 1) idx = (idx + 1) % preset.notes.length;
+    bgmLastNote = idx;
+
+    const freq = midiToHz(preset.notes[idx]);
+    const dur = preset.noteLen + (Math.random() - 0.5) * 0.4;
+    const vol = preset.vol * (0.7 + Math.random() * 0.3);
+
+    // Main note
+    const osc = ctx.createOscillator();
+    osc.type = preset.type;
+    osc.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now + 0.08);
+    g.gain.setValueAtTime(vol * 0.8, now + dur * 0.5);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(g).connect(bgmGain);
+    osc.start(now); osc.stop(now + dur + 0.01);
+
+    // Delayed echo (fake reverb)
+    if (preset.delayMix > 0) {
+      const dOsc = ctx.createOscillator();
+      dOsc.type = preset.type;
+      dOsc.frequency.value = freq;
+      const dG = ctx.createGain();
+      const dT = now + 0.25 + Math.random() * 0.15;
+      dG.gain.setValueAtTime(0, dT);
+      dG.gain.linearRampToValueAtTime(vol * preset.delayMix * 0.5, dT + 0.06);
+      dG.gain.exponentialRampToValueAtTime(0.0001, dT + dur * 0.7);
+      dOsc.connect(dG).connect(bgmGain);
+      dOsc.start(dT); dOsc.stop(dT + dur * 0.7 + 0.01);
+    }
+
+    // Chord (harmony note - perfect 5th or octave)
+    if (Math.random() < preset.chordChance) {
+      const intervals = [7, 12, 5]; // 5th, octave, 4th
+      const interval = intervals[Math.floor(Math.random() * intervals.length)];
+      const hFreq = midiToHz(preset.notes[idx] + interval);
+      const hOsc = ctx.createOscillator();
+      hOsc.type = 'sine';
+      hOsc.frequency.value = hFreq;
+      const hG = ctx.createGain();
+      const hDelay = 0.05 + Math.random() * 0.1;
+      hG.gain.setValueAtTime(0, now + hDelay);
+      hG.gain.linearRampToValueAtTime(vol * 0.4, now + hDelay + 0.06);
+      hG.gain.exponentialRampToValueAtTime(0.0001, now + dur * 0.6);
+      hOsc.connect(hG).connect(bgmGain);
+      hOsc.start(now + hDelay); hOsc.stop(now + dur * 0.6 + 0.01);
+    }
+  }
 
   function ensure(): boolean {
     if (muted) return false;
@@ -205,11 +291,31 @@ export function createAudio(): GameAudio {
       const flt = ctx!.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 350; flt.Q.value = 0.4;
       windGain = ctx!.createGain(); windGain.gain.value = 0.035;
       windNode.connect(flt).connect(windGain).connect(master); windNode.start();
+      // Start BGM
+      if (!bgmGain) {
+        bgmGain = ctx!.createGain();
+        bgmGain.gain.value = 1.0;
+        bgmGain.connect(master);
+      }
+      bgmActive = true;
     },
 
     update(dt) {
       if (!ctx || !ready || muted) return;
       if (windGain) { const t = ctx.currentTime; windGain.gain.value = 0.03 + Math.sin(t * 0.25) * 0.012 + Math.sin(t * 0.7) * 0.005; }
+
+      // BGM scheduling
+      if (bgmActive) {
+        bgmTimer -= dt;
+        if (bgmTimer <= 0) {
+          const jitter = (Math.random() - 0.5) * bgmPreset.tempo * 0.3;
+          bgmTimer = bgmPreset.tempo + jitter;
+          if (Math.random() > bgmPreset.restChance) {
+            bgmPlayNote(bgmPreset);
+          }
+        }
+      }
+
       birdTimer -= dt;
       if (birdTimer <= 0) {
         birdTimer = 3.5 + Math.random() * 9;
@@ -235,8 +341,14 @@ export function createAudio(): GameAudio {
       muted = !muted;
       if (master) master.gain.value = muted ? 0 : 0.35;
       if (muted && windNode) { windNode.stop(); windNode = null; windGain = null; }
+      if (muted) { bgmActive = false; }
       if (!muted) this.startAmbient();
       return muted;
+    },
+
+    setBGMMood(timeLabel: string) {
+      const p = BGM_PRESETS[timeLabel];
+      if (p) bgmPreset = p;
     },
 
     // =============================================

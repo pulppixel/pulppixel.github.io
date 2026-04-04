@@ -17,6 +17,8 @@ import { createAudio } from './system/audio';
 import { createTimeWeather } from './world/timeweather';
 import { createPostFX } from './system/postfx';
 import { createAnimals } from './entity/animals';
+import { createAnimalInteraction } from './entity/interactions';
+import { createSeasonSystem } from './world/seasons';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -38,9 +40,9 @@ const SPAWN = { x: 0, y: 1.0, z: 0 };
 // --- Skin palette tint helper ---
 const _tintColor = new THREE.Color();
 function applySkinPalette(
-  palette: SkinPalette,
-  particles: { geo: THREE.BufferGeometry; count: number },
-  dustMat: THREE.PointsMaterial,
+    palette: SkinPalette,
+    particles: { geo: THREE.BufferGeometry; count: number },
+    dustMat: THREE.PointsMaterial,
 ): void {
   // Tint pollen particles
   const pMat = (particles.geo.userData?.pointsMaterial as THREE.PointsMaterial | undefined);
@@ -67,7 +69,7 @@ export function init(): void {
   const audio = createAudio();
   const initAudio = () => {
     audio.init();
-    audio.startAmbient();
+    audio.startAmbient(); // ambient + BGM 함께 시작
     document.removeEventListener('keydown', initAudio);
     document.removeEventListener('click', initAudio);
     document.removeEventListener('touchstart', initAudio);
@@ -79,7 +81,7 @@ export function init(): void {
   const soundBtn = document.getElementById('sound-toggle');
   if (soundBtn) {
     soundBtn.onclick = () => {
-      const m = audio.toggleMute();
+      const m = audio.toggleMute(); // BGM도 함께 토글됨
       soundBtn.textContent = m ? '\u266A\u0338' : '\u266A';
     };
   }
@@ -117,6 +119,8 @@ export function init(): void {
 
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const animals = createAnimals(scene);
+  const animalInteraction = createAnimalInteraction(scene);
+  const seasons = createSeasonSystem(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -155,11 +159,30 @@ export function init(): void {
     });
   });
 
+  // Season UI
+  document.querySelectorAll('[data-season]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      seasons.setSeason((btn as HTMLElement).dataset.season as any);
+      document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('tw-on'));
+      btn.classList.add('tw-on');
+    });
+  });
+
   // Warp teleport
   const warp = createWarp((x: number, z: number, h: number) => {
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
     isGrounded = false;
+  });
+
+  // --- Season system ---
+  const season = createSeasonSystem(scene);
+  document.querySelectorAll('[data-season]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      season.setSeason((btn as HTMLElement).dataset.season as any);
+      document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('tw-on'));
+      btn.classList.add('tw-on');
+    });
   });
 
   // --- Mobile jump button ---
@@ -178,8 +201,8 @@ export function init(): void {
   // --- Arcade transition overlay ---
   const arcadeOverlay = document.createElement('div');
   arcadeOverlay.style.cssText =
-    'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
-    'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
+      'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
+      'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
 
   // --- Minigames (with audio) ---
@@ -419,6 +442,7 @@ export function init(): void {
 
     updateZones(t, dt, character.group.position, nearestProject);
     animals.update(dt, t, character.group.position);
+    animalInteraction.update(dt, t, character.group.position);
 
     for (let zi = 0; zi < zones.length; zi++) {
       const dx = character.group.position.x - zones[zi].cx;
@@ -451,6 +475,8 @@ export function init(): void {
     updateEnvironment(t, particles, stars, clouds, water);
     audio.update(dt);
     tw.update(dt);
+    audio.setBGMMood(tw.getTimeLabel());
+    seasons.update(dt);
     postfx.updateForTime(tw.getTimeLabel(), dt);
     postfx.render();
 

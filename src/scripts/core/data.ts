@@ -34,10 +34,10 @@ export interface Platform {
 // --- Zone layout ---
 
 export const COMPANIES: CompanyData[] = [
-  { name: 'The Nether (2025-2026)', color: 0xa78bfa, position: { x: 0, z: -18 } },
-  { name: 'Treasure Isle (2023)', color: 0x6ee7b7, position: { x: 28, z: -40 } },
-  { name: 'Beacon Peak (2026)', color: 0xfbbf24, position: { x: -28, z: -40 } },
-  { name: 'Overworld (2019-2022)', color: 0xff6b9d, position: { x: 0, z: -58 } },
+  { name: 'Overworld (19-22)', color: 0xff6b9d, position: { x: 0, z: -58 } },
+  { name: 'Treasure Isle (23)', color: 0x6ee7b7, position: { x: 28, z: -40 } },
+  { name: 'The Nether (25-26)', color: 0xa78bfa, position: { x: 0, z: -18 } },
+  { name: 'Beacon Peak (26)', color: 0xfbbf24, position: { x: -28, z: -40 } },
 ];
 
 // --- Platforms ---

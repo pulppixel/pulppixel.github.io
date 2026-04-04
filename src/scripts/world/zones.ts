@@ -184,111 +184,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     scene.add(label);
   });
 
-  // --- Zone 0: Purple Portal Arch ---
+  // --- Zone 0: Sacred Tree + Campfire ---
   _zIdx = 0;
-  {
-    const cx = COMPANIES[0].position.x, cz = COMPANIES[0].position.z;
-    const ph = zoneHeight(cx, cz);
-    const COL = 0xa78bfa, COL_DK = 0x7c5cbf;
-
-    const pillarL = stdBox(0.4, 3.5, 0.4, COL_DK); pillarL.position.set(cx - 1.8, ph + 1.75, cz - 5); scene.add(pillarL);
-    const pillarR = stdBox(0.4, 3.5, 0.4, COL_DK); pillarR.position.set(cx + 1.8, ph + 1.75, cz - 5); scene.add(pillarR);
-    const crossbar = stdBox(4.0, 0.35, 0.35, COL_DK); crossbar.position.set(cx, ph + 3.7, cz - 5); scene.add(crossbar);
-
-    const portalFill = glowBox(3.2, 3.0, 0.08, COL, 0.4);
-    (portalFill.material as THREE.MeshStandardMaterial).transparent = true;
-    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.15;
-    portalFill.position.set(cx, ph + 2.0, cz - 5); scene.add(portalFill);
-    za({ mesh: portalFill, type: 'pulse', baseOp: 0.15, range: 0.08 });
-
-    [[cx, ph + 4.5, cz - 5], [cx - 3.2, ph + 2.0, cz - 3.5], [cx + 3.2, ph + 2.0, cz - 3.5]].forEach(([x, y, z], i) => {
-      const cry = glowBox(0.4, 0.6, 0.4, COL, 0.5);
-      cry.rotation.set(Math.PI / 4, 0, Math.PI / 4);
-      cry.position.set(x, y, z); scene.add(cry);
-      za({ mesh: cry, type: 'spin', axis: 'y', speed: 0.6 + i * 0.3, baseY: y, float: 0.15 + i * 0.05 });
-    });
-
-    [[-2, -3], [2, -3], [-3, -1], [3, -1]].forEach(([ox, oz]) => {
-      const rune = glowBox(0.3, 0.08, 0.3, COL, 0.2);
-      rune.position.set(cx + ox, ph + 0.04, cz + oz); rune.rotation.y = Math.PI / 4;
-      scene.add(rune);
-    });
-
-    const portalLight = new THREE.PointLight(COL, 0.8, 8);
-    portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
-  }
-
-  // --- Zone 1: Treasure Isle ---
-  _zIdx = 1;
-  {
-    const cx = COMPANIES[1].position.x, cz = COMPANIES[1].position.z;
-    const ph = zoneHeight(cx, cz);
-    const GOLD = 0xf5c870;
-
-    const mast = stdBox(0.2, 4.0, 0.2, WOOD); mast.position.set(cx, ph + 2.0, cz - 4.5); scene.add(mast);
-    const flag = glowBox(1.2, 0.8, 0.05, 0x6ee7b7, 0.3);
-    flag.position.set(cx + 0.7, ph + 3.5, cz - 4.5); scene.add(flag);
-    za({ mesh: flag, type: 'float', baseY: ph + 3.5, range: 0.06, speed: 1.5, phase: 0 });
-
-    const chestBody = stdBox(1.2, 0.7, 0.8, WOOD); chestBody.position.set(cx, ph + 0.35, cz - 3.5); scene.add(chestBody);
-    const lid = stdBox(1.25, 0.2, 0.85, WOOD_LT); lid.position.set(cx, ph + 0.8, cz - 3.5); lid.rotation.x = -0.25; scene.add(lid);
-
-    [[0, 0.9, 0], [-0.5, 0.2, 0.6], [0.5, 0.2, 0.6], [0, 0.2, -0.6], [0.3, 1.2, 0.2]].forEach(([gx, gy, gz], i) => {
-      const g = glowBox(0.45, 0.45, 0.45, GOLD, 0.3);
-      g.position.set(cx + gx, ph + gy, cz - 3.5 + gz); scene.add(g);
-      if (i === 4) za({ mesh: g, type: 'float', baseY: ph + 1.2, range: 0.15, speed: 0.7, phase: 0 });
-    });
-
-    const emerald = glowBox(0.5, 0.5, 0.5, 0x50c878, 0.5);
-    emerald.rotation.set(Math.PI / 4, 0, Math.PI / 4);
-    emerald.position.set(cx + 3.5, ph + 2.5, cz - 3); scene.add(emerald);
-    za({ mesh: emerald, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 2.5, float: 0.25 });
-
-    const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
-    treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
-
-    [[-2, -2], [2, -2], [-3, 0], [3, 0], [-1, -5], [1, -5]].forEach(([ox, oz]) => {
-      const coin = glowBox(0.25, 0.06, 0.25, GOLD, 0.2);
-      coin.position.set(cx + ox, ph + 0.03, cz + oz); scene.add(coin);
-    });
-  }
-
-  // --- Zone 2: Beacon Peak ---
-  _zIdx = 2;
-  {
-    const cx = COMPANIES[2].position.x, cz = COMPANIES[2].position.z;
-    const ph = zoneHeight(cx, cz);
-    const COL = 0xfbbf24, CRYSTAL = 0x50c8d8;
-
-    [1.6, 1.2, 0.8].forEach((w, i) => {
-      const b = stdBox(w, 0.5, w, STONE_LT);
-      b.position.set(cx, ph + 0.25 + i * 0.5, cz - 4.5); scene.add(b);
-    });
-
-    const crystal = glowBox(0.7, 1.0, 0.7, CRYSTAL, 0.6);
-    crystal.rotation.set(Math.PI / 4, 0, Math.PI / 4);
-    crystal.position.set(cx, ph + 2.2, cz - 4.5); scene.add(crystal);
-    za({ mesh: crystal, type: 'spin', axis: 'y', speed: 0.6, baseY: ph + 2.2, float: 0.2 });
-
-    const beam = new THREE.Mesh(
-      new THREE.BoxGeometry(0.15, 12, 0.15),
-      new THREE.MeshBasicMaterial({ color: CRYSTAL, transparent: true, opacity: 0.08 }),
-    );
-    beam.position.set(cx, ph + 8, cz - 4.5); scene.add(beam);
-    za({ mesh: beam, type: 'pulse', baseOp: 0.08, range: 0.05 });
-
-    [[-2.5, 1.0, -3], [2.5, 0.8, -3], [-1.5, 0.6, -6], [1.5, 0.6, -6]].forEach(([ox, h, oz], i) => {
-      const c = glowBox(0.3, h, 0.3, CRYSTAL, 0.35);
-      c.rotation.set(0, i * 0.7, (i % 2 === 0 ? 0.15 : -0.15));
-      c.position.set(cx + ox, ph + h / 2, cz + oz); scene.add(c);
-    });
-
-    const beaconLight = new THREE.PointLight(COL, 0.7, 8);
-    beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
-  }
-
-  // --- Zone 3: Sacred Tree + Campfire ---
-  _zIdx = 3;
   {
     const cx = COMPANIES[3].position.x, cz = COMPANIES[3].position.z;
     const ph = zoneHeight(cx, cz);
@@ -299,9 +196,9 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const leafGeo = new THREE.BoxGeometry(1.5, 1.2, 1.5);
     const leafCols = [LEAF, 0xe888a0, LEAF, 0xf5c8d8];
     [[0, 0, 0], [-1.3, -0.2, 0], [1.3, -0.2, 0], [0, -0.2, -1.3],
-     [0, -0.2, 1.3], [0, 1.1, 0], [-1, 0.8, 1], [1, 0.8, -1]].forEach(([lx, ly, lz], i) => {
+      [0, -0.2, 1.3], [0, 1.1, 0], [-1, 0.8, 1], [1, 0.8, -1]].forEach(([lx, ly, lz], i) => {
       const leaf = new THREE.Mesh(leafGeo,
-        new THREE.MeshStandardMaterial({ color: leafCols[i % leafCols.length], metalness: 0.05, roughness: 0.85 }));
+          new THREE.MeshStandardMaterial({ color: leafCols[i % leafCols.length], metalness: 0.05, roughness: 0.85 }));
       leaf.castShadow = true;
       leaf.position.set(cx + lx * 1.1, ph + 4.2 + ly, cz - 4.5 + lz * 1.1);
       scene.add(leaf);
@@ -343,6 +240,109 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       scene.add(fl);
       za({ mesh: fl, type: 'float', baseY: ph + 0.48, range: 0.06, speed: 1.0, phase: i * 1.5 });
     });
+  }
+
+  // --- Zone 1: Treasure Isle ---
+  _zIdx = 1;
+  {
+    const cx = COMPANIES[1].position.x, cz = COMPANIES[1].position.z;
+    const ph = zoneHeight(cx, cz);
+    const GOLD = 0xf5c870;
+
+    const mast = stdBox(0.2, 4.0, 0.2, WOOD); mast.position.set(cx, ph + 2.0, cz - 4.5); scene.add(mast);
+    const flag = glowBox(1.2, 0.8, 0.05, 0x6ee7b7, 0.3);
+    flag.position.set(cx + 0.7, ph + 3.5, cz - 4.5); scene.add(flag);
+    za({ mesh: flag, type: 'float', baseY: ph + 3.5, range: 0.06, speed: 1.5, phase: 0 });
+
+    const chestBody = stdBox(1.2, 0.7, 0.8, WOOD); chestBody.position.set(cx, ph + 0.35, cz - 3.5); scene.add(chestBody);
+    const lid = stdBox(1.25, 0.2, 0.85, WOOD_LT); lid.position.set(cx, ph + 0.8, cz - 3.5); lid.rotation.x = -0.25; scene.add(lid);
+
+    [[0, 0.9, 0], [-0.5, 0.2, 0.6], [0.5, 0.2, 0.6], [0, 0.2, -0.6], [0.3, 1.2, 0.2]].forEach(([gx, gy, gz], i) => {
+      const g = glowBox(0.45, 0.45, 0.45, GOLD, 0.3);
+      g.position.set(cx + gx, ph + gy, cz - 3.5 + gz); scene.add(g);
+      if (i === 4) za({ mesh: g, type: 'float', baseY: ph + 1.2, range: 0.15, speed: 0.7, phase: 0 });
+    });
+
+    const emerald = glowBox(0.5, 0.5, 0.5, 0x50c878, 0.5);
+    emerald.rotation.set(Math.PI / 4, 0, Math.PI / 4);
+    emerald.position.set(cx + 3.5, ph + 2.5, cz - 3); scene.add(emerald);
+    za({ mesh: emerald, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 2.5, float: 0.25 });
+
+    const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
+    treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
+
+    [[-2, -2], [2, -2], [-3, 0], [3, 0], [-1, -5], [1, -5]].forEach(([ox, oz]) => {
+      const coin = glowBox(0.25, 0.06, 0.25, GOLD, 0.2);
+      coin.position.set(cx + ox, ph + 0.03, cz + oz); scene.add(coin);
+    });
+  }
+
+  // --- Zone 2: Purple Portal Arch ---
+  _zIdx = 2;
+  {
+    const cx = COMPANIES[0].position.x, cz = COMPANIES[0].position.z;
+    const ph = zoneHeight(cx, cz);
+    const COL = 0xa78bfa, COL_DK = 0x7c5cbf;
+
+    const pillarL = stdBox(0.4, 3.5, 0.4, COL_DK); pillarL.position.set(cx - 1.8, ph + 1.75, cz - 5); scene.add(pillarL);
+    const pillarR = stdBox(0.4, 3.5, 0.4, COL_DK); pillarR.position.set(cx + 1.8, ph + 1.75, cz - 5); scene.add(pillarR);
+    const crossbar = stdBox(4.0, 0.35, 0.35, COL_DK); crossbar.position.set(cx, ph + 3.7, cz - 5); scene.add(crossbar);
+
+    const portalFill = glowBox(3.2, 3.0, 0.08, COL, 0.4);
+    (portalFill.material as THREE.MeshStandardMaterial).transparent = true;
+    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.15;
+    portalFill.position.set(cx, ph + 2.0, cz - 5); scene.add(portalFill);
+    za({ mesh: portalFill, type: 'pulse', baseOp: 0.15, range: 0.08 });
+
+    [[cx, ph + 4.5, cz - 5], [cx - 3.2, ph + 2.0, cz - 3.5], [cx + 3.2, ph + 2.0, cz - 3.5]].forEach(([x, y, z], i) => {
+      const cry = glowBox(0.4, 0.6, 0.4, COL, 0.5);
+      cry.rotation.set(Math.PI / 4, 0, Math.PI / 4);
+      cry.position.set(x, y, z); scene.add(cry);
+      za({ mesh: cry, type: 'spin', axis: 'y', speed: 0.6 + i * 0.3, baseY: y, float: 0.15 + i * 0.05 });
+    });
+
+    [[-2, -3], [2, -3], [-3, -1], [3, -1]].forEach(([ox, oz]) => {
+      const rune = glowBox(0.3, 0.08, 0.3, COL, 0.2);
+      rune.position.set(cx + ox, ph + 0.04, cz + oz); rune.rotation.y = Math.PI / 4;
+      scene.add(rune);
+    });
+
+    const portalLight = new THREE.PointLight(COL, 0.8, 8);
+    portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
+  }
+
+  // --- Zone 3: Beacon Peak ---
+  _zIdx = 3;
+  {
+    const cx = COMPANIES[2].position.x, cz = COMPANIES[2].position.z;
+    const ph = zoneHeight(cx, cz);
+    const COL = 0xfbbf24, CRYSTAL = 0x50c8d8;
+
+    [1.6, 1.2, 0.8].forEach((w, i) => {
+      const b = stdBox(w, 0.5, w, STONE_LT);
+      b.position.set(cx, ph + 0.25 + i * 0.5, cz - 4.5); scene.add(b);
+    });
+
+    const crystal = glowBox(0.7, 1.0, 0.7, CRYSTAL, 0.6);
+    crystal.rotation.set(Math.PI / 4, 0, Math.PI / 4);
+    crystal.position.set(cx, ph + 2.2, cz - 4.5); scene.add(crystal);
+    za({ mesh: crystal, type: 'spin', axis: 'y', speed: 0.6, baseY: ph + 2.2, float: 0.2 });
+
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 12, 0.15),
+      new THREE.MeshBasicMaterial({ color: CRYSTAL, transparent: true, opacity: 0.08 }),
+    );
+    beam.position.set(cx, ph + 8, cz - 4.5); scene.add(beam);
+    za({ mesh: beam, type: 'pulse', baseOp: 0.08, range: 0.05 });
+
+    [[-2.5, 1.0, -3], [2.5, 0.8, -3], [-1.5, 0.6, -6], [1.5, 0.6, -6]].forEach(([ox, h, oz], i) => {
+      const c = glowBox(0.3, h, 0.3, CRYSTAL, 0.35);
+      c.rotation.set(0, i * 0.7, (i % 2 === 0 ? 0.15 : -0.15));
+      c.position.set(cx + ox, ph + h / 2, cz + oz); scene.add(c);
+    });
+
+    const beaconLight = new THREE.PointLight(COL, 0.7, 8);
+    beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
   }
 
   // --- Update ---

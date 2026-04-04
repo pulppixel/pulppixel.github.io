@@ -1,5 +1,4 @@
 // Entry point + game loop
-// Changes: mobile jump button, skin palette theme, minigame audio pass-through
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
 import { createScene, updateEnvironment } from './world/scene';
@@ -12,6 +11,7 @@ import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
+import { createNineToSixGame } from './minigames/ninetosix';
 import { createAudio } from './system/audio';
 import { createTimeWeather } from './world/timeweather';
 import { createPostFX } from './system/postfx';
@@ -230,6 +230,7 @@ export function init(): void {
     maze: createMazeGame(mgContainer, exitMg, audio),
     nomads: createNomadsGame(mgContainer, exitMg, audio),
     haul: createHaulGame(mgContainer, exitMg, audio),
+    ninetosix: createNineToSixGame(mgContainer, exitMg, audio),
   };
 
   function enterMinigame(key: string): void {

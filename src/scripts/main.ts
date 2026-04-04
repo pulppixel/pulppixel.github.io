@@ -19,6 +19,7 @@ import { createPostFX } from './system/postfx';
 import { createAnimals } from './entity/animals';
 import { createAnimalInteraction } from './entity/interactions';
 import { createSeasonSystem } from './world/seasons';
+import { createWindSystem } from './world/wind';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -28,6 +29,7 @@ const Y_AXIS = new THREE.Vector3(0, 1, 0);
 
 const SP = 4.8;
 const SPRINT_MULT = 1.7;
+const WALK_MULT = 0.45;  // 산책 모드 속도
 const BOUND_X = 50;
 const BOUND_Z_MIN = -68;
 const BOUND_Z_MAX = 10;
@@ -121,6 +123,7 @@ export function init(): void {
   const animals = createAnimals(scene);
   const animalInteraction = createAnimalInteraction(scene);
   const seasons = createSeasonSystem(scene);
+  const wind = createWindSystem(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -269,6 +272,7 @@ export function init(): void {
   let isGrounded = true;
   let wasGrounded = true;
   let isSprinting = false;
+  let isWalking = false; // 산책 모드 (V키 토글)
   let smoothGroundY = 0;
 
   const camLookOffset = new THREE.Vector3(0, 0.8, 0);
@@ -298,13 +302,16 @@ export function init(): void {
     if (input.keys['KeyD'] || input.keys['ArrowRight']) _mv.x += 1;
     if (input.moveTid !== null) { _mv.x += input.jIn.x; _mv.z += input.jIn.y; }
 
+    // Walk mode toggle (V key)
+    if (input.keys['KeyV']) { isWalking = !isWalking; input.keys['KeyV'] = false; }
+
     const wantSprint = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
     isSprinting = false;
 
     if (_mv.length() > 0.12) {
       if (!started) { started = true; hud.heroLabel.classList.add('hidden'); }
-      isSprinting = wantSprint && isGrounded;
-      const speed = isSprinting ? SP * SPRINT_MULT : SP;
+      isSprinting = wantSprint && isGrounded && !isWalking;
+      const speed = isSprinting ? SP * SPRINT_MULT : isWalking ? SP * WALK_MULT : SP;
       _mv.normalize().applyAxisAngle(Y_AXIS, input.yaw);
 
       const curY = character.group.position.y;
@@ -452,13 +459,14 @@ export function init(): void {
       if (inZone) activeZoneSet.add(zi); else activeZoneSet.delete(zi);
     }
 
-    // Camera
-    const camH = input.camDist * 0.55 + input.pitch * input.camDist * 0.8;
-    const camZ = input.camDist * Math.cos(input.pitch * 0.5);
+    // Camera (산책 모드: 가까움, 낮은 FOV, 부드러운 추적)
+    const walkCamDist = isWalking ? Math.min(input.camDist, 3.5) : input.camDist;
+    const camH = walkCamDist * 0.55 + input.pitch * walkCamDist * 0.8;
+    const camZ = walkCamDist * Math.cos(input.pitch * 0.5);
 
     _camOffset.set(0, Math.max(1.5, camH), camZ).applyAxisAngle(Y_AXIS, input.yaw);
     _camTarget.copy(character.group.position).add(_camOffset);
-    camPos.lerp(_camTarget, 4 * dt);
+    camPos.lerp(_camTarget, (isWalking ? 3 : 4) * dt);
 
     _lookTarget.copy(character.group.position).add(camLookOffset);
     camLookAt.lerp(_lookTarget, 6 * dt);
@@ -466,13 +474,14 @@ export function init(): void {
     camera.position.copy(camPos);
     camera.lookAt(camLookAt);
 
-    const targetFov = isSprinting && moving ? 58 : 50;
+    const targetFov = isSprinting && moving ? 58 : isWalking ? 42 : 50;
     if (Math.abs(camera.fov - targetFov) > 0.15) {
       camera.fov += (targetFov - camera.fov) * 3.5 * dt;
       camera.updateProjectionMatrix();
     }
 
     updateEnvironment(t, particles, stars, clouds, water);
+    wind.update(t);
     audio.update(dt);
     tw.update(dt);
     audio.setBGMMood(tw.getTimeLabel());

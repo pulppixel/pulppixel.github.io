@@ -1,9 +1,10 @@
 // Entry point + game loop
+// Changes: mobile jump button, skin palette theme, minigame audio pass-through
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
 import { isFenceBlocked } from './core/collision';
 import { createScene, updateEnvironment } from './world/scene';
-import { createCharacter, SKIN_INFO } from './entity/character';
+import { createCharacter, SKIN_INFO, type SkinPalette } from './entity/character';
 import { createZones } from './world/zones';
 import { createInput } from './core/input';
 import { createWarp, createHUD } from './system/ui';
@@ -17,7 +18,6 @@ import { createTimeWeather } from './world/timeweather';
 import { createPostFX } from './system/postfx';
 import { createAnimals } from './entity/animals';
 
-// Pre-allocated vectors (avoid GC in hot path)
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
 const _camTarget = new THREE.Vector3();
@@ -35,6 +35,20 @@ const JUMP_FORCE = 12.6;
 const WATER_Y = -1.5;
 const SPAWN = { x: 0, y: 1.0, z: 0 };
 
+// --- Skin palette tint helper ---
+const _tintColor = new THREE.Color();
+function applySkinPalette(
+  palette: SkinPalette,
+  particles: { geo: THREE.BufferGeometry; count: number },
+  dustMat: THREE.PointsMaterial,
+): void {
+  // Tint pollen particles
+  const pMat = (particles.geo.userData?.pointsMaterial as THREE.PointsMaterial | undefined);
+  if (pMat) pMat.color.set(palette.particle);
+  // Tint dust particles
+  dustMat.color.set(palette.particle);
+}
+
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) document.body.classList.add('is-mobile');
@@ -46,45 +60,10 @@ export function init(): void {
 
   let character = createCharacter(scene);
 
-  // Skin highlight
   const initBtn = document.querySelector(`[data-skin="${character.skinIndex}"]`);
   if (initBtn) initBtn.classList.add('sk-on');
 
-  function swapSkin(index: number): void {
-    const pos = character.group.position.clone();
-    const rot = character.group.rotation.y;
-    scene.remove(character.group);
-    character = createCharacter(scene, index);
-    character.group.position.copy(pos);
-    character.group.rotation.y = rot;
-  }
-
-  const { zones, projectMeshes, update: updateZones } = createZones(scene);
-  const animals = createAnimals(scene);
-  const input = createInput(renderer.domElement, isMobile, () => false);
-  const hud = createHUD();
-
-  const tw = createTimeWeather({
-    scene, renderer,
-    skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
-    water,
-  }, isMobile);
-
-  // Skin selection UI
-  document.querySelectorAll('[data-skin]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt((btn as HTMLElement).dataset.skin!);
-      swapSkin(idx);
-      document.querySelectorAll('[data-skin]').forEach(b => b.classList.remove('sk-on'));
-      btn.classList.add('sk-on');
-    });
-  });
-
-  const postfx = createPostFX(renderer, scene, camera, isMobile);
-  window.addEventListener('resize', () => postfx.resize(innerWidth, innerHeight));
-
-  // --- Sound ---
-
+  // --- Audio ---
   const audio = createAudio();
   const initAudio = () => {
     audio.init();
@@ -105,8 +84,62 @@ export function init(): void {
     };
   }
 
-  // --- Time/Weather UI ---
+  // --- Dust particles (with skin-tintable material) ---
+  const DUST_MAX = 80;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(DUST_MAX * 3);
+  const dustAlpha = new Float32Array(DUST_MAX);
+  const dustVel = new Float32Array(DUST_MAX * 3);
+  let dustCount = 0;
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustMat = new THREE.PointsMaterial({
+    color: character.palette.particle,
+    size: 0.08, transparent: true, opacity: 0.5,
+    sizeAttenuation: true, depthWrite: false,
+  });
+  scene.add(new THREE.Points(dustGeo, dustMat));
+  let dustSpawnT = 0;
 
+  // --- Skin swap ---
+  function swapSkin(index: number): void {
+    const pos = character.group.position.clone();
+    const rot = character.group.rotation.y;
+    scene.remove(character.group);
+    character = createCharacter(scene, index);
+    character.group.position.copy(pos);
+    character.group.rotation.y = rot;
+    // Apply palette to scene elements
+    applySkinPalette(character.palette, particles, dustMat);
+  }
+
+  // Apply initial palette
+  applySkinPalette(character.palette, particles, dustMat);
+
+  const { zones, projectMeshes, update: updateZones } = createZones(scene);
+  const animals = createAnimals(scene);
+  const input = createInput(renderer.domElement, isMobile, () => false);
+  const hud = createHUD();
+
+  const tw = createTimeWeather({
+    scene, renderer,
+    skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
+    water,
+  }, isMobile);
+
+  // --- Skin selection UI ---
+  document.querySelectorAll('[data-skin]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt((btn as HTMLElement).dataset.skin!);
+      swapSkin(idx);
+      document.querySelectorAll('[data-skin]').forEach(b => b.classList.remove('sk-on'));
+      btn.classList.add('sk-on');
+    });
+  });
+
+  const postfx = createPostFX(renderer, scene, camera, isMobile);
+  window.addEventListener('resize', () => postfx.resize(innerWidth, innerHeight));
+
+  // --- Time/Weather UI ---
   document.querySelectorAll('[data-time]').forEach(btn => {
     btn.addEventListener('click', () => {
       tw.setTime((btn as HTMLElement).dataset.time as any);
@@ -129,16 +162,27 @@ export function init(): void {
     isGrounded = false;
   });
 
-  // --- Arcade transition overlay ---
+  // --- Mobile jump button ---
+  const mobileJumpBtn = document.getElementById('mobile-jump');
+  if (mobileJumpBtn) {
+    mobileJumpBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      input.keys['Space'] = true;
+    }, { passive: false });
+    mobileJumpBtn.addEventListener('touchend', () => {
+      input.keys['Space'] = false;
+    });
+  }
 
+  // --- Arcade transition overlay ---
   const arcadeOverlay = document.createElement('div');
   arcadeOverlay.style.cssText =
     'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
     'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
 
-  // --- Minigames ---
-
+  // --- Minigames (with audio) ---
   const mgContainer = document.getElementById('minigame-container')!;
   let inMinigame = false;
   let mgTransitioning = false;
@@ -156,11 +200,11 @@ export function init(): void {
   };
 
   const minigames: Record<string, { start(): void; stop(): void }> = {
-    spody: createSpodyGame(mgContainer, exitMg),
-    ruby: createRubyGame(mgContainer, exitMg),
-    maze: createMazeGame(mgContainer, exitMg),
-    nomads: createNomadsGame(mgContainer, exitMg),
-    haul: createHaulGame(mgContainer, exitMg),
+    spody: createSpodyGame(mgContainer, exitMg, audio),
+    ruby: createRubyGame(mgContainer, exitMg, audio),
+    maze: createMazeGame(mgContainer, exitMg, audio),
+    nomads: createNomadsGame(mgContainer, exitMg, audio),
+    haul: createHaulGame(mgContainer, exitMg, audio),
   };
 
   function enterMinigame(key: string): void {
@@ -168,7 +212,6 @@ export function init(): void {
     mgTransitioning = true;
     if (!isMobile) document.exitPointerLock();
     audio.mgEnter();
-
     arcadeOverlay.style.opacity = '1';
     arcadeOverlay.style.pointerEvents = 'auto';
     setTimeout(() => {
@@ -204,21 +247,6 @@ export function init(): void {
   let wasGrounded = true;
   let isSprinting = false;
   let smoothGroundY = 0;
-
-  // Dust particles
-  const DUST_MAX = 80;
-  const dustGeo = new THREE.BufferGeometry();
-  const dustPos = new Float32Array(DUST_MAX * 3);
-  const dustAlpha = new Float32Array(DUST_MAX);
-  const dustVel = new Float32Array(DUST_MAX * 3);
-  let dustCount = 0;
-  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-  const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({
-    color: 0x9B8EC4, size: 0.08, transparent: true, opacity: 0.5,
-    sizeAttenuation: true, depthWrite: false,
-  }));
-  scene.add(dustPts);
-  let dustSpawnT = 0;
 
   const camLookOffset = new THREE.Vector3(0, 0.8, 0);
   const camPos = character.group.position.clone().add(new THREE.Vector3(0, 3, 5));
@@ -256,7 +284,6 @@ export function init(): void {
       const speed = isSprinting ? SP * SPRINT_MULT : SP;
       _mv.normalize().applyAxisAngle(Y_AXIS, input.yaw);
 
-      // Wall + fence collision with axis-separated sliding
       const curY = character.group.position.y;
       const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + _mv.x * speed * dt));
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + _mv.z * speed * dt));
@@ -267,12 +294,10 @@ export function init(): void {
         character.group.position.x = nx;
         character.group.position.z = nz;
       } else {
-        // Try X only
         const ghX = getGroundHeight(nx, character.group.position.z);
         if (ghX <= curY + STEP_H && !isFenceBlocked(nx, character.group.position.z, curY)) {
           character.group.position.x = nx;
         }
-        // Try Z only
         const ghZ = getGroundHeight(character.group.position.x, nz);
         if (ghZ <= curY + STEP_H && !isFenceBlocked(character.group.position.x, nz, curY)) {
           character.group.position.z = nz;
@@ -295,12 +320,11 @@ export function init(): void {
       audio.jump();
     }
 
-    // Gravity + ground collision
+    // Gravity + ground
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
     const groundH = getGroundHeight(character.group.position.x, character.group.position.z);
 
-    // Water respawn
     if (character.group.position.y < WATER_Y) {
       audio.splash();
       character.group.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
@@ -332,7 +356,6 @@ export function init(): void {
     const groundHForShadow = getGroundHeight(character.group.position.x, character.group.position.z);
     character.animate(t, moving, isSprinting, groundHForShadow);
 
-    // Footstep sound
     if (moving && isGrounded) {
       audio.footstep(getSurface(character.group.position.x, character.group.position.z), isSprinting);
     }
@@ -353,7 +376,6 @@ export function init(): void {
       dustSpawnT = 0.03;
     }
 
-    // Update dust (compact dead particles)
     let writeIdx = 0;
     for (let i = 0; i < dustCount; i++) {
       dustAlpha[i] -= dt * 2.5;
@@ -386,12 +408,10 @@ export function init(): void {
     if (nearestProject) hud.showProjectHint(nearestProject.userData.project);
     else hud.hideProjectHint();
 
-    // Cube approach tick
     const curNearIdx = nearestProject ? nearestProject.userData.index : -1;
     if (curNearIdx !== prevNearestIdx && curNearIdx >= 0) audio.cubeTick();
     prevNearestIdx = curNearIdx;
 
-    // Interact
     if (input.keys['KeyE'] && nearestProject) {
       interact(nearestProject);
       input.keys['KeyE'] = false;
@@ -400,7 +420,6 @@ export function init(): void {
     updateZones(t, dt, character.group.position, nearestProject);
     animals.update(dt, t, character.group.position);
 
-    // Zone chime on enter
     for (let zi = 0; zi < zones.length; zi++) {
       const dx = character.group.position.x - zones[zi].cx;
       const dz = character.group.position.z - zones[zi].cz;
@@ -409,7 +428,7 @@ export function init(): void {
       if (inZone) activeZoneSet.add(zi); else activeZoneSet.delete(zi);
     }
 
-    // Camera (pre-allocated vectors - no GC pressure)
+    // Camera
     const camH = input.camDist * 0.55 + input.pitch * input.camDist * 0.8;
     const camZ = input.camDist * Math.cos(input.pitch * 0.5);
 
@@ -435,7 +454,6 @@ export function init(): void {
     postfx.updateForTime(tw.getTimeLabel(), dt);
     postfx.render();
 
-    // FPS counter
     frameCount++;
     const now = performance.now();
     if (now - fpsLastTime >= 1000) {

@@ -1,8 +1,7 @@
 // SPODY: 돌아다니는 타겟을 공으로 터뜨리기 (Refactored)
-// 웨이브 3단계, 콤보, 스플래시 범위 판정
+// + Sound integration
 import { MinigameBase, rgba, C } from './base';
-
-// Constants & Types
+import type { GameAudio } from '../system/audio';
 
 const TCOL = [C.pink, C.accent, C.purple, C.yellow, C.blue];
 const SYMS = [['★', '+', '♥', '◆'], ['▲', '●', '×', '÷', '='], ['π', '∑', '√', '∞', '±', '≡', '∫']];
@@ -17,8 +16,6 @@ interface Tgt { x: number; y: number; vx: number; vy: number; r: number; color: 
 interface Fly { sx: number; sy: number; ex: number; ey: number; t: number; dur: number; }
 interface Spl { x: number; y: number; t: number; r: number; }
 type Phase = 'intro' | 'play' | 'clear' | 'result';
-
-// Game Class
 
 class SpodyGame extends MinigameBase {
   protected readonly title = 'SPODY';
@@ -54,12 +51,7 @@ class SpodyGame extends MinigameBase {
       const y = mg + Math.random() * (this.H * 0.55 - mg);
       const a = Math.random() * Math.PI * 2;
       const sp = w.sMin + Math.random() * (w.sMax - w.sMin);
-      this.tgts.push({
-        x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-        r: w.r + (Math.random() - 0.5) * 4,
-        color: TCOL[i % TCOL.length], sym: syms[i % syms.length],
-        alive: true, hitT: 0, sq: 0, sqA: 'x',
-      });
+      this.tgts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: w.r + (Math.random() - 0.5) * 4, color: TCOL[i % TCOL.length], sym: syms[i % syms.length], alive: true, hitT: 0, sq: 0, sqA: 'x' });
     }
     this.totalTgt += w.n;
     this.phase = 'intro'; this.phaseT = 1.3;
@@ -68,6 +60,7 @@ class SpodyGame extends MinigameBase {
   private throwBall(tx: number, ty: number): void {
     if (this.phase !== 'play' || this.ammo <= 0 || this.fly) return;
     this.ammo--;
+    this.audio?.mgShoot(); // 🔊 투사체 발사
     const sx = this.W / 2, sy = this.H - 38;
     this.fly = { sx, sy, ex: tx, ey: ty, t: 0, dur: Math.max(0.07, Math.min(0.18, Math.hypot(tx - sx, ty - sy) / 3200)) };
   }
@@ -84,7 +77,10 @@ class SpodyGame extends MinigameBase {
         this.addBurst(tg.x, tg.y, tg.color, 9, 140);
       }
     }
-    if (h === 0) return;
+    if (h === 0) {
+      this.audio?.mgExplosion(); // 🔊 빈 스플래시
+      return;
+    }
     this.hits += h;
     this.combo = (now - this.lastHit < COMBO_WIN) ? this.combo + 1 : 1;
     if (this.combo > this.maxCombo) this.maxCombo = this.combo;
@@ -92,20 +88,24 @@ class SpodyGame extends MinigameBase {
     const cm = Math.min(this.combo, 8);
     let p = h * 100 * cm; if (h >= 2) p += (h - 1) * 150;
     this.score += p;
+
+    this.audio?.mgCoin(this.combo); // 🔊 타격 (콤보 음정 상승)
+    if (this.combo >= 2) this.audio?.mgCombo(this.combo); // 🔊 콤보
+    if (h >= 2) this.audio?.mgExplosion(); // 🔊 멀티 히트
+
     this.addPop(x, y - 12, `+${p}`);
     if (this.combo >= 2) this.addPop(x, y - 38, `COMBO ×${cm}`, true, 1.4);
     if (h >= 2) this.addPop(x, y + 14, h === 2 ? 'DOUBLE!' : h === 3 ? 'TRIPLE!' : `×${h} HIT!`, true, 1.3);
     if (!this.tgts.some(t => t.alive)) {
       this.score += 300;
+      this.audio?.mgWaveClear(); // 🔊 웨이브 클리어
       this.addPop(this.W / 2, this.H / 2, `WAVE ${this.wave + 1} CLEAR +300`, true, 1.8);
       this.phase = 'clear'; this.phaseT = 1.4;
     }
   }
 
-  // --- Update ---
   protected updateGame(dt: number): void {
     const now = performance.now() / 1000;
-
     if (this.phase === 'intro' || this.phase === 'clear') {
       this.phaseT -= dt;
       if (this.phaseT <= 0) {
@@ -114,9 +114,14 @@ class SpodyGame extends MinigameBase {
       }
     }
     if (this.phase === 'play' && now - this.lastHit > COMBO_WIN) this.combo = 0;
-    if (this.phase === 'play' && this.ammo < MAX_AMMO) { this.ammoT += dt; if (this.ammoT >= AMMO_CD) { this.ammo++; this.ammoT = 0; } }
+    if (this.phase === 'play' && this.ammo < MAX_AMMO) {
+      this.ammoT += dt;
+      if (this.ammoT >= AMMO_CD) {
+        this.ammo++; this.ammoT = 0;
+        this.audio?.mgPickup(); // 🔊 탄약 충전
+      }
+    }
 
-    // Target movement
     if (this.phase === 'play' || this.phase === 'intro') {
       const bnd = this.H * 0.85;
       for (const tg of this.tgts) {
@@ -130,10 +135,8 @@ class SpodyGame extends MinigameBase {
       }
     }
 
-    // Flying ball
     if (this.fly) { this.fly.t += dt; if (this.fly.t >= this.fly.dur) { this.doSplash(this.fly.ex, this.fly.ey); this.fly = null; } }
 
-    // Splashes (swap-and-pop)
     let i = this.spls.length;
     while (i-- > 0) { this.spls[i].t += dt; if (this.spls[i].t > 0.4) { this.spls[i] = this.spls[this.spls.length - 1]; this.spls.pop(); } }
 
@@ -141,25 +144,18 @@ class SpodyGame extends MinigameBase {
     this.updatePops(dt);
   }
 
-  // --- Render ---
   protected renderGame(now: number): void {
     const { cx, W, H } = this;
-    this.drawBg();
-    this.drawGrid(0.025);
+    this.drawBg(); this.drawGrid(0.025);
 
-    // Play area border
     cx.strokeStyle = rgba(C.accent, 0.08); cx.lineWidth = 1.5; cx.strokeRect(1, 1, W - 2, H * 0.85);
     cx.setLineDash([5, 7]); cx.strokeStyle = rgba(C.pink, 0.06);
     cx.beginPath(); cx.moveTo(0, H * 0.85); cx.lineTo(W, H * 0.85); cx.stroke(); cx.setLineDash([]);
 
-    // Targets
     for (const tg of this.tgts) {
       if (!tg.alive) {
         const age = now - tg.hitT;
-        if (age < 0.35) {
-          cx.beginPath(); cx.arc(tg.x, tg.y, tg.r * (1 + age * 7), 0, Math.PI * 2);
-          cx.strokeStyle = rgba(tg.color, 1 - age / 0.35); cx.lineWidth = 2; cx.stroke();
-        }
+        if (age < 0.35) { cx.beginPath(); cx.arc(tg.x, tg.y, tg.r * (1 + age * 7), 0, Math.PI * 2); cx.strokeStyle = rgba(tg.color, 1 - age / 0.35); cx.lineWidth = 2; cx.stroke(); }
         continue;
       }
       cx.save(); cx.translate(tg.x, tg.y);
@@ -172,7 +168,6 @@ class SpodyGame extends MinigameBase {
       cx.restore();
     }
 
-    // Splashes
     for (const sp of this.spls) {
       const p = sp.t / 0.4;
       cx.beginPath(); cx.arc(sp.x, sp.y, sp.r * p, 0, Math.PI * 2);
@@ -181,7 +176,6 @@ class SpodyGame extends MinigameBase {
       cx.fillStyle = rgba(C.accent, 0.07 * (1 - p)); cx.fill();
     }
 
-    // Flying ball + trail
     if (this.fly) {
       const p = this.fly.t / this.fly.dur;
       const bx = this.fly.sx + (this.fly.ex - this.fly.sx) * p;
@@ -195,13 +189,11 @@ class SpodyGame extends MinigameBase {
       cx.beginPath(); cx.arc(bx, by, 6, 0, Math.PI * 2); cx.fillStyle = C.accent; cx.fill();
     }
 
-    // Launcher
     if (this.phase === 'play') {
       cx.beginPath(); cx.arc(W / 2, H - 38, 7, 0, Math.PI * 2); cx.fillStyle = '#111115'; cx.fill();
       cx.strokeStyle = rgba(C.accent, this.ammo > 0 ? 0.45 : 0.12); cx.lineWidth = 1.5; cx.stroke();
     }
 
-    // Cursor (desktop)
     if (!this.mob && this.phase === 'play') {
       cx.beginPath(); cx.arc(this.mX, this.mY, 18, 0, Math.PI * 2);
       cx.strokeStyle = rgba(C.accent, this.ammo > 0 ? 0.15 : 0.05); cx.lineWidth = 1; cx.stroke();
@@ -210,15 +202,12 @@ class SpodyGame extends MinigameBase {
       cx.strokeStyle = rgba(C.accent, this.ammo > 0 ? 0.25 : 0.08); cx.lineWidth = 1; cx.stroke();
     }
 
-    this.renderPts();
-    this.renderPops();
+    this.renderPts(); this.renderPops();
 
-    // HUD
     this.drawHudTitle();
     this.drawHudLine(`SCORE  ${this.score}`, 46);
     this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#3a3a44');
 
-    // Ammo
     cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('AMMO', W - 20, 28);
     for (let i = 0; i < MAX_AMMO; i++) {
       cx.beginPath(); cx.arc(W - 24 - i * 16, 42, 5, 0, Math.PI * 2);
@@ -229,7 +218,6 @@ class SpodyGame extends MinigameBase {
     this.drawComboHud(this.combo, now, W / 2, H - 60);
     this.drawCloseBtn();
 
-    // Phase overlays
     if (this.phase === 'intro') {
       this.drawIntro(this.phaseT, `WAVE ${this.wave + 1}`, `${WAVES[this.wave].n} TARGETS`);
     }
@@ -245,7 +233,6 @@ class SpodyGame extends MinigameBase {
     this.drawResultBtns(bx, by + 48);
   }
 
-  // --- Input ---
   protected onClickAt(x: number, y: number): void {
     if (this.phase === 'result') {
       const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 48);
@@ -256,13 +243,10 @@ class SpodyGame extends MinigameBase {
     if (this.phase === 'play') this.throwBall(x, y);
   }
 
-  protected onMouseMoveAt(x: number, y: number): void {
-    this.mX = x; this.mY = y;
-  }
+  protected onMouseMoveAt(x: number, y: number): void { this.mX = x; this.mY = y; }
 }
 
-// Factory
-export function createSpodyGame(container: HTMLElement, onExit: () => void) {
-  const game = new SpodyGame(container, onExit);
+export function createSpodyGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
+  const game = new SpodyGame(container, onExit, audio);
   return { start: () => game.start(), stop: () => game.stop() };
 }

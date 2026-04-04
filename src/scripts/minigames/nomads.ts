@@ -1,6 +1,7 @@
 // Nomads Planet: Coin Dash v2
 // 드리프트 물리, NPC 4종, 신호위반 추적, 니어미스, 타이머, 코인트레일
 import { MinigameBase, rgba, C } from './base';
+import type { GameAudio } from '../system/audio';
 
 // Constants
 
@@ -219,6 +220,7 @@ class NomadsGame extends MinigameBase {
                 // 직진 또는 좌회전 = 위반!
                 this.spawnPolice(this.violationPending.ix, this.violationPending.iy);
                 this.addPop(this.px, this.py - 40, '⚠ VIOLATION!', true, 1.5);
+                this.audio?.mgHurt(); // 🔊 신호위반
             }
             this.violationPending = null;
         }
@@ -342,11 +344,12 @@ class NomadsGame extends MinigameBase {
     // --- Player ---
 
     private hurtPlayer(): void {
-        if (this.shield) { this.shield = false; this.addBurst(this.px, this.py, C.blue, 10, 150); this.addPop(this.px, this.py - 30, 'SHIELD!', true, 1.0); this.iFrames = 0.4; return; }
+        if (this.shield) { this.shield = false; this.addBurst(this.px, this.py, C.blue, 10, 150); this.addPop(this.px, this.py - 30, 'SHIELD!', true, 1.0); this.iFrames = 0.4; this.audio?.mgPickup(); return; }
         this.hp--; this.iFrames = 1.0; this.combo = 0;
         this.shX = 6 * (Math.random() > 0.5 ? 1 : -1); this.shY = 4 * (Math.random() - 0.5);
         this.addBurst(this.px, this.py, C.pink, 8, 120);
-        if (this.hp <= 0) this.phase = 'dead';
+        this.audio?.mgHurt(); // 🔊 피격
+        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); } // 🔊 사망
     }
 
     private updatePlayer(dt: number): void {
@@ -428,6 +431,7 @@ class NomadsGame extends MinigameBase {
             const stars = pct >= 0.7 ? 3 : pct >= 0.4 ? 2 : got > 0 ? 1 : 0;
             this.stageStars.push(stars);
             this.addPop(this.W / 2, this.H / 2, `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)} TIME UP`, true, 1.8);
+            this.audio?.mgWaveClear(); // 🔊 스테이지 클리어
             this.phase = 'clear'; this.phaseT = 1.5; return;
         }
 
@@ -446,11 +450,12 @@ class NomadsGame extends MinigameBase {
                 if (this.combo > this.maxCombo) this.maxCombo = this.combo;
                 this.lastCoinT = now;
                 let pts = 100 * coin.value * Math.min(this.combo, 8);
-                if (this.isDrifting) { pts = Math.round(pts * 1.5); this.addPop(this.px, this.py - 50, 'DRIFT!', true, 0.8); }
+                if (this.isDrifting) { pts = Math.round(pts * 1.5); this.addPop(this.px, this.py - 50, 'DRIFT!', true, 0.8); this.audio?.mgDrift(); }
                 this.score += pts;
                 this.addBurst(coin.x, coin.y, coin.danger ? C.yellow : C.cyan, 5, 80);
                 this.addPop(coin.x, coin.y - 14, `+${pts}`);
-                if (this.combo >= 2) this.addPop(coin.x, coin.y - 36, `×${this.combo}`, true, 1.2);
+                this.audio?.mgCoin(this.combo); // 🔊 코인
+                if (this.combo >= 2) { this.addPop(coin.x, coin.y - 36, `×${this.combo}`, true, 1.2); this.audio?.mgCombo(this.combo); }
                 if (coin.trail >= 0) { const tr = this.coins.filter(c => c.trail === coin.trail); if (tr.every(c => c.collected)) { const b = tr.length * 150; this.score += b; this.addPop(coin.x, coin.y - 60, `TRAIL ×${tr.length} +${b}`, true, 1.5); } }
             }
         }
@@ -465,13 +470,14 @@ class NomadsGame extends MinigameBase {
                 const cls = 1 - (dist - HIT_R) / (NEAR_MAX - HIT_R);
                 const pts = Math.round(50 + cls * 150);
                 this.score += pts; this.addPop(this.px, this.py - 30, `NEAR MISS +${pts}`, false, 0.9);
+                this.audio?.mgNearMiss(); // 🔊 니어미스
                 this.nearMissCd = 0.5; this.nmFlash = 0.25; break;
             }
         }
 
         // Pickups
-        for (const bp of this.boostPads) if (Math.hypot(bp.x - this.px, bp.y - this.py) < 18) { this.boostT = 2.0; this.addPop(this.px, this.py - 25, 'BOOST!', true, 0.8); }
-        for (let i = this.shields.length - 1; i >= 0; i--) if (Math.hypot(this.shields[i].x - this.px, this.shields[i].y - this.py) < 14) { this.shield = true; this.addPop(this.px, this.py - 25, 'SHIELD +1', true, 1.0); this.shields.splice(i, 1); }
+        for (const bp of this.boostPads) if (Math.hypot(bp.x - this.px, bp.y - this.py) < 18) { this.boostT = 2.0; this.addPop(this.px, this.py - 25, 'BOOST!', true, 0.8); this.audio?.mgPickup(); }
+        for (let i = this.shields.length - 1; i >= 0; i--) if (Math.hypot(this.shields[i].x - this.px, this.shields[i].y - this.py) < 14) { this.shield = true; this.addPop(this.px, this.py - 25, 'SHIELD +1', true, 1.0); this.shields.splice(i, 1); this.audio?.mgPickup(); }
 
         // PERFECT - 전 코인 수집 시 조기 클리어 + 타임 보너스
         if (!this.coins.some(c => !c.collected)) {
@@ -479,6 +485,7 @@ class NomadsGame extends MinigameBase {
             const tb = Math.round(this.stageTime * 50);
             this.score += 500 + tb;
             this.addPop(this.W / 2, this.H / 2 - 20, `★★★ PERFECT! +${500 + tb}`, true, 2.0);
+            this.audio?.mgWaveClear(); // 🔊 퍼펙트 클리어
             this.phase = 'clear'; this.phaseT = 1.8;
         }
 
@@ -710,7 +717,7 @@ class NomadsGame extends MinigameBase {
     protected onTouchEndAt(): void { this.touchDir = { x: 0, y: 0 }; }
 }
 
-export function createNomadsGame(container: HTMLElement, onExit: () => void) {
-    const game = new NomadsGame(container, onExit);
+export function createNomadsGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
+    const game = new NomadsGame(container, onExit, audio);
     return { start: () => game.start(), stop: () => game.stop() };
 }

@@ -1,6 +1,7 @@
 // Math Master: 미로 탈출 (Refactored)
 // Recursive Backtracker + A*, 3 Stages, Fog of War
 import { MinigameBase, rgba, C, type Popup } from './base';
+import type { GameAudio } from '../system/audio';
 
 // Constants & Types
 
@@ -190,6 +191,7 @@ class MazeGame extends MinigameBase {
         if (g.x < 0 || g.x >= this.mW || g.y < 0 || g.y >= this.mH) return;
         this.hintPath = astar(this.maze, this.mW, this.mH, g.x, g.y, this.goalX, this.goalY);
         this.hintProg = 0; this.hintTrails = [];
+        this.audio?.mgPickup(); // 🔊 힌트 활성화
     }
 
     private spawnDissolve(): void {
@@ -250,7 +252,10 @@ class MazeGame extends MinigameBase {
 
         // Gem collection
         for (const gem of this.gems) {
-            if (!gem.collected && pg.x === gem.x && pg.y === gem.y) gem.collected = true;
+            if (!gem.collected && pg.x === gem.x && pg.y === gem.y) {
+                gem.collected = true;
+                this.audio?.mgCoin(); // 🔊 젬 획득
+            }
         }
 
         // Hint scout
@@ -281,6 +286,7 @@ class MazeGame extends MinigameBase {
         if (pg.x === this.goalX && pg.y === this.goalY) {
             this.stageTimes.push(this.timer);
             this.spawnDissolve();
+            this.audio?.mgWaveClear(); // 🔊 스테이지 클리어
             this.phase = 'clear'; this.phaseT = 1.8;
         }
     }
@@ -520,7 +526,7 @@ class MazeGame extends MinigameBase {
 }
 
 // Factory (main.ts 호환)
-export function createMazeGame(container: HTMLElement, onExit: () => void) {
-    const game = new MazeGame(container, onExit);
+export function createMazeGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
+    const game = new MazeGame(container, onExit, audio);
     return { start: () => game.start(), stop: () => game.stop() };
 }

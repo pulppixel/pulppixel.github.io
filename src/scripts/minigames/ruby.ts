@@ -1,6 +1,7 @@
 // 루비의 모험: 디아블로식 탑다운 ARPG (Refactored)
 // 클릭 이동/공격, WASD 직접 이동, 콤보 시스템
 import { MinigameBase, rgba, C } from './base';
+import type { GameAudio } from '../system/audio';
 
 // Constants & Types
 
@@ -81,6 +82,7 @@ class RubyGame extends MinigameBase {
         const now = performance.now() / 1000;
         const mult = 1 + this.combo * 0.3, dmg = Math.ceil(mult);
         m.hp -= dmg; m.flashT = 0.12;
+        this.audio?.mgHit(); // 🔊 타격
         const a = Math.atan2(m.y - this.py, m.x - this.px);
         this.px += Math.cos(a) * LUNGE; this.py += Math.sin(a) * LUNGE;
         m.x += Math.cos(a) * (10 + this.combo * 3); m.y += Math.sin(a) * (10 + this.combo * 3);
@@ -97,7 +99,9 @@ class RubyGame extends MinigameBase {
             const p = Math.round(m.pts * mult); this.score += p;
             this.addBurst(m.x, m.y, m.color);
             this.addPop(m.x, m.y - 20, `+${p}`);
+            this.audio?.mgCoin(this.combo); // 🔊 처치
             if (this.combo >= 2) this.addPop(m.x, m.y - 44, this.combo >= 5 ? 'FRENZY!' : `×${this.combo} COMBO`, true, 1.4);
+            if (this.combo >= 2) this.audio?.mgCombo(this.combo); // 🔊 콤보
             this.chaseTarget = null;
         }
         this.cState = 'atk'; this.cTimer = ATK_DUR;
@@ -106,7 +110,8 @@ class RubyGame extends MinigameBase {
     private hurtPlayer(): void {
         this.hp--; this.iFrames = 0.7; this.combo = 0;
         this.shX = 6 * (Math.random() > 0.5 ? 1 : -1); this.shY = 4 * (Math.random() - 0.5);
-        if (this.hp <= 0) this.phase = 'dead';
+        this.audio?.mgHurt(); // 🔊 피격
+        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); } // 🔊 사망
     }
 
     // --- Update ---
@@ -206,6 +211,7 @@ class RubyGame extends MinigameBase {
         // Wave clear
         if (this.spawnI >= this.spawnQ.length && !this.mons.some(m => m.alive) && this.phase === 'play') {
             this.score += 300;
+            this.audio?.mgWaveClear(); // 🔊 웨이브 클리어
             this.addPop(this.W / 2, this.H / 2, `WAVE ${this.wave + 1} CLEAR +300`, true, 1.8);
             this.phase = 'clear'; this.phaseT = 1.5;
         }
@@ -359,7 +365,7 @@ class RubyGame extends MinigameBase {
 }
 
 // Factory
-export function createRubyGame(container: HTMLElement, onExit: () => void) {
-    const game = new RubyGame(container, onExit);
+export function createRubyGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
+    const game = new RubyGame(container, onExit, audio);
     return { start: () => game.start(), stop: () => game.stop() };
 }

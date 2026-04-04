@@ -1,4 +1,7 @@
 // Minigame abstract base: canvas lifecycle, input, particles, popups, shared UI
+// + Audio integration
+
+import type { GameAudio } from '../system/audio';
 
 // --- Utilities ---
 
@@ -44,6 +47,7 @@ export abstract class MinigameBase {
   protected keys: Record<string, boolean> = {};
   protected pts: Particle[] = [];
   protected pops: Popup[] = [];
+  protected audio: GameAudio | null;
 
   protected abstract readonly title: string;
   protected abstract readonly titleColor: string;
@@ -54,9 +58,10 @@ export abstract class MinigameBase {
   private readonly onExit: () => void;
   private boundHandlers: { el: EventTarget; type: string; fn: EventListener }[] = [];
 
-  constructor(container: HTMLElement, onExit: () => void) {
+  constructor(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
     this.container = container;
     this.onExit = onExit;
+    this.audio = audio ?? null;
   }
 
   // --- Lifecycle hooks (subclass implements) ---

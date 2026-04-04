@@ -2,6 +2,7 @@
 // "다르면 차별한다"  - 동물별 완전히 다른 플레이 경험
 // 비둘기(안전/느림), 고양이(변수/밸런스), 들쥐(위험/보상+지하세계)
 import { MinigameBase, rgba, C } from './base';
+import type { GameAudio } from '../system/audio';
 
 const GRAV = 1400;
 const LOOT_DUR = 0.9;
@@ -167,15 +168,16 @@ class HaulGame extends MinigameBase {
         this.shX=5*(Math.random()>0.5?1:-1);this.shY=3*(Math.random()-0.5);
         this.addBurst(this.px,this.py,C.red,6,80);this.addPop(this.px,this.py-22,`-${dmg}`,false,0.8);
         this.lootTgt=null;this.lootP=0;this.extracting=false;this.exP=0;
-        if(this.hp<=0)this.phase='dead';
+        this.audio?.mgHurt(); // 🔊 피격
+        if(this.hp<=0){this.phase='dead';this.audio?.mgFail();} // 🔊 사망
     }
 
     private doInteract(): void {
         if(this.lootTgt||this.extracting)return;
         // 하수도 진입 (들쥐, 지상, 입구 근처)
-        if(this.aD.sewer&&!this.inSewer&&this.onGnd){for(const p of this.pipes){if(Math.abs(this.px-p.x)<22){this.inSewer=true;this.py=this.sewerFloor-10;this.pvy=0;this.pvx=0;this.addPop(this.px,this.py-20,'하수도 진입!',true,0.8);return;}}}
+        if(this.aD.sewer&&!this.inSewer&&this.onGnd){for(const p of this.pipes){if(Math.abs(this.px-p.x)<22){this.inSewer=true;this.py=this.sewerFloor-10;this.pvy=0;this.pvx=0;this.addPop(this.px,this.py-20,'하수도 진입!',true,0.8);this.audio?.mgPickup();return;}}}
         // 하수도 탈출 (들쥐, 지하, 입구 or 출구 근처)
-        if(this.aD.sewer&&this.inSewer){for(const p of this.pipes){if(Math.abs(this.px-p.x)<22||Math.abs(this.px-p.ex)<22){this.py=this.gndY-18;this.inSewer=false;this.pvy=-200;this.addPop(this.px,this.py-20,'지상 복귀!',false,0.7);return;}}}
+        if(this.aD.sewer&&this.inSewer){for(const p of this.pipes){if(Math.abs(this.px-p.x)<22||Math.abs(this.px-p.ex)<22){this.py=this.gndY-18;this.inSewer=false;this.pvy=-200;this.addPop(this.px,this.py-20,'지상 복귀!',false,0.7);this.audio?.mgPickup();return;}}}
         if(!this.inSewer&&this.px>=this.exZ.x&&this.px<=this.exZ.x+this.exZ.w&&this.onGnd){this.extracting=true;this.exP=0;return;}
         for(const t of this.cans){
             if(t.looted||t.isSewer!==this.inSewer)continue;
@@ -192,11 +194,11 @@ class HaulGame extends MinigameBase {
         if(this.phase==='intro'){this.phT-=dt;if(this.phT<=0)this.phase='play';return;}
         if(this.phase==='clear'){this.phT-=dt;if(this.phT<=0){this.stage++;if(this.stage>=STAGES.length)this.phase='result';else this.startStage();}return;}
         if(this.phase!=='play')return;
-        this.stTime-=dt;if(this.stTime<=0){this.stTime=0;this.phase='dead';return;}
+        this.stTime-=dt;if(this.stTime<=0){this.stTime=0;this.phase='dead';this.audio?.mgFail();return;}
         if(this.petFlash>0){this.petFlash-=dt;this.pvx=0;}
         if(this.keys['KeyE']||this.keys['KeyF']){this.doInteract();this.keys['KeyE']=false;this.keys['KeyF']=false;}
-        if(this.lootTgt){this.lootP+=dt;if(this.lootP>=LOOT_DUR){const g=Math.min(Math.ceil(this.lootTgt.core*this.aD.coreMul),this.maxC-this.core);this.core+=g;this.score+=Math.round(g*100*this.aD.scoreMul);this.lootTgt.looted=true;this.addBurst(this.lootTgt.x,this.lootTgt.y,this.lootTgt.isSewer?C.purple:C.yellow,6,60);this.addPop(this.lootTgt.x,this.lootTgt.y-22,`+${g} ◆`,true,1.0);this.lootTgt=null;this.lootP=0;}}
-        if(this.extracting){this.exP+=dt;if(this.exP>=this.aD.extractTime){this.totCore+=this.core;this.score+=Math.round((this.core*200+this.stTime*10)*this.aD.scoreMul);this.stRes.push({core:this.core,time:STAGES[this.stage].time-this.stTime,animal:this.selA});this.addPop(this.px,this.py-40,'탈출 성공!',true,1.5);this.phase='clear';this.phT=1.5;}if(!(this.px>=this.exZ.x&&this.px<=this.exZ.x+this.exZ.w)){this.extracting=false;this.exP=0;}}
+        if(this.lootTgt){this.lootP+=dt;if(this.lootP>=LOOT_DUR){const g=Math.min(Math.ceil(this.lootTgt.core*this.aD.coreMul),this.maxC-this.core);this.core+=g;this.score+=Math.round(g*100*this.aD.scoreMul);this.lootTgt.looted=true;this.addBurst(this.lootTgt.x,this.lootTgt.y,this.lootTgt.isSewer?C.purple:C.yellow,6,60);this.addPop(this.lootTgt.x,this.lootTgt.y-22,`+${g} ◆`,true,1.0);this.audio?.mgLoot();this.lootTgt=null;this.lootP=0;}}
+        if(this.extracting){this.exP+=dt;if(this.exP>=this.aD.extractTime){this.totCore+=this.core;this.score+=Math.round((this.core*200+this.stTime*10)*this.aD.scoreMul);this.stRes.push({core:this.core,time:STAGES[this.stage].time-this.stTime,animal:this.selA});this.addPop(this.px,this.py-40,'탈출 성공!',true,1.5);this.audio?.mgExtract();this.phase='clear';this.phT=1.5;}if(!(this.px>=this.exZ.x&&this.px<=this.exZ.x+this.exZ.w)){this.extracting=false;this.exP=0;}}
         if(this.petFlash<=0)this.updPlayer(dt);
         if(!this.inSewer)this.updHumans(dt);
         if(this.inSewer)for(const tr of this.traps){if(!tr.triggered&&Math.abs(this.px-tr.x)<16&&Math.abs(this.py-tr.y)<14){tr.triggered=true;this.hurt(25);this.addPop(tr.x,tr.y-20,'쥐덫!',true,1.0);}}
@@ -298,7 +300,7 @@ class HaulGame extends MinigameBase {
     protected onTouchEndAt():void{this.tDir={x:0,y:0};this.tJump=false;}
 }
 
-export function createHaulGame(container: HTMLElement, onExit: () => void) {
-    const game = new HaulGame(container, onExit);
+export function createHaulGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
+    const game = new HaulGame(container, onExit, audio);
     return { start: () => game.start(), stop: () => game.stop() };
 }

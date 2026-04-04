@@ -99,6 +99,9 @@ const title = 'pulppixel - 3D Explore';
     #mobile-interact { position: absolute; bottom: 70px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.3); background: rgba(110,231,183,0.06); color: #6ee7b7; font-size: 11px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
     .is-mobile #mobile-interact.show { display: flex; }
     #mobile-interact:active { background: rgba(110,231,183,0.25); transform: scale(0.93); }
+    #mobile-jump { position: absolute; bottom: 140px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.2); background: rgba(110,231,183,0.04); color: #6ee7b7; font-size: 16px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; transition: all 0.15s; }
+    .is-mobile #mobile-jump { display: flex; }
+    #mobile-jump:active { background: rgba(110,231,183,0.25); transform: scale(0.93); }
     #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #6ee7b7; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(110,231,183,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; z-index: 5; }
     .is-mobile #controls-hint { bottom: 16px; font-size: 10px; animation-delay: 1s; }
     #fps { position: absolute; top: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; pointer-events: none; }
@@ -152,7 +155,7 @@ const title = 'pulppixel - 3D Explore';
   <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, 6 yrs, explore my projects</p></div>
   <div id="controls-hint">
     <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
-    <span class="mobile-hint">아래 - 이동, 위 - 회전, 핀치 - 줌, 탭 - 점프</span>
+    <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
   </div>
   <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
   <div id="project-label"></div>
@@ -194,6 +197,7 @@ const title = 'pulppixel - 3D Explore';
   <div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
   <div id="minigame-container" style="display:none;position:absolute;inset:0;z-index:25;"></div>
   <div id="joystick-base"><div id="joystick-thumb"></div></div>
+  <button id="mobile-jump">▲</button>
   <button id="mobile-interact">E</button>
   <div id="fps"></div>
 

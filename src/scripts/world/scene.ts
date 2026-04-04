@@ -1,6 +1,6 @@
 // Scene setup + per-frame environment update
 import * as THREE from 'three';
-import { COMPANIES } from './data';
+import { COMPANIES } from '../core/data';
 import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildFences, buildLanterns, buildZonePatches, buildPathDots } from './terrain';
 import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';

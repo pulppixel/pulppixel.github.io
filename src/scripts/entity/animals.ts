@@ -1,7 +1,7 @@
 // NPC animals: Rabbit (4-state FSM), Bird (perch/fly/glide), Butterfly (figure-8)
 import * as THREE from 'three';
-import { stdBox, facePlane, setPos, stdMat } from './helpers';
-import { getGroundHeight } from './data';
+import { stdBox, facePlane, setPos, stdMat } from '../core/helpers';
+import { getGroundHeight } from '../core/data';
 
 export interface Animals {
   update(dt: number, t: number, playerPos: THREE.Vector3): void;

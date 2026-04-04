@@ -1,21 +1,21 @@
 // Entry point + game loop
 import * as THREE from 'three';
-import { getGroundHeight, getSurface } from './data';
-import { isFenceBlocked } from './collision';
-import { createScene, updateEnvironment } from './scene';
-import { createCharacter, SKIN_INFO } from './character';
-import { createZones } from './zones';
-import { createInput } from './input';
-import { createWarp, createHUD } from './ui';
+import { getGroundHeight, getSurface } from './core/data';
+import { isFenceBlocked } from './core/collision';
+import { createScene, updateEnvironment } from './world/scene';
+import { createCharacter, SKIN_INFO } from './entity/character';
+import { createZones } from './world/zones';
+import { createInput } from './core/input';
+import { createWarp, createHUD } from './system/ui';
 import { createSpodyGame } from './minigames/spody';
 import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
-import { createAudio } from './audio';
-import { createTimeWeather } from './timeweather';
-import { createPostFX } from './postfx';
-import { createAnimals } from './animals';
+import { createAudio } from './system/audio';
+import { createTimeWeather } from './world/timeweather';
+import { createPostFX } from './system/postfx';
+import { createAnimals } from './entity/animals';
 
 // Pre-allocated vectors (avoid GC in hot path)
 const _mv = new THREE.Vector3();

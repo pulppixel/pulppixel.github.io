@@ -1,6 +1,6 @@
 // Animated ocean: multi-wave vertex displacement + caustics + foam
 import * as THREE from 'three';
-import { stdMat } from './helpers';
+import { stdMat } from '../core/helpers';
 
 export function buildOcean(scene: THREE.Scene, isMobile: boolean): THREE.Mesh {
   // Deep ocean floor

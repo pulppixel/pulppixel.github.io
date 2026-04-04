@@ -1,7 +1,7 @@
 // Zone monuments, project cubes, proximity activation
 import * as THREE from 'three';
-import { COMPANIES, PROJECTS, PLATFORMS } from './data';
-import { stdBox, glowBox, textSprite } from './helpers';
+import { COMPANIES, PROJECTS, PLATFORMS } from '../core/data';
+import { stdBox, glowBox, textSprite } from '../core/helpers';
 
 // --- Types ---
 

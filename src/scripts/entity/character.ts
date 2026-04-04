@@ -1,6 +1,6 @@
 // Player character: 5 voxel skins (Bunny, Frog, Bear, Robot, Penguin)
 import * as THREE from 'three';
-import { setPos, facePlane } from './helpers';
+import { setPos, facePlane } from '../core/helpers';
 
 export interface Character {
   group: THREE.Group;

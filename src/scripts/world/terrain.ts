@@ -1,8 +1,8 @@
 // Static world geometry: terrain, vegetation, fences, lanterns
 import * as THREE from 'three';
-import { COMPANIES, PLATFORMS } from './data';
-import { stdMat, stdBox } from './helpers';
-import { isEdgeConnected } from './collision';
+import { COMPANIES, PLATFORMS } from '../core/data';
+import { stdMat, stdBox } from '../core/helpers';
+import { isEdgeConnected } from '../core/collision';
 
 // --- Palette ---
 

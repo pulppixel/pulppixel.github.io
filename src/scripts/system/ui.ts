@@ -1,6 +1,6 @@
 // Warp menu + HUD labels
-import type { ProjectData } from './data';
-import { COMPANIES, PROJECTS, PLATFORMS } from './data';
+import type { ProjectData } from '../core/data';
+import { COMPANIES, PROJECTS, PLATFORMS } from '../core/data';
 
 // --- Warp ---
 

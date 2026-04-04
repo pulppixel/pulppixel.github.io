@@ -117,9 +117,9 @@ class MazeGame extends MinigameBase {
     private hintProg = 0;
     private hintTrails: HintTrail[] = [];
     private dissolve: DPart[] = [];
-    private touchDir = { x: 0, y: 0 };
 
     protected resetGame(): void {
+        this.setupMobileControls({ joystick: true });
         this.stage = 0;
         this.stageTimes = [];
         this.totalGems = [];
@@ -244,7 +244,10 @@ class MazeGame extends MinigameBase {
         if (this.keys['KeyS'] || this.keys['ArrowDown']) my += 1;
         if (this.keys['KeyA'] || this.keys['ArrowLeft']) mx -= 1;
         if (this.keys['KeyD'] || this.keys['ArrowRight']) mx += 1;
-        if (mx === 0 && my === 0 && (this.touchDir.x || this.touchDir.y)) { mx = this.touchDir.x; my = this.touchDir.y; }
+        if (mx === 0 && my === 0 && (this.mJoy.x || this.mJoy.y)) {
+            mx = this.mJoy.x > 0.3 ? 1 : this.mJoy.x < -0.3 ? -1 : 0;
+            my = this.mJoy.y > 0.3 ? 1 : this.mJoy.y < -0.3 ? -1 : 0;
+        }
         if (mx !== 0 || my !== 0) this.tryMove(mx, my, dt);
 
         const pg = this.gridOf(this.px, this.py);
@@ -511,18 +514,7 @@ class MazeGame extends MinigameBase {
         }
     }
 
-    protected onTouchMoveAt(x: number, y: number): void {
-        if (this.phase !== 'play') return;
-        const dx = x - this.px, dy = y - this.py;
-        if (Math.hypot(dx, dy) < 15) { this.touchDir = { x: 0, y: 0 }; return; }
-        this.touchDir = Math.abs(dx) > Math.abs(dy)
-            ? { x: dx > 0 ? 1 : -1, y: 0 }
-            : { x: 0, y: dy > 0 ? 1 : -1 };
-    }
-
-    protected onTouchEndAt(): void {
-        this.touchDir = { x: 0, y: 0 };
-    }
+    // Touch input handled by base class virtual joystick
 }
 
 // Factory (main.ts 호환)

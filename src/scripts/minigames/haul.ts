@@ -53,9 +53,8 @@ class HaulGame extends MinigameBase {
     private stTime = 0; private score = 0; private totCore = 0;
     private stRes: {core:number;time:number;animal:string}[] = [];
     private shX = 0; private shY = 0; private alertFl = 0; private petFlash = 0;
-    private tDir = {x:0,y:0}; private tJump = false;
 
-    protected resetGame(): void { this.stage=0; this.score=0; this.totCore=0; this.stRes=[]; this.selA=''; this.phase='select'; }
+    protected resetGame(): void { this.setupMobileControls({ joystick: true, actionBtn: 'E', jumpBtn: true }); this.stage=0; this.score=0; this.totCore=0; this.stRes=[]; this.selA=''; this.phase='select'; }
     protected onResized(): void { this.gndY=this.H*GND_R; this.sewerFloor=this.gndY+this.H*SEWER_H_R; }
 
     private startStage(): void {
@@ -66,7 +65,7 @@ class HaulGame extends MinigameBase {
         this.iF=0; this.gliding=false; this.wallSl=false; this.inSewer=false;
         this.lootTgt=null; this.lootP=0; this.extracting=false; this.exP=0;
         this.shX=0; this.shY=0; this.alertFl=0; this.petFlash=0; this.camX=0;
-        this.pts=[]; this.pops=[]; this.tDir={x:0,y:0}; this.tJump=false;
+        this.pts=[]; this.pops=[];
         this.exZ={x:this.mapW-170,w:130}; this.genMap(s); this.stTime=s.time; this.phase='intro'; this.phT=1.3;
     }
 
@@ -108,28 +107,25 @@ class HaulGame extends MinigameBase {
         const d=this.aD; let mx=0;
         if(this.keys['KeyA']||this.keys['ArrowLeft'])mx-=1;
         if(this.keys['KeyD']||this.keys['ArrowRight'])mx+=1;
-        if(this.tDir.x)mx=this.tDir.x;
-        const wJ=this.keys['Space']||this.keys['KeyW']||this.keys['ArrowUp']||this.tJump;
+        if(mx===0&&this.mJoy.x)mx=this.mJoy.x>0.3?1:this.mJoy.x<-0.3?-1:0;
+        const wJ=this.keys['Space']||this.keys['KeyW']||this.keys['ArrowUp']||this.mJump;
         if((mx!==0||wJ)&&(this.lootTgt||this.extracting)){this.lootTgt=null;this.lootP=0;this.extracting=false;this.exP=0;}
         if(this.inSewer){
             if(mx!==0&&!this.lootTgt){this.pvx=mx*d.spd*1.2;this.pDir=mx>0?1:-1;}else this.pvx*=0.78;
-            // 하수도 점프 (쥐덫 회피용)
             const sewerCeil=this.gndY+6, sewerGnd=this.sewerFloor-10;
-            if(wJ&&this.onGnd&&!this.lootTgt){this.pvy=-350;this.onGnd=false;this.tJump=false;}
+            if(wJ&&this.onGnd&&!this.lootTgt){this.pvy=-350;this.onGnd=false;}
             if(!this.onGnd)this.pvy+=GRAV*dt;
             this.px+=this.pvx*dt; this.py+=this.pvy*dt;
             this.px=Math.max(14,Math.min(this.mapW-14,this.px));
-            // 천장 충돌
             if(this.py<sewerCeil){this.py=sewerCeil;this.pvy=0;}
-            // 바닥 충돌
             this.onGnd=false;
             if(this.py>=sewerGnd){this.py=sewerGnd;this.pvy=0;this.onGnd=true;}
             this.gliding=false; this.wallSl=false;
         } else {
             if(mx!==0&&!this.lootTgt&&!this.extracting){this.pvx=mx*d.spd;this.pDir=mx>0?1:-1;}else this.pvx*=0.78;
-            if(wJ&&this.onGnd&&!this.lootTgt&&!this.extracting){this.pvy=d.jumpV;this.onGnd=false;this.tJump=false;}
+            if(wJ&&this.onGnd&&!this.lootTgt&&!this.extracting){this.pvy=d.jumpV;this.onGnd=false;}
             this.gliding=false;
-            if(d.glide&&!this.onGnd&&this.pvy>0&&(this.keys['Space']||this.tDir.y<-0.3)){this.pvy=Math.min(this.pvy,50);this.gliding=true;}
+            if(d.glide&&!this.onGnd&&this.pvy>0&&(this.keys['Space']||this.mJoy.y<-0.3)){this.pvy=Math.min(this.pvy,50);this.gliding=true;}
             this.wallSl=false;
             if(d.wallClimb&&!this.onGnd){for(const p of this.plats){const oL=Math.abs(this.px-p.x)<8&&this.py>p.y&&this.py<p.y+p.h;const oR=Math.abs(this.px-(p.x+p.w))<8&&this.py>p.y&&this.py<p.y+p.h;if(oL||oR){this.wallSl=true;this.pvy=Math.min(this.pvy,28);if(wJ){this.pvy=d.jumpV*0.85;this.pvx=oL?220:-220;this.wallSl=false;}break;}}}
             if(!this.onGnd&&!this.wallSl)this.pvy+=GRAV*dt;else if(this.wallSl)this.pvy+=GRAV*0.25*dt;
@@ -196,7 +192,7 @@ class HaulGame extends MinigameBase {
         if(this.phase!=='play')return;
         this.stTime-=dt;if(this.stTime<=0){this.stTime=0;this.phase='dead';this.audio?.mgFail();return;}
         if(this.petFlash>0){this.petFlash-=dt;this.pvx=0;}
-        if(this.keys['KeyE']||this.keys['KeyF']){this.doInteract();this.keys['KeyE']=false;this.keys['KeyF']=false;}
+        if(this.keys['KeyE']||this.keys['KeyF']||this.mAction){this.doInteract();this.keys['KeyE']=false;this.keys['KeyF']=false;this.mAction=false;}
         if(this.lootTgt){this.lootP+=dt;if(this.lootP>=LOOT_DUR){const g=Math.min(Math.ceil(this.lootTgt.core*this.aD.coreMul),this.maxC-this.core);this.core+=g;this.score+=Math.round(g*100*this.aD.scoreMul);this.lootTgt.looted=true;this.addBurst(this.lootTgt.x,this.lootTgt.y,this.lootTgt.isSewer?C.purple:C.yellow,6,60);this.addPop(this.lootTgt.x,this.lootTgt.y-22,`+${g} ◆`,true,1.0);this.audio?.mgLoot();this.lootTgt=null;this.lootP=0;}}
         if(this.extracting){this.exP+=dt;if(this.exP>=this.aD.extractTime){this.totCore+=this.core;this.score+=Math.round((this.core*200+this.stTime*10)*this.aD.scoreMul);this.stRes.push({core:this.core,time:STAGES[this.stage].time-this.stTime,animal:this.selA});this.addPop(this.px,this.py-40,'탈출 성공!',true,1.5);this.audio?.mgExtract();this.phase='clear';this.phT=1.5;}if(!(this.px>=this.exZ.x&&this.px<=this.exZ.x+this.exZ.w)){this.extracting=false;this.exP=0;}}
         if(this.petFlash<=0)this.updPlayer(dt);
@@ -292,12 +288,10 @@ class HaulGame extends MinigameBase {
     protected onClickAt(x:number,y:number):void{
         if(this.phase==='select'){this.selClick(x,y);return;}
         if(this.phase==='result'||this.phase==='dead'){const h=this.hitResultBtn(x,y,this.W/2,this.rBY);if(h==='retry')this.resetGame();if(h==='exit')this.stop();return;}
-        if(this.phase==='play'&&this.mob){if(x>this.W*0.7)this.tJump=true;else if(x<this.W*0.3)this.doInteract();}
     }
     private selClick(x:number,y:number):void{const keys=['pigeon','cat','rat'],cW=Math.min(165,(this.W-60)/3),gp=12,tW=cW*3+gp*2,sx=(this.W-tW)/2,cy=this.H*0.33,ch=this.H*0.52;for(let i=0;i<3;i++){const cx2=sx+i*(cW+gp);if(x>=cx2&&x<=cx2+cW&&y>=cy&&y<=cy+ch){this.selA=keys[i];this.startStage();return;}}}
     protected onMouseMoveAt(x:number,y:number):void{if(this.phase!=='select')return;const keys=['pigeon','cat','rat'],cW=Math.min(165,(this.W-60)/3),gp=12,tW=cW*3+gp*2,sx=(this.W-tW)/2,cy=this.H*0.33,ch=this.H*0.52;this.hovA=null;for(let i=0;i<3;i++){const cx2=sx+i*(cW+gp);if(x>=cx2&&x<=cx2+cW&&y>=cy&&y<=cy+ch){this.hovA=keys[i];break;}}}
-    protected onTouchMoveAt(x:number):void{if(this.phase!=='play')return;const dx=x-(this.px-this.camX);this.tDir={x:dx>30?1:dx<-30?-1:0,y:0};}
-    protected onTouchEndAt():void{this.tDir={x:0,y:0};this.tJump=false;}
+    // Touch movement/jump/interact handled by base class virtual controls
 }
 
 export function createHaulGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {

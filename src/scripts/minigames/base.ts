@@ -1,5 +1,5 @@
 // Minigame abstract base: canvas lifecycle, input, particles, popups, shared UI
-// + Audio integration
+// + Audio integration + Mobile virtual controls
 
 import type { GameAudio } from '../system/audio';
 
@@ -23,17 +23,15 @@ export const C = {
   blue: '#38bdf8',
 } as const;
 
-// --- Shared types ---
+export interface Particle { x: number; y: number; vx: number; vy: number; a: number; color: string; s: number; }
+export interface Popup { x: number; y: number; a: number; text: string; big: boolean; }
 
-export interface Particle {
-  x: number; y: number;
-  vx: number; vy: number;
-  a: number; color: string; s: number;
-}
+// --- Mobile controls config ---
 
-export interface Popup {
-  x: number; y: number;
-  a: number; text: string; big: boolean;
+export interface MobileControlsConfig {
+  joystick?: boolean;       // 가상 조이스틱 (왼쪽 하단)
+  actionBtn?: string;       // 액션 버튼 라벨 (오른쪽 하단). null이면 비활성
+  jumpBtn?: boolean;        // 점프 버튼
 }
 
 // --- Abstract base ---
@@ -49,6 +47,11 @@ export abstract class MinigameBase {
   protected pops: Popup[] = [];
   protected audio: GameAudio | null;
 
+  // Mobile virtual controls state
+  protected mJoy = { x: 0, y: 0 };  // joystick normalized -1~1
+  protected mAction = false;          // action button pressed
+  protected mJump = false;            // jump button pressed
+
   protected abstract readonly title: string;
   protected abstract readonly titleColor: string;
   protected cursorStyle = 'default';
@@ -58,13 +61,20 @@ export abstract class MinigameBase {
   private readonly onExit: () => void;
   private boundHandlers: { el: EventTarget; type: string; fn: EventListener }[] = [];
 
+  // Mobile UI elements
+  private mobileOverlay: HTMLDivElement | null = null;
+  private joyBase: HTMLDivElement | null = null;
+  private joyThumb: HTMLDivElement | null = null;
+  private joyTouchId: number | null = null;
+  private joyOrigin = { x: 0, y: 0 };
+
   constructor(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
     this.container = container;
     this.onExit = onExit;
     this.audio = audio ?? null;
   }
 
-  // --- Lifecycle hooks (subclass implements) ---
+  // --- Lifecycle hooks ---
   protected abstract resetGame(): void;
   protected abstract updateGame(dt: number): void;
   protected abstract renderGame(now: number): void;
@@ -78,7 +88,144 @@ export abstract class MinigameBase {
   get W(): number { return this.cv.width; }
   get H(): number { return this.cv.height; }
 
-  // --- Public API ---
+  // --- MOBILE CONTROLS ---
+
+  protected setupMobileControls(config: MobileControlsConfig): void {
+    if (!this.mob) return;
+
+    this.mobileOverlay = document.createElement('div');
+    this.mobileOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:30;';
+    this.container.appendChild(this.mobileOverlay);
+
+    if (config.joystick) this.createJoystick();
+    if (config.actionBtn) this.createActionBtn(config.actionBtn);
+    if (config.jumpBtn) this.createJumpBtn();
+  }
+
+  private createJoystick(): void {
+    const base = document.createElement('div');
+    base.style.cssText = `
+      position:absolute; bottom:30px; left:30px;
+      width:100px; height:100px; border-radius:50%;
+      border:1.5px solid rgba(110,231,183,0.25);
+      background:rgba(110,231,183,0.04);
+      pointer-events:auto; touch-action:none;
+    `;
+    const thumb = document.createElement('div');
+    thumb.style.cssText = `
+      position:absolute; top:50%; left:50%;
+      width:40px; height:40px; border-radius:50%;
+      background:rgba(110,231,183,0.2);
+      border:1px solid rgba(110,231,183,0.4);
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+    `;
+    base.appendChild(thumb);
+    this.mobileOverlay!.appendChild(base);
+    this.joyBase = base;
+    this.joyThumb = thumb;
+
+    const JR = 50;
+
+    base.addEventListener('touchstart', (e: TouchEvent) => {
+      e.preventDefault(); e.stopPropagation();
+      if (this.joyTouchId !== null) return;
+      const t = e.changedTouches[0];
+      this.joyTouchId = t.identifier;
+      const rect = base.getBoundingClientRect();
+      this.joyOrigin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }, { passive: false });
+
+    const onMove = (e: TouchEvent) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier !== this.joyTouchId) continue;
+        let dx = t.clientX - this.joyOrigin.x;
+        let dy = t.clientY - this.joyOrigin.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d > JR) { dx = dx / d * JR; dy = dy / d * JR; }
+        this.mJoy.x = dx / JR;
+        this.mJoy.y = dy / JR;
+        thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      }
+    };
+
+    const onEnd = (e: TouchEvent) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier !== this.joyTouchId) continue;
+        this.joyTouchId = null;
+        this.mJoy = { x: 0, y: 0 };
+        thumb.style.transform = 'translate(-50%,-50%)';
+      }
+    };
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+    this.boundHandlers.push(
+        { el: document, type: 'touchmove', fn: onMove as EventListener },
+        { el: document, type: 'touchend', fn: onEnd as EventListener },
+        { el: document, type: 'touchcancel', fn: onEnd as EventListener },
+    );
+  }
+
+  private createActionBtn(label: string): void {
+    const btn = document.createElement('button');
+    btn.textContent = label;
+    btn.style.cssText = `
+      position:absolute; bottom:40px; right:30px;
+      width:60px; height:60px; border-radius:50%;
+      border:1.5px solid rgba(110,231,183,0.3);
+      background:rgba(110,231,183,0.08);
+      color:#6ee7b7; font-size:12px; font-family:'JetBrains Mono',monospace;
+      pointer-events:auto; touch-action:none;
+      display:flex; align-items:center; justify-content:center;
+    `;
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this.mAction = true;
+      btn.style.background = 'rgba(110,231,183,0.25)';
+    }, { passive: false });
+    btn.addEventListener('touchend', () => {
+      this.mAction = false;
+      btn.style.background = 'rgba(110,231,183,0.08)';
+    });
+    this.mobileOverlay!.appendChild(btn);
+  }
+
+  private createJumpBtn(): void {
+    const btn = document.createElement('button');
+    btn.textContent = '▲';
+    btn.style.cssText = `
+      position:absolute; bottom:110px; right:30px;
+      width:50px; height:50px; border-radius:50%;
+      border:1.5px solid rgba(110,231,183,0.2);
+      background:rgba(110,231,183,0.04);
+      color:#6ee7b7; font-size:16px; font-family:'JetBrains Mono',monospace;
+      pointer-events:auto; touch-action:none;
+      display:flex; align-items:center; justify-content:center;
+    `;
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this.mJump = true;
+      btn.style.background = 'rgba(110,231,183,0.25)';
+    }, { passive: false });
+    btn.addEventListener('touchend', () => {
+      this.mJump = false;
+      btn.style.background = 'rgba(110,231,183,0.04)';
+    });
+    this.mobileOverlay!.appendChild(btn);
+  }
+
+  private cleanupMobileControls(): void {
+    if (this.mobileOverlay) {
+      this.mobileOverlay.remove();
+      this.mobileOverlay = null;
+    }
+    this.joyBase = null; this.joyThumb = null; this.joyTouchId = null;
+    this.mJoy = { x: 0, y: 0 }; this.mAction = false; this.mJump = false;
+  }
+
+  // --- PUBLIC API ---
 
   start(): void {
     this.mob = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -109,6 +256,7 @@ export abstract class MinigameBase {
   stop(): void {
     this.on = false;
     cancelAnimationFrame(this.aId);
+    this.cleanupMobileControls();
     for (const h of this.boundHandlers) h.el.removeEventListener(h.type, h.fn);
     this.boundHandlers = [];
     this.container.style.display = 'none';
@@ -116,7 +264,7 @@ export abstract class MinigameBase {
     this.onExit();
   }
 
-  // --- Drawing helpers ---
+  // --- DRAWING HELPERS ---
 
   protected drawBg(): void { this.cx.fillStyle = C.bg; this.cx.fillRect(0, 0, this.W, this.H); }
 
@@ -138,7 +286,9 @@ export abstract class MinigameBase {
   }
 
   protected drawCloseBtn(y = 38): void {
-    this.cx.font = '400 16px "JetBrains Mono",monospace';
+    // 모바일에서 닫기 버튼 더 크게
+    const sz = this.mob ? 48 : 40;
+    this.cx.font = `400 ${this.mob ? 20 : 16}px "JetBrains Mono",monospace`;
     this.cx.fillStyle = '#5a5a66'; this.cx.textAlign = 'center';
     this.cx.fillText('\u2715', this.W - 22, y);
   }
@@ -155,7 +305,7 @@ export abstract class MinigameBase {
     this.cx.fillStyle = color; this.cx.textAlign = 'left'; this.cx.fillText(text, 20, y);
   }
 
-  // --- Particle system (swap-and-pop) ---
+  // --- Particle system ---
 
   protected updatePts(dt: number, gravity = 0): void {
     let i = this.pts.length;
@@ -183,7 +333,7 @@ export abstract class MinigameBase {
     }
   }
 
-  // --- Popup system (swap-and-pop) ---
+  // --- Popup system ---
 
   protected updatePops(dt: number): void {
     let i = this.pops.length;
@@ -266,7 +416,10 @@ export abstract class MinigameBase {
     this.aId = requestAnimationFrame(this.loop);
   };
 
-  private isCloseHit(x: number, y: number): boolean { return x > this.W - 40 && y < 50; }
+  private isCloseHit(x: number, y: number): boolean {
+    const sz = this.mob ? 48 : 40;
+    return x > this.W - sz && y < sz + 10;
+  }
 
   private handleClick(e: MouseEvent): void {
     if (this.isCloseHit(e.clientX, e.clientY)) { this.stop(); return; }

@@ -79,7 +79,6 @@ class NomadsGame extends MinigameBase {
     private stage = 0; private score = 0;
     private combo = 0; private maxCombo = 0; private lastCoinT = -10;
     private spawnT = 0; private stageTime = 0;
-    private touchDir = { x: 0, y: 0 };
     private shX = 0; private shY = 0;
     private nearMissCd = 0; private nmFlash = 0;
     private inIntersection = false; private stageStars: number[] = [];
@@ -91,6 +90,7 @@ class NomadsGame extends MinigameBase {
     // --- Lifecycle ---
 
     protected resetGame(): void {
+        this.setupMobileControls({ joystick: true });
         this.stage = 0; this.score = 0; this.combo = 0; this.maxCombo = 0;
         this.lastCoinT = -10; this.stageStars = [];
         this.startStage();
@@ -110,7 +110,6 @@ class NomadsGame extends MinigameBase {
         this.tfAct = 'h'; this.tfCol = 'green'; this.tfT = TF_GREEN;
         this.spawnT = 1.5; this.stageTime = STAGES[this.stage].time;
         this.shX = 0; this.shY = 0; this.nearMissCd = 0; this.nmFlash = 0;
-        this.touchDir = { x: 0, y: 0 };
         this.placeCoins(); this.placeBoosts(); this.placeShield();
         this.phase = 'intro'; this.phaseT = 1.3;
     }
@@ -358,7 +357,7 @@ class NomadsGame extends MinigameBase {
         if (this.keys['KeyS'] || this.keys['ArrowDown']) my += 1;
         if (this.keys['KeyA'] || this.keys['ArrowLeft']) mx -= 1;
         if (this.keys['KeyD'] || this.keys['ArrowRight']) mx += 1;
-        if (mx === 0 && my === 0 && (this.touchDir.x || this.touchDir.y)) { mx = this.touchDir.x; my = this.touchDir.y; }
+        if (mx === 0 && my === 0 && (this.mJoy.x || this.mJoy.y)) { mx = this.mJoy.x; my = this.mJoy.y; }
 
         // Drift physics
         if (mx !== 0 || my !== 0) {
@@ -707,14 +706,8 @@ class NomadsGame extends MinigameBase {
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') { const h = this.hitResultBtn(x, y, this.W/2, this.rBtnY); if (h === 'retry') this.resetGame(); if (h === 'exit') this.stop(); return; }
-        if (this.phase === 'play' && this.mob) { const dx = x-this.px, dy = y-this.py, len = Math.hypot(dx, dy); if (len > 20) this.touchDir = { x: dx/len, y: dy/len }; }
     }
-    protected onTouchMoveAt(x: number, y: number): void {
-        if (this.phase !== 'play') return;
-        const dx = x-this.px, dy = y-this.py, len = Math.hypot(dx, dy);
-        if (len > 20) this.touchDir = { x: dx/len, y: dy/len }; else this.touchDir = { x: 0, y: 0 };
-    }
-    protected onTouchEndAt(): void { this.touchDir = { x: 0, y: 0 }; }
+    // Touch input handled by base class virtual joystick
 }
 
 export function createNomadsGame(container: HTMLElement, onExit: () => void, audio?: GameAudio) {

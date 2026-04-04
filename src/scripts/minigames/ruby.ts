@@ -353,11 +353,12 @@ class RubyGame extends MinigameBase {
 
     private handleGameClick(cx: number, cy: number): void {
         if (this.phase !== 'play') return;
+        const tapR = this.mob ? 44 : 28; // 모바일: 더 넓은 터치 영역
         let tgt: Mon | null = null, minD = Infinity;
         for (const m of this.mons) {
             if (!m.alive) continue;
             const d = Math.hypot(m.x - cx, m.y - cy);
-            if (d < m.r + 28 && d < minD) { minD = d; tgt = m; }
+            if (d < m.r + tapR && d < minD) { minD = d; tgt = m; }
         }
         if (tgt) { this.chaseTarget = tgt; this.moveTo = null; }
         else { this.moveTo = { x: cx, y: cy }; this.chaseTarget = null; this.clickMark = { x: cx, y: cy, a: 0.6 }; }

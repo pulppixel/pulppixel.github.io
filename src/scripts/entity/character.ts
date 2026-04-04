@@ -104,7 +104,7 @@ const buildBunny: Builder = (hd, bd, aL, aR, lL, lR, root) => {
   hd.add(setPos(facePlane(0.04, 0.015, DK), 0, -0.12, FZ));
   bd.add(BX(0.34, 0.26, 0.22, PK)); bd.add(setPos(BX(0.20, 0.16, 0.01, WH, 0.15), 0, 0, 0.115));
   addArms(aL, aR, PK, SK); addLegs(lL, lR, PK, PK, DK);
-  const tail = setPos(BX(0.10, 0.10, 0.08, WH, 0.4), 0, 0.62, -0.20); root.add(tail);
+  const tail = setPos(BX(0.10, 0.10, 0.08, WH, 0.4), 0, 0.48, -0.20); root.add(tail);
   return { eyeL, eyeR, hlL, hlR, blushMat, tail: [tail],
     extra(t, moving) {
       const f = moving ? Math.sin(t * 8) * 0.12 : Math.sin(t * 1.5) * 0.03;
@@ -155,7 +155,7 @@ const buildBear: Builder = (hd, bd, aL, aR, lL, lR, root) => {
   hd.add(setPos(facePlane(0.04, 0.015, DK), 0, -0.10, FZ));
   bd.add(BX(0.34, 0.26, 0.22, BR)); bd.add(setPos(BX(0.20, 0.16, 0.01, CREAM, 0.15), 0, 0, 0.115));
   addArms(aL, aR, BR, BR); addLegs(lL, lR, BR, DK, BR);
-  const tail = setPos(BX(0.06, 0.06, 0.04, DK, 0.2), 0, 0.60, -0.18); root.add(tail);
+  const tail = setPos(BX(0.06, 0.06, 0.04, DK, 0.2), 0, 0.46, -0.18); root.add(tail);
   const pot = setPos(GL(0.10, 0.10, 0.10, 0xFBBF24, 0.6), -0.28, 0.55, 0); root.add(pot);
   return { eyeL, eyeR, hlL, hlR, blushMat, tail: [tail],
     extra(t) {
@@ -244,6 +244,7 @@ export const SKIN_INFO = SKINS.map((s, i) => ({
 
 export function createCharacter(scene: THREE.Scene, skinIndex?: number): Character {
   const ch = new THREE.Group();
+  ch.userData = { isCharacter: true };
   scene.add(ch);
 
   const idx = skinIndex !== undefined ? skinIndex % SKINS.length : Math.floor(Math.random() * SKINS.length);

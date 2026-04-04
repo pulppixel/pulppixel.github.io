@@ -84,6 +84,15 @@ function matchType(hex: number): 'leaf' | 'flower' | 'grass' | null {
   return null;
 }
 
+function hasTaggedAncestor(obj: THREE.Object3D): boolean {
+  let p = obj.parent;
+  while (p) {
+    if (p.userData?.isCharacter || p.userData?.isAnimal) return true;
+    p = p.parent;
+  }
+  return false;
+}
+
 export function createSeasonSystem(scene: THREE.Scene): SeasonSystem {
   let currentSeason: SeasonName = 'summer';
   let targetPreset = PRESETS.summer;
@@ -100,6 +109,7 @@ export function createSeasonSystem(scene: THREE.Scene): SeasonSystem {
 
     scene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
+      if (hasTaggedAncestor(obj)) return;
       const mat = obj.material;
       if (!mat || !(mat instanceof THREE.MeshStandardMaterial)) return;
       if (!mat.color) return;

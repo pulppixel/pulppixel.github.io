@@ -96,12 +96,12 @@ const title = 'pulppixel - 3D Explore';
     #joystick-base.active { display: block; }
     #joystick-thumb { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(110,231,183,0.2); border: 1px solid rgba(110,231,183,0.4); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
     #joystick-thumb.active { background: rgba(110,231,183,0.45); }
-    #mobile-interact { position: absolute; bottom: 70px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.3); background: rgba(110,231,183,0.06); color: #6ee7b7; font-size: 11px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
+    #mobile-interact { position: absolute; bottom: 70px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.3); background: rgba(110,231,183,0.06); backdrop-filter: blur(4px); color: #6ee7b7; font-size: 11px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
     .is-mobile #mobile-interact.show { display: flex; }
-    #mobile-interact:active { background: rgba(110,231,183,0.25); transform: scale(0.93); }
-    #mobile-jump { position: absolute; bottom: 140px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.2); background: rgba(110,231,183,0.04); color: #6ee7b7; font-size: 16px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; transition: all 0.15s; }
+    #mobile-interact:active { background: rgba(110,231,183,0.3); transform: scale(0.93); }
+    #mobile-jump { position: absolute; bottom: 140px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.2); background: rgba(110,231,183,0.04); backdrop-filter: blur(4px); color: #6ee7b7; font-size: 16px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; transition: all 0.15s; }
     .is-mobile #mobile-jump { display: flex; }
-    #mobile-jump:active { background: rgba(110,231,183,0.25); transform: scale(0.93); }
+    #mobile-jump:active { background: rgba(110,231,183,0.3); transform: scale(0.93); }
     #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #6ee7b7; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(110,231,183,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; z-index: 5; }
     .is-mobile #controls-hint { bottom: 16px; font-size: 10px; animation-delay: 1s; }
     #fps { position: absolute; top: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; pointer-events: none; }

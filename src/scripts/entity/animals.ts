@@ -28,6 +28,7 @@ const CREAM = 0xf5efe0, RPINK = 0xf0a0b0, RWHITE = 0xffffff, RDARK = 0x1a1520;
 function createRabbit(scene: THREE.Scene, x: number, z: number): Rabbit {
   const h = getGroundHeight(x, z);
   const g = new THREE.Group();
+  g.userData = { isAnimal: true };
   g.position.set(x, h, z);
   g.scale.setScalar(0.4);
 
@@ -58,7 +59,7 @@ function createRabbit(scene: THREE.Scene, x: number, z: number): Rabbit {
   const legBR = setPos(stdBox(0.09, 0.12, 0.12, CREAM), 0.10, 0.06, -0.14);
   g.add(legFL, legFR, legBL, legBR);
 
-  const tail = setPos(stdBox(0.09, 0.09, 0.06, RWHITE), 0, 0.28, -0.26);
+  const tail = setPos(stdBox(0.09, 0.09, 0.06, RWHITE), 0, 0.20, -0.26);
   g.add(tail);
 
   // Shadow circle
@@ -194,6 +195,7 @@ interface Bird {
 
 function createBird(scene: THREE.Scene, x: number, y: number, z: number, color: number): Bird {
   const g = new THREE.Group();
+  g.userData = { isAnimal: true };
   g.position.set(x, y, z);
   g.scale.setScalar(0.3);
 
@@ -293,6 +295,7 @@ const BF_COLS: [number, number][] = [
 function createButterfly(scene: THREE.Scene, x: number, z: number, cols: [number, number]): Butterfly {
   const h = getGroundHeight(x, z);
   const g = new THREE.Group();
+  g.userData = { isAnimal: true };
   g.position.set(x, h + 0.8 + Math.random() * 0.4, z);
   g.scale.setScalar(0.22);
 

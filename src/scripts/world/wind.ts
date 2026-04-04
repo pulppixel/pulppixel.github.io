@@ -33,6 +33,15 @@ function colorClose(c: THREE.Color, targets: Set<number>, threshold = 0.2): bool
   return false;
 }
 
+function hasTaggedAncestor(obj: THREE.Object3D): boolean {
+  let p = obj.parent;
+  while (p) {
+    if (p.userData?.isCharacter || p.userData?.isAnimal) return true;
+    p = p.parent;
+  }
+  return false;
+}
+
 export function createWindSystem(scene: THREE.Scene): WindSystem {
   const targets: SwayTarget[] = [];
 
@@ -40,6 +49,7 @@ export function createWindSystem(scene: THREE.Scene): WindSystem {
   setTimeout(() => {
     scene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
+      if (hasTaggedAncestor(obj)) return;
       const mat = obj.material;
       if (!(mat instanceof THREE.MeshStandardMaterial) || !mat.color) return;
 

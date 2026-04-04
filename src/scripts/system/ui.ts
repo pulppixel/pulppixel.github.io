@@ -81,7 +81,6 @@ export function createHUD(): HUD {
       if (p.minigame) {
         lb += ` <span class="lbl-badge" style="background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444;">PLAY</span>`;
       }
-      lb += `<div class="lbl-period">${p.period}</div>`;
 
       lb += `<div class="lbl-period">${p.period}</div>`;
       projectLabel.innerHTML = lb;

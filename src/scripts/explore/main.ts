@@ -163,8 +163,8 @@ export function init(): void {
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
-  const GRAVITY = -19;
-  const JUMP_FORCE = 10.6;
+  const GRAVITY = -16.9;
+  const JUMP_FORCE = 12.6;
   let isSprinting = false;
   const SPRINT_MULT = 1.7;
 

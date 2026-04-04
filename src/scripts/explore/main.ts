@@ -14,6 +14,7 @@ import { createHaulGame } from './minigames/haul';
 import { createAudio } from './audio';
 import { createTimeWeather } from './timeweather';
 import { createPostFX } from './postfx';
+import { createAnimals } from './animals';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -24,6 +25,7 @@ export function init(): void {
   } = createScene(isMobile);
   const character = createCharacter(scene);
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
+  const animals = createAnimals(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -108,7 +110,7 @@ export function init(): void {
     setTimeout(() => {
       arcadeOverlay.style.opacity = '0';
       arcadeOverlay.style.pointerEvents = 'none';
-      if (!isMobile) renderer.domElement.requestPointerLock();
+      if (!isMobile) renderer.domElement.requestPointerLock().then(_ => "");
     }, 100);
   };
 
@@ -372,6 +374,7 @@ export function init(): void {
     }
 
     updateZones(t, dt, character.group.position, nearestProject);
+    animals.update(dt, t, character.group.position);
 
     // ── 사운드: 존 진입 차임 ──
     for (let zi = 0; zi < zones.length; zi++) {

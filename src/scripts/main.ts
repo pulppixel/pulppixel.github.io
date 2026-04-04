@@ -2,16 +2,10 @@
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
 import { createScene, updateEnvironment } from './world/scene';
-import { createCharacter, SKIN_INFO, type SkinPalette } from './entity/character';
+import { createCharacter, type SkinPalette } from './entity/character';
 import { createZones } from './world/zones';
 import { createInput } from './core/input';
 import { createWarp, createHUD } from './system/ui';
-import { createSpodyGame } from './minigames/spody';
-import { createRubyGame } from './minigames/ruby';
-import { createMazeGame } from './minigames/maze';
-import { createNomadsGame } from './minigames/nomads';
-import { createHaulGame } from './minigames/haul';
-import { createNineToSixGame } from './minigames/circles.ts';
 import { createAudio } from './system/audio';
 import { createTimeWeather } from './world/timeweather';
 import { createPostFX } from './system/postfx';
@@ -231,27 +225,44 @@ export function init(): void {
     }, 100);
   };
 
-  const minigames: Record<string, { start(): void; stop(): void }> = {
-    spody: createSpodyGame(mgContainer, exitMg, audio),
-    ruby: createRubyGame(mgContainer, exitMg, audio),
-    maze: createMazeGame(mgContainer, exitMg, audio),
-    nomads: createNomadsGame(mgContainer, exitMg, audio),
-    haul: createHaulGame(mgContainer, exitMg, audio),
-    ninetosix: createNineToSixGame(mgContainer, exitMg, audio),
-  };
+  // --- Minigame lazy loading (dynamic import) ---
+  const mgCache: Record<string, { start(): void; stop(): void }> = {};
+  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'circles']);
+
+  async function loadMinigame(key: string): Promise<{ start(): void; stop(): void }> {
+    if (mgCache[key]) return mgCache[key];
+    let game: { start(): void; stop(): void };
+    switch (key) {
+      case 'spody':     game = (await import('./minigames/spody')).createSpodyGame(mgContainer, exitMg, audio); break;
+      case 'ruby':      game = (await import('./minigames/ruby')).createRubyGame(mgContainer, exitMg, audio); break;
+      case 'maze':      game = (await import('./minigames/maze')).createMazeGame(mgContainer, exitMg, audio); break;
+      case 'nomads':    game = (await import('./minigames/nomads')).createNomadsGame(mgContainer, exitMg, audio); break;
+      case 'haul':      game = (await import('./minigames/haul')).createHaulGame(mgContainer, exitMg, audio); break;
+      case 'ninetosix': game = (await import('./minigames/circles')).createNineToSixGame(mgContainer, exitMg, audio); break;
+      default: throw new Error(`Unknown minigame: ${key}`);
+    }
+    mgCache[key] = game;
+    return game;
+  }
 
   function enterMinigame(key: string): void {
-    if (!minigames[key] || mgTransitioning) return;
+    if (!MG_KEYS.has(key) || mgTransitioning) return;
     mgTransitioning = true;
     if (!isMobile) document.exitPointerLock();
     audio.mgEnter();
     arcadeOverlay.style.opacity = '1';
     arcadeOverlay.style.pointerEvents = 'auto';
-    setTimeout(() => {
+
+    const fadeP = new Promise(r => setTimeout(r, 480));
+    Promise.all([fadeP, loadMinigame(key)]).then(([, game]) => {
       inMinigame = true;
       mgTransitioning = false;
-      minigames[key].start();
-    }, 480);
+      game.start();
+    }).catch(() => {
+      mgTransitioning = false;
+      arcadeOverlay.style.opacity = '0';
+      arcadeOverlay.style.pointerEvents = 'none';
+    });
   }
 
   function interact(m: THREE.Mesh): void {
@@ -290,14 +301,14 @@ export function init(): void {
 
   const fpsEl = document.getElementById('fps')!;
   let frameCount = 0, fpsLastTime = performance.now();
-  const clock = new THREE.Clock();
+  const timer = new THREE.Timer();
 
   // --- Main loop ---
 
   function animate(): void {
     requestAnimationFrame(animate);
-    const dt = Math.min(clock.getDelta(), 0.05);
-    const t = clock.getElapsedTime();
+    const dt = Math.min(timer.getDelta(), 0.05);
+    const t = timer.getElapsed();
 
     if (inMinigame) { renderer.render(scene, camera); return; }
 

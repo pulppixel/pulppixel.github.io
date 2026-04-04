@@ -314,15 +314,17 @@ class NineToSixGame extends MinigameBase {
         c.save();
         c.translate(this.shX, this.shY);
         this.drawBg();
-        this.drawGrid(0.012);
+        if (!this.mob) this.drawGrid(0.012);
 
-        // Radial bg glow
-        const grad = c.createRadialGradient(gx, gy, MIN_R, gx, gy, this.maxR);
-        grad.addColorStop(0, rgba(C.red, 0.03));
-        grad.addColorStop(0.3, rgba(C.accent, 0.015));
-        grad.addColorStop(1, 'transparent');
-        c.fillStyle = grad;
-        c.fillRect(0, 0, W, H);
+        // Radial bg glow (skip on mobile)
+        if (!this.mob) {
+            const grad = c.createRadialGradient(gx, gy, MIN_R, gx, gy, this.maxR);
+            grad.addColorStop(0, rgba(C.red, 0.03));
+            grad.addColorStop(0.3, rgba(C.accent, 0.015));
+            grad.addColorStop(1, 'transparent');
+            c.fillStyle = grad;
+            c.fillRect(0, 0, W, H);
+        }
 
         // --- Rings (each with own rotation) ---
         c.lineCap = 'butt';
@@ -333,6 +335,9 @@ class NineToSixGame extends MinigameBase {
             const isCur = ri === this.pRing;
             const isNext = ri === this.pRing + 1;
             const isPast = ri < this.pRing;
+
+            // Mobile: skip past rings entirely
+            if (isPast && this.mob) continue;
 
             // Dark background ring
             c.beginPath();
@@ -350,7 +355,8 @@ class NineToSixGame extends MinigameBase {
                         : isNext ? 0.35 + Math.sin(now * 3) * 0.08
                             : 0.18;
 
-                if (!isPast) {
+                // Outer glow (desktop only)
+                if (!isPast && !this.mob) {
                     c.beginPath();
                     c.arc(gx, gy, ring.radius, gs, ge);
                     c.strokeStyle = rgba(ring.color, alpha * 0.25);
@@ -364,11 +370,14 @@ class NineToSixGame extends MinigameBase {
                 c.lineWidth = RING_W;
                 c.stroke();
 
-                c.beginPath();
-                c.arc(gx, gy, ring.radius - RING_W / 2 + 1, gs, ge);
-                c.strokeStyle = rgba(ring.color, alpha * 0.35);
-                c.lineWidth = 1.5;
-                c.stroke();
+                // Inner edge highlight (desktop only)
+                if (!this.mob) {
+                    c.beginPath();
+                    c.arc(gx, gy, ring.radius - RING_W / 2 + 1, gs, ge);
+                    c.strokeStyle = rgba(ring.color, alpha * 0.35);
+                    c.lineWidth = 1.5;
+                    c.stroke();
+                }
             }
 
             // Urgency pulse when current ring nears death
@@ -397,8 +406,8 @@ class NineToSixGame extends MinigameBase {
                 : rgba(C.red, 0.15 + Math.sin(now * 4) * 0.05);
             c.fill();
 
-            // Connecting line
-            if (this.pRing < this.rings.length) {
+            // Connecting line (desktop only)
+            if (!this.mob && this.pRing < this.rings.length) {
                 const curR = this.rings[this.pRing].radius;
                 const ppx = gx + Math.cos(absA) * curR;
                 const ppy = gy + Math.sin(absA) * curR;
@@ -454,10 +463,13 @@ class NineToSixGame extends MinigameBase {
             const blink = this.phase === 'dead' && Math.sin(now * 20) > 0;
 
             if (!blink) {
-                c.beginPath();
-                c.arc(px, py, PLAYER_R + 5, 0, TAU);
-                c.fillStyle = rgba(C.accent, 0.08);
-                c.fill();
+                // Glow (desktop only)
+                if (!this.mob) {
+                    c.beginPath();
+                    c.arc(px, py, PLAYER_R + 5, 0, TAU);
+                    c.fillStyle = rgba(C.accent, 0.08);
+                    c.fill();
+                }
 
                 c.beginPath();
                 c.arc(px, py, PLAYER_R, 0, TAU);

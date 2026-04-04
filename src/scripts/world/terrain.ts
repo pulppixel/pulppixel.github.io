@@ -101,8 +101,8 @@ const STONE_LT = 0xc8c0b8;
 function getH(x: number, z: number): number {
   let h = -1;
   for (const p of PLATFORMS) {
-    if (x >= p.x - p.w / 2 - 0.5 && x <= p.x + p.w / 2 + 0.5 &&
-        z >= p.z - p.d / 2 - 0.5 && z <= p.z + p.d / 2 + 0.5) {
+    if (x >= p.x - p.w / 2 && x <= p.x + p.w / 2 &&
+        z >= p.z - p.d / 2 && z <= p.z + p.d / 2) {
       if (p.h > h) h = p.h;
     }
   }

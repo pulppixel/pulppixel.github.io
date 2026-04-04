@@ -2,7 +2,6 @@
 // Changes: mobile jump button, skin palette theme, minigame audio pass-through
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
-import { isFenceBlocked } from './core/collision';
 import { createScene, updateEnvironment } from './world/scene';
 import { createCharacter, SKIN_INFO, type SkinPalette } from './entity/character';
 import { createZones } from './world/zones';
@@ -320,17 +319,16 @@ export function init(): void {
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + _mv.z * speed * dt));
 
       const ghBoth = getGroundHeight(nx, nz);
-      const fbBoth = isFenceBlocked(nx, nz, curY);
-      if (ghBoth <= curY + STEP_H && !fbBoth) {
+      if (ghBoth <= curY + STEP_H) {
         character.group.position.x = nx;
         character.group.position.z = nz;
       } else {
         const ghX = getGroundHeight(nx, character.group.position.z);
-        if (ghX <= curY + STEP_H && !isFenceBlocked(nx, character.group.position.z, curY)) {
+        if (ghX <= curY + STEP_H) {
           character.group.position.x = nx;
         }
         const ghZ = getGroundHeight(character.group.position.x, nz);
-        if (ghZ <= curY + STEP_H && !isFenceBlocked(character.group.position.x, nz, curY)) {
+        if (ghZ <= curY + STEP_H) {
           character.group.position.z = nz;
         }
       }

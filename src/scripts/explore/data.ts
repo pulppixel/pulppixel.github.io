@@ -225,3 +225,19 @@ export const PROJECTS: ProjectData[] = [
   { co: 'Overworld (2019-2022)', title: 'Math Master', sub: '미로 탈출', period: '2021.06 — 2022.06', role: '게임 로직 개발', badge: null, bc: null, color: 0xff6b9d, coHex: '#ff6b9d', desc: '초등 수학 라이브 서비스. Recursive Backtracker + A* 알고리즘.', tags: ['Unity', 'C#'], details: ['Recursive Backtracker 미로 생성', 'A* 최단 경로 탐색', '분수 도메인 타입 설계', '자체 Tween 라이브러리'], link: '/projects/math-master/', off: { x: 0, z: 1.5 }, minigame: 'maze' },
   { co: 'Overworld (2019-2022)', title: '루비의 모험', sub: '3D 액션 RPG', period: '2019.09 — 2019.11', role: '기획·설계·구현 (1인)', badge: '우수상', bc: '#ff6b9d', color: 0xff6b9d, coHex: '#ff6b9d', desc: '1인 개발 3D 액션 RPG. 졸업전시 우수상.', tags: ['Unity', 'C#', 'NavMesh', 'Timeline'], details: ['5-state FSM 플레이어', '콤보 + 스킬 3종', 'NavMesh AI + 유도탄 마법사', 'ScriptableObject 인벤토리'], link: '/projects/ruby-adventure/', off: { x: 1.8, z: 0 }, minigame: 'ruby' },
 ];
+
+/** 현재 위치의 지면 재질 반환 */
+export function getSurface(x: number, z: number): 'grass' | 'stone' | 'wood' {
+  let bestH = -1;
+  let bestP: Platform | null = null;
+  for (const p of PLATFORMS) {
+    const hw = p.w / 2, hd = p.d / 2;
+    if (x >= p.x - hw && x <= p.x + hw && z >= p.z - hd && z <= p.z + hd) {
+      if (p.h > bestH) { bestH = p.h; bestP = p; }
+    }
+  }
+  if (!bestP) return 'stone';
+  if (bestP.w >= 14) return 'grass';   // 메인 섬
+  if (bestP.w >= 8) return 'stone';    // 중간 다리
+  return 'wood';                        // 작은 다리
+}

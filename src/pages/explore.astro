@@ -109,15 +109,24 @@ const title = 'pulppixel - 3D Explore';
     .is-mobile #zone-hint { opacity: 1; animation: zoneHintFade 4s ease forwards 3s; }
     @keyframes zoneHintFade { to { opacity: 0; } }
     @media (max-width: 520px) { #panel { width: 100vw; padding: 2rem 1.25rem; } #quest-log { width: 170px; font-size: 10px; } }
+    #sound-toggle {
+      background: rgba(110,231,183,0.06); border: 1px solid rgba(110,231,183,0.2);
+      color: #6ee7b7; width: 28px; height: 28px; border-radius: 4px;
+      cursor: pointer; font-size: 14px; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    #sound-toggle:hover { border-color: #6ee7b7; background: rgba(110,231,183,0.12); }
   </style>
 </head>
 <body>
   <div id="nav">
     <a href="/" class="logo">pulppixel<span>.</span></a>
     <div class="nav-links">
-      <a href="/" class="classic-link"><- classic view</a>
+      <a href="/" class="classic-link">classic view</a>
       <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
       <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
+      <button id="sound-toggle" title="Toggle sound">♪</button>
     </div>
   </div>
 

@@ -1,6 +1,6 @@
 // ─── 진입점 · 게임 루프 ───
 import * as THREE from 'three';
-import { getGroundHeight, isFenceBlocked } from './data';
+import { getGroundHeight, isFenceBlocked, getSurface } from './data';
 import { createScene, updateEnvironment } from './scene';
 import { createCharacter } from './character';
 import { createZones } from './zones';
@@ -11,6 +11,7 @@ import { createRubyGame } from './minigames/ruby';
 import { createMazeGame } from './minigames/maze';
 import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
+import { createAudio } from './audio';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -21,6 +22,26 @@ export function init(): void {
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
+
+  // ── 사운드 ──
+  const audio = createAudio();
+  const initAudio = () => {
+    audio.init();
+    audio.startAmbient();
+    document.removeEventListener('keydown', initAudio);
+    document.removeEventListener('click', initAudio);
+    document.removeEventListener('touchstart', initAudio);
+  };
+  document.addEventListener('keydown', initAudio);
+  document.addEventListener('click', initAudio);
+  document.addEventListener('touchstart', initAudio);
+
+  // 음소거 버튼
+  const soundBtn = document.getElementById('sound-toggle');
+  if (soundBtn) soundBtn.onclick = () => {
+    const m = audio.toggleMute();
+    soundBtn.textContent = m ? '♪̸' : '♪';
+  };
 
   // 워프 — 캐릭터 텔레포트 콜백
   const warp = createWarp((x: number, z: number, h: number) => {
@@ -46,6 +67,7 @@ export function init(): void {
   const exitMg = () => {
     // Minigame just closed → screen is dark (overlay still opacity:1 from enter)
     // Fade out to reveal 3D world
+    audio.mgExit();
     inMinigame = false;
     arcadeOverlay.style.opacity = '1';
     arcadeOverlay.style.pointerEvents = 'auto';
@@ -69,6 +91,9 @@ export function init(): void {
     mgTransitioning = true;
 
     if (!isMobile) document.exitPointerLock();
+
+    audio.mgEnter();
+    arcadeOverlay.style.opacity = '1';
 
     // Phase 1: Fade to black (0.45s)
     arcadeOverlay.style.opacity = '1';
@@ -107,6 +132,8 @@ export function init(): void {
   let smoothGroundY = 0;       // 부드러운 지면 추적용
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
+  let prevNearestIdx = -1;
+  const activeZoneSet = new Set<number>();
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
@@ -206,6 +233,7 @@ export function init(): void {
       velocityY = JUMP_FORCE;
       isGrounded = false;
       input.keys['Space'] = false;
+      audio.jump();
     }
 
     // ── 중력 + 지면 충돌 ──
@@ -215,6 +243,7 @@ export function init(): void {
 
     // 물에 빠짐 → 리스폰
     if (character.group.position.y < WATER_Y) {
+      audio.splash();
       character.group.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
       velocityY = 0;
       smoothGroundY = SPAWN.y;
@@ -233,6 +262,7 @@ export function init(): void {
         character.group.position.y = groundH;
         smoothGroundY = groundH;
         if (velocityY < -2 && !wasGrounded) character.landSquash();
+        if (!wasGrounded) audio.land(Math.abs(velocityY) / 5);
       }
       velocityY = 0;
       isGrounded = true;
@@ -244,6 +274,11 @@ export function init(): void {
 
     const groundHForShadow = getGroundHeight(character.group.position.x, character.group.position.z);
     character.animate(t, moving, isSprinting, groundHForShadow);
+    // ── 사운드: 발소리 ──
+    if (moving && isGrounded) {
+      const sf = getSurface(character.group.position.x, character.group.position.z);
+      audio.footstep(sf, isSprinting);
+    }
 
     // ── 더스트 파티클 ──
     dustSpawnT -= dt;
@@ -292,6 +327,11 @@ export function init(): void {
     if (nearestProject) hud.showProjectHint(nearestProject.userData.project);
     else hud.hideProjectHint();
 
+    // ── 사운드: 큐브 접근 틱 ──
+    const curNearIdx = nearestProject ? nearestProject.userData.index : -1;
+    if (curNearIdx !== prevNearestIdx && curNearIdx >= 0) audio.cubeTick();
+    prevNearestIdx = curNearIdx;
+
     // E키 → interact()
     if (input.keys['KeyE'] && nearestProject) {
       interact(nearestProject);
@@ -299,6 +339,15 @@ export function init(): void {
     }
 
     updateZones(t, dt, character.group.position, nearestProject);
+
+    // ── 사운드: 존 진입 차임 ──
+    for (let zi = 0; zi < zones.length; zi++) {
+      const dx = character.group.position.x - zones[zi].cx;
+      const dz = character.group.position.z - zones[zi].cz;
+      const inZone = Math.sqrt(dx * dx + dz * dz) < 5;
+      if (inZone && !activeZoneSet.has(zi)) audio.zoneChime(zones[zi].color);
+      if (inZone) activeZoneSet.add(zi); else activeZoneSet.delete(zi);
+    }
 
     // ── 카메라 ──
     const camH = input.camDist * 0.55 + input.pitch * input.camDist * 0.8;
@@ -316,6 +365,7 @@ export function init(): void {
     }
 
     updateEnvironment(t, particles, stars, clouds);
+    audio.update(dt);
     renderer.render(scene, camera);
 
     frameCount++;

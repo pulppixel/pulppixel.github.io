@@ -105,9 +105,15 @@ function updateRabbit(r: Rabbit, dt: number, t: number, px: number, pz: number):
         r.state = 'hop'; r.timer = 0.6 + Math.random() * 0.6;
         r.dir = Math.random() * Math.PI * 2; r.hopT = 0;
         r.tx = Math.max(r.homeX - r.range, Math.min(r.homeX + r.range,
-          r.group.position.x + Math.cos(r.dir) * (1.5 + Math.random() * 2)));
+            r.group.position.x + Math.cos(r.dir) * (1.5 + Math.random() * 2)));
         r.tz = Math.max(r.homeZ - r.range, Math.min(r.homeZ + r.range,
-          r.group.position.z + Math.sin(r.dir) * (1.5 + Math.random() * 2)));
+            r.group.position.z + Math.sin(r.dir) * (1.5 + Math.random() * 2)));
+        // Reject target if off-platform
+        if (getGroundHeight(r.tx, r.tz) < 0) {
+          r.tx = r.homeX;
+          r.tz = r.homeZ;
+          r.dir += Math.PI;
+        }
         break;
       case 'hop': r.state = 'idle'; r.timer = 2 + Math.random() * 4; break;
       case 'alert':
@@ -127,18 +133,35 @@ function updateRabbit(r: Rabbit, dt: number, t: number, px: number, pz: number):
     const hpPhase = r.hopT * (r.state === 'flee' ? 9 : 5);
 
     if (r.state === 'flee') {
-      r.tx = Math.max(r.homeX - r.range * 1.5, Math.min(r.homeX + r.range * 1.5,
-        r.group.position.x + Math.cos(r.dir) * spd * dt));
-      r.tz = Math.max(r.homeZ - r.range * 1.5, Math.min(r.homeZ + r.range * 1.5,
-        r.group.position.z + Math.sin(r.dir) * spd * dt));
+      const fleeX = Math.max(r.homeX - r.range * 1.5, Math.min(r.homeX + r.range * 1.5,
+          r.group.position.x + Math.cos(r.dir) * spd * dt));
+      const fleeZ = Math.max(r.homeZ - r.range * 1.5, Math.min(r.homeZ + r.range * 1.5,
+          r.group.position.z + Math.sin(r.dir) * spd * dt));
+      // Stay on platform
+      if (getGroundHeight(fleeX, fleeZ) >= 0) {
+        r.tx = fleeX;
+        r.tz = fleeZ;
+      } else {
+        r.dir += Math.PI * 0.7;
+        r.state = 'idle';
+        r.timer = 1;
+      }
     }
 
     const tdx = r.tx - r.group.position.x;
     const tdz = r.tz - r.group.position.z;
     const tD = Math.sqrt(tdx * tdx + tdz * tdz);
     if (tD > 0.1) {
-      r.group.position.x += (tdx / tD) * spd * dt;
-      r.group.position.z += (tdz / tD) * spd * dt;
+      const nextX = r.group.position.x + (tdx / tD) * spd * dt;
+      const nextZ = r.group.position.z + (tdz / tD) * spd * dt;
+      if (getGroundHeight(nextX, nextZ) >= 0) {
+        r.group.position.x = nextX;
+        r.group.position.z = nextZ;
+      } else {
+        r.dir += Math.PI;
+        r.state = 'idle';
+        r.timer = 1 + Math.random() * 2;
+      }
       r.dir = Math.atan2(tdz, tdx);
     }
 
@@ -324,15 +347,18 @@ function createButterfly(scene: THREE.Scene, x: number, z: number, cols: [number
     homeX: x, homeZ: z, homeH: h,
     phase: Math.random() * Math.PI * 2,
     speed: 0.3 + Math.random() * 0.4,
-    radius: 1.5 + Math.random() * 2,
+    radius: 0.8 + Math.random() * 1.2,
   };
 }
 
 function updateButterfly(b: Butterfly, dt: number, t: number): void {
   b.phase += dt * b.speed;
-  b.group.position.x = b.homeX + Math.sin(b.phase) * b.radius;
-  b.group.position.z = b.homeZ + Math.sin(b.phase * 2) * b.radius * 0.5;
-  b.group.position.y = b.homeH + 0.8 + Math.sin(b.phase * 1.3) * 0.3;
+  const nextX = b.homeX + Math.sin(b.phase) * b.radius;
+  const nextZ = b.homeZ + Math.sin(b.phase * 2) * b.radius * 0.5;
+  if (getGroundHeight(nextX, nextZ) >= 0) {
+    b.group.position.x = nextX;
+    b.group.position.z = nextZ;
+  }
 
   const flutter = Math.sin(t * 15 + b.phase) * 0.8;
   b.wingL.rotation.z = flutter;

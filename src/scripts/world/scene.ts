@@ -1,9 +1,10 @@
 // Scene setup + per-frame environment update
 import * as THREE from 'three';
 import { COMPANIES } from '../core/data';
-import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildFences, buildLanterns, buildZonePatches, buildPathDots } from './terrain';
+import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots } from './terrain';
 import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';
+import { buildWaterEdge, buildBushes, buildZoneDecor } from './zonedetails';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -41,10 +42,14 @@ export function createScene(isMobile: boolean): SceneContext {
   buildTrees(scene);
   buildFlowers(scene);
   buildMushrooms(scene);
+  buildRocks(scene);
   buildFences(scene);
   buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots(scene);
+  buildWaterEdge(scene);
+  buildBushes(scene);
+  buildZoneDecor(scene);
   const skyUniforms = buildSkyDome(scene);
   const water = buildOcean(scene, isMobile);
   const clouds = buildClouds(scene);

@@ -1,10 +1,8 @@
-// ─── SPODY: 돌아다니는 타겟을 공으로 터뜨리기 (Refactored) ───
-// 웨이브 3단계 · 콤보 · 스플래시 범위 판정
+// SPODY: 돌아다니는 타겟을 공으로 터뜨리기 (Refactored)
+// 웨이브 3단계, 콤보, 스플래시 범위 판정
 import { MinigameBase, rgba, C } from './base';
 
-// ══════════════════════════════════════════
-// ── Constants & Types ──
-// ══════════════════════════════════════════
+// Constants & Types
 
 const TCOL = [C.pink, C.accent, C.purple, C.yellow, C.blue];
 const SYMS = [['★', '+', '♥', '◆'], ['▲', '●', '×', '÷', '='], ['π', '∑', '√', '∞', '±', '≡', '∫']];
@@ -20,9 +18,7 @@ interface Fly { sx: number; sy: number; ex: number; ey: number; t: number; dur: 
 interface Spl { x: number; y: number; t: number; r: number; }
 type Phase = 'intro' | 'play' | 'clear' | 'result';
 
-// ══════════════════════════════════════════
-// ── Game Class ──
-// ══════════════════════════════════════════
+// Game Class
 
 class SpodyGame extends MinigameBase {
   protected readonly title = 'SPODY';
@@ -106,7 +102,7 @@ class SpodyGame extends MinigameBase {
     }
   }
 
-  // ── Update ──
+  // --- Update ---
   protected updateGame(dt: number): void {
     const now = performance.now() / 1000;
 
@@ -145,7 +141,7 @@ class SpodyGame extends MinigameBase {
     this.updatePops(dt);
   }
 
-  // ── Render ──
+  // --- Render ---
   protected renderGame(now: number): void {
     const { cx, W, H } = this;
     this.drawBg();
@@ -249,7 +245,7 @@ class SpodyGame extends MinigameBase {
     this.drawResultBtns(bx, by + 48);
   }
 
-  // ── Input ──
+  // --- Input ---
   protected onClickAt(x: number, y: number): void {
     if (this.phase === 'result') {
       const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 48);
@@ -265,7 +261,7 @@ class SpodyGame extends MinigameBase {
   }
 }
 
-// ── Factory ──
+// Factory
 export function createSpodyGame(container: HTMLElement, onExit: () => void) {
   const game = new SpodyGame(container, onExit);
   return { start: () => game.start(), stop: () => game.stop() };

@@ -1,5 +1,4 @@
-// ─── PC · 모바일 입력 ───
-
+// PC + mobile input handling
 export interface InputState {
   keys: Record<string, boolean>;
   yaw: number;
@@ -11,9 +10,9 @@ export interface InputState {
 }
 
 export function createInput(
-    canvas: HTMLCanvasElement,
-    isMobile: boolean,
-    isPanelOpen: () => boolean,
+  canvas: HTMLCanvasElement,
+  isMobile: boolean,
+  isPanelOpen: () => boolean,
 ): InputState {
   const state: InputState = {
     keys: {},
@@ -27,22 +26,32 @@ export function createInput(
   document.addEventListener('keydown', e => { state.keys[e.code] = true; });
   document.addEventListener('keyup', e => { state.keys[e.code] = false; });
 
+  // --- Desktop: pointer lock ---
+
   if (!isMobile) {
     canvas.addEventListener('click', () => { if (!isPanelOpen()) canvas.requestPointerLock(); });
     document.addEventListener('pointerlockchange', () => { state.isLocked = document.pointerLockElement === canvas; });
     document.addEventListener('mousemove', e => {
       if (state.isLocked) {
         state.yaw -= e.movementX * 0.003;
-        // pitch 반전 (+ 방향)
         state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + e.movementY * 0.002));
       }
     });
     document.addEventListener('keydown', e => {
-      if (e.code === 'AltLeft' || e.code === 'AltRight') { e.preventDefault(); if (state.isLocked) document.exitPointerLock(); }
+      if (e.code === 'AltLeft' || e.code === 'AltRight') {
+        e.preventDefault();
+        if (state.isLocked) document.exitPointerLock();
+      }
     });
   }
 
-  canvas.addEventListener('wheel', e => { state.camDist = Math.max(2.5, Math.min(12, state.camDist + e.deltaY * 0.004)); }, { passive: true });
+  // --- Zoom (both platforms) ---
+
+  canvas.addEventListener('wheel', e => {
+    state.camDist = Math.max(2.5, Math.min(12, state.camDist + e.deltaY * 0.004));
+  }, { passive: true });
+
+  // --- Mobile: virtual joystick + camera ---
 
   const jBase = document.getElementById('joystick-base')!;
   const jThumb = document.getElementById('joystick-thumb')!;
@@ -51,45 +60,59 @@ export function createInput(
   let camPrev = { x: 0, y: 0 };
   let pinchOn = false, pinchBase = 0;
   const JR = 55, MZ = 0.65;
-  const pDist = (a: Touch, b: Touch) => Math.sqrt((a.clientX - b.clientX) ** 2 + (a.clientY - b.clientY) ** 2);
+
+  const pDist = (a: Touch, b: Touch) =>
+    Math.sqrt((a.clientX - b.clientX) ** 2 + (a.clientY - b.clientY) ** 2);
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     if (isPanelOpen()) return;
-    if (e.touches.length >= 2) { pinchOn = true; pinchBase = pDist(e.touches[0], e.touches[1]); return; }
+
+    if (e.touches.length >= 2) {
+      pinchOn = true;
+      pinchBase = pDist(e.touches[0], e.touches[1]);
+      return;
+    }
+
     const t = e.changedTouches[0];
     const yr = t.clientY / innerHeight;
+
     if (state.moveTid === null && yr >= MZ) {
       state.moveTid = t.identifier;
       moveOrig = { x: t.clientX, y: t.clientY };
       state.jIn = { x: 0, y: 0 };
-      jBase.style.left = t.clientX + 'px'; jBase.style.top = t.clientY + 'px';
-      jBase.classList.add('active'); jThumb.classList.add('active');
+      jBase.style.left = t.clientX + 'px';
+      jBase.style.top = t.clientY + 'px';
+      jBase.classList.add('active');
+      jThumb.classList.add('active');
       jThumb.style.transform = 'translate(-50%,-50%)';
     } else if (camTid === null) {
-      camTid = t.identifier; camPrev = { x: t.clientX, y: t.clientY };
+      camTid = t.identifier;
+      camPrev = { x: t.clientX, y: t.clientY };
     }
   }, { passive: false });
 
   canvas.addEventListener('touchmove', e => {
     e.preventDefault();
+
     if (e.touches.length >= 2) {
       if (!pinchOn) { pinchOn = true; pinchBase = pDist(e.touches[0], e.touches[1]); }
       const nd = pDist(e.touches[0], e.touches[1]);
       state.camDist = Math.max(3, Math.min(12, state.camDist - (nd - pinchBase) * 0.008));
       pinchBase = nd;
     }
+
     for (const t of e.changedTouches) {
       if (t.identifier === state.moveTid) {
         let dx = t.clientX - moveOrig.x, dy = t.clientY - moveOrig.y;
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d > JR) { dx = dx / d * JR; dy = dy / d * JR; }
-        state.jIn.x = dx / JR; state.jIn.y = dy / JR;
+        state.jIn.x = dx / JR;
+        state.jIn.y = dy / JR;
         jThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
       }
       if (t.identifier === camTid) {
         state.yaw -= (t.clientX - camPrev.x) * 0.005;
-        // 모바일도 pitch 반전
         state.pitch = Math.max(-0.45, Math.min(0.85, state.pitch + (t.clientY - camPrev.y) * 0.004));
         camPrev = { x: t.clientX, y: t.clientY };
       }
@@ -100,8 +123,10 @@ export function createInput(
     if (e.touches.length < 2) pinchOn = false;
     for (const t of e.changedTouches) {
       if (t.identifier === state.moveTid) {
-        state.moveTid = null; state.jIn = { x: 0, y: 0 };
-        jBase.classList.remove('active'); jThumb.classList.remove('active');
+        state.moveTid = null;
+        state.jIn = { x: 0, y: 0 };
+        jBase.classList.remove('active');
+        jThumb.classList.remove('active');
         jThumb.style.transform = 'translate(-50%,-50%)';
       }
       if (t.identifier === camTid) camTid = null;
@@ -109,8 +134,10 @@ export function createInput(
   });
 
   canvas.addEventListener('touchcancel', () => {
-    state.moveTid = null; camTid = null; pinchOn = false; state.jIn = { x: 0, y: 0 };
-    jBase.classList.remove('active'); jThumb.classList.remove('active');
+    state.moveTid = null; camTid = null; pinchOn = false;
+    state.jIn = { x: 0, y: 0 };
+    jBase.classList.remove('active');
+    jThumb.classList.remove('active');
   });
 
   return state;

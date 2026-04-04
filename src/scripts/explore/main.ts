@@ -1,6 +1,7 @@
-// ─── 진입점 · 게임 루프 ───
+// Entry point + game loop
 import * as THREE from 'three';
-import { getGroundHeight, isFenceBlocked, getSurface } from './data';
+import { getGroundHeight, getSurface } from './data';
+import { isFenceBlocked } from './collision';
 import { createScene, updateEnvironment } from './scene';
 import { createCharacter, SKIN_INFO } from './character';
 import { createZones } from './zones';
@@ -16,20 +17,39 @@ import { createTimeWeather } from './timeweather';
 import { createPostFX } from './postfx';
 import { createAnimals } from './animals';
 
+// Pre-allocated vectors (avoid GC in hot path)
+const _mv = new THREE.Vector3();
+const _camOffset = new THREE.Vector3();
+const _camTarget = new THREE.Vector3();
+const _lookTarget = new THREE.Vector3();
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+const SP = 4.8;
+const SPRINT_MULT = 1.7;
+const BOUND_X = 50;
+const BOUND_Z_MIN = -68;
+const BOUND_Z_MAX = 10;
+const STEP_H = 0.35;
+const GRAVITY = -16.9;
+const JUMP_FORCE = 12.6;
+const WATER_Y = -1.5;
+const SPAWN = { x: 0, y: 1.0, z: 0 };
+
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) document.body.classList.add('is-mobile');
 
-  const { scene, camera, renderer, particles, stars, clouds, water,
+  const {
+    scene, camera, renderer, particles, stars, clouds, water,
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
   } = createScene(isMobile);
+
   let character = createCharacter(scene);
 
-  // 초기 스킨 하이라이트
+  // Skin highlight
   const initBtn = document.querySelector(`[data-skin="${character.skinIndex}"]`);
   if (initBtn) initBtn.classList.add('sk-on');
 
-  // 스킨 교체
   function swapSkin(index: number): void {
     const pos = character.group.position.clone();
     const rot = character.group.rotation.y;
@@ -38,19 +58,19 @@ export function init(): void {
     character.group.position.copy(pos);
     character.group.rotation.y = rot;
   }
+
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const animals = createAnimals(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
-  // ── 시간대 + 날씨 ──
   const tw = createTimeWeather({
     scene, renderer,
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
     water,
   }, isMobile);
 
-  // ── 캐릭터 선택 UI ──
+  // Skin selection UI
   document.querySelectorAll('[data-skin]').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt((btn as HTMLElement).dataset.skin!);
@@ -60,14 +80,11 @@ export function init(): void {
     });
   });
 
-  // ── 포스트 프로세싱 ──
   const postfx = createPostFX(renderer, scene, camera, isMobile);
+  window.addEventListener('resize', () => postfx.resize(innerWidth, innerHeight));
 
-  window.addEventListener('resize', () => {
-    postfx.resize(innerWidth, innerHeight);
-  });
+  // --- Sound ---
 
-  // ── 사운드 ──
   const audio = createAudio();
   const initAudio = () => {
     audio.init();
@@ -80,14 +97,16 @@ export function init(): void {
   document.addEventListener('click', initAudio);
   document.addEventListener('touchstart', initAudio);
 
-  // 음소거 버튼
   const soundBtn = document.getElementById('sound-toggle');
-  if (soundBtn) soundBtn.onclick = () => {
-    const m = audio.toggleMute();
-    soundBtn.textContent = m ? '♪̸' : '♪';
-  };
+  if (soundBtn) {
+    soundBtn.onclick = () => {
+      const m = audio.toggleMute();
+      soundBtn.textContent = m ? '\u266A\u0338' : '\u266A';
+    };
+  }
 
-  // ── 시간/날씨 UI ──
+  // --- Time/Weather UI ---
+
   document.querySelectorAll('[data-time]').forEach(btn => {
     btn.addEventListener('click', () => {
       tw.setTime((btn as HTMLElement).dataset.time as any);
@@ -103,30 +122,28 @@ export function init(): void {
     });
   });
 
-  // 워프 — 캐릭터 텔레포트 콜백
+  // Warp teleport
   const warp = createWarp((x: number, z: number, h: number) => {
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
     isGrounded = false;
   });
 
-  // ── 아케이드 트랜지션 오버레이 ──
+  // --- Arcade transition overlay ---
+
   const arcadeOverlay = document.createElement('div');
-  arcadeOverlay.style.cssText = `
-    position:fixed; inset:0; background:#0a0a0b; opacity:0;
-    pointer-events:none; transition:opacity 0.45s ease;
-    z-index:24; /* above 3D (z:0~20), below minigame (z:25) */
-  `;
+  arcadeOverlay.style.cssText =
+    'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
+    'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
 
-  // ── 미니게임 ──
+  // --- Minigames ---
+
   const mgContainer = document.getElementById('minigame-container')!;
   let inMinigame = false;
   let mgTransitioning = false;
 
   const exitMg = () => {
-    // Minigame just closed → screen is dark (overlay still opacity:1 from enter)
-    // Fade out to reveal 3D world
     audio.mgExit();
     inMinigame = false;
     arcadeOverlay.style.opacity = '1';
@@ -134,7 +151,7 @@ export function init(): void {
     setTimeout(() => {
       arcadeOverlay.style.opacity = '0';
       arcadeOverlay.style.pointerEvents = 'none';
-      if (!isMobile) renderer.domElement.requestPointerLock().then(_ => "");
+      if (!isMobile) renderer.domElement.requestPointerLock().then(_ => '');
     }, 100);
   };
 
@@ -149,16 +166,11 @@ export function init(): void {
   function enterMinigame(key: string): void {
     if (!minigames[key] || mgTransitioning) return;
     mgTransitioning = true;
-
     if (!isMobile) document.exitPointerLock();
-
     audio.mgEnter();
 
-    // Phase 1: Fade to black (0.45s)
     arcadeOverlay.style.opacity = '1';
     arcadeOverlay.style.pointerEvents = 'auto';
-
-    // Phase 2: After fade complete, start minigame
     setTimeout(() => {
       inMinigame = true;
       mgTransitioning = false;
@@ -166,7 +178,6 @@ export function init(): void {
     }, 480);
   }
 
-  // 인터랙트 — 미니게임은 바로 시작, 나머지는 링크 열기
   function interact(m: THREE.Mesh): void {
     const proj = m.userData.project;
     warp.visit(m.userData.index);
@@ -182,13 +193,8 @@ export function init(): void {
     if (nearestProject) interact(nearestProject);
   }, { passive: false });
 
-  // ── 게임 상태 ──
-  const mv = new THREE.Vector3();
-  const SP = 4.8;
-  const BOUND_X = 50, BOUND_Z_MIN = -68, BOUND_Z_MAX = 10;
-  // 벽 충돌용 step height
-  const STEP_H = 0.35;
-  let smoothGroundY = 0;       // 부드러운 지면 추적용
+  // --- Game state ---
+
   let started = false;
   let nearestProject: THREE.Mesh | null = null;
   let prevNearestIdx = -1;
@@ -196,15 +202,10 @@ export function init(): void {
   let velocityY = 0;
   let isGrounded = true;
   let wasGrounded = true;
-  const GRAVITY = -16.9;
-  const JUMP_FORCE = 12.6;
   let isSprinting = false;
-  const SPRINT_MULT = 1.7;
+  let smoothGroundY = 0;
 
-  const WATER_Y = -1.5;           // 이 아래로 떨어지면 리스폰
-  const SPAWN = { x: 0, y: 1.0, z: 0 };  // 리스폰 위치
-
-  // 더스트 파티클
+  // Dust particles
   const DUST_MAX = 80;
   const dustGeo = new THREE.BufferGeometry();
   const dustPos = new Float32Array(DUST_MAX * 3);
@@ -228,6 +229,8 @@ export function init(): void {
   let frameCount = 0, fpsLastTime = performance.now();
   const clock = new THREE.Clock();
 
+  // --- Main loop ---
+
   function animate(): void {
     requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -235,51 +238,48 @@ export function init(): void {
 
     if (inMinigame) { renderer.render(scene, camera); return; }
 
-    // ── 이동 ──
-    mv.set(0, 0, 0);
+    // Movement input
+    _mv.set(0, 0, 0);
     let moving = false;
-    if (input.keys['KeyW'] || input.keys['ArrowUp']) mv.z -= 1;
-    if (input.keys['KeyS'] || input.keys['ArrowDown']) mv.z += 1;
-    if (input.keys['KeyA'] || input.keys['ArrowLeft']) mv.x -= 1;
-    if (input.keys['KeyD'] || input.keys['ArrowRight']) mv.x += 1;
-    if (input.moveTid !== null) { mv.x += input.jIn.x; mv.z += input.jIn.y; }
+    if (input.keys['KeyW'] || input.keys['ArrowUp']) _mv.z -= 1;
+    if (input.keys['KeyS'] || input.keys['ArrowDown']) _mv.z += 1;
+    if (input.keys['KeyA'] || input.keys['ArrowLeft']) _mv.x -= 1;
+    if (input.keys['KeyD'] || input.keys['ArrowRight']) _mv.x += 1;
+    if (input.moveTid !== null) { _mv.x += input.jIn.x; _mv.z += input.jIn.y; }
 
     const wantSprint = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
     isSprinting = false;
 
-    if (mv.length() > 0.12) {
+    if (_mv.length() > 0.12) {
       if (!started) { started = true; hud.heroLabel.classList.add('hidden'); }
       isSprinting = wantSprint && isGrounded;
       const speed = isSprinting ? SP * SPRINT_MULT : SP;
-      mv.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
+      _mv.normalize().applyAxisAngle(Y_AXIS, input.yaw);
 
-      // 벽 충돌 + 울타리 충돌 — 축 분리 슬라이딩
+      // Wall + fence collision with axis-separated sliding
       const curY = character.group.position.y;
-      const footY = character.group.position.y;
-      const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + mv.x * speed * dt));
-      const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + mv.z * speed * dt));
+      const nx = Math.max(-BOUND_X, Math.min(BOUND_X, character.group.position.x + _mv.x * speed * dt));
+      const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + _mv.z * speed * dt));
+
       const ghBoth = getGroundHeight(nx, nz);
       const fbBoth = isFenceBlocked(nx, nz, curY);
-      if (ghBoth <= footY + STEP_H && !fbBoth) {
-        // 양 축 모두 이동 가능
+      if (ghBoth <= curY + STEP_H && !fbBoth) {
         character.group.position.x = nx;
         character.group.position.z = nz;
       } else {
-        // 축 분리 — X만 시도
+        // Try X only
         const ghX = getGroundHeight(nx, character.group.position.z);
-        const fbX = isFenceBlocked(nx, character.group.position.z, curY);
-        if (ghX <= curY + STEP_H && !fbX) {
+        if (ghX <= curY + STEP_H && !isFenceBlocked(nx, character.group.position.z, curY)) {
           character.group.position.x = nx;
         }
-        // Z만 시도
+        // Try Z only
         const ghZ = getGroundHeight(character.group.position.x, nz);
-        const fbZ = isFenceBlocked(character.group.position.x, nz, curY);
-        if (ghZ <= curY + STEP_H && !fbZ) {
+        if (ghZ <= curY + STEP_H && !isFenceBlocked(character.group.position.x, nz, curY)) {
           character.group.position.z = nz;
         }
       }
 
-      const tr = Math.atan2(mv.x, mv.z);
+      const tr = Math.atan2(_mv.x, _mv.z);
       let df = tr - character.group.rotation.y;
       while (df > Math.PI) df -= Math.PI * 2;
       while (df < -Math.PI) df += Math.PI * 2;
@@ -287,7 +287,7 @@ export function init(): void {
       moving = true;
     }
 
-    // ── 점프 ──
+    // Jump
     if (input.keys['Space'] && isGrounded) {
       velocityY = JUMP_FORCE;
       isGrounded = false;
@@ -295,12 +295,12 @@ export function init(): void {
       audio.jump();
     }
 
-    // ── 중력 + 지면 충돌 ──
+    // Gravity + ground collision
     velocityY += GRAVITY * dt;
     character.group.position.y += velocityY * dt;
     const groundH = getGroundHeight(character.group.position.x, character.group.position.z);
 
-    // 물에 빠짐 → 리스폰
+    // Water respawn
     if (character.group.position.y < WATER_Y) {
       audio.splash();
       character.group.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
@@ -313,11 +313,9 @@ export function init(): void {
 
     if (character.group.position.y <= groundH && groundH > -0.5) {
       if (wasGrounded && velocityY > -3) {
-        // 걸어서 높이 변화 → lerp
         smoothGroundY += (groundH - smoothGroundY) * Math.min(1, 14 * dt);
         character.group.position.y = smoothGroundY;
       } else {
-        // 낙하 착지
         character.group.position.y = groundH;
         smoothGroundY = groundH;
         if (velocityY < -2 && !wasGrounded) character.landSquash();
@@ -333,22 +331,20 @@ export function init(): void {
 
     const groundHForShadow = getGroundHeight(character.group.position.x, character.group.position.z);
     character.animate(t, moving, isSprinting, groundHForShadow);
-    // ── 사운드: 발소리 ──
+
+    // Footstep sound
     if (moving && isGrounded) {
-      const sf = getSurface(character.group.position.x, character.group.position.z);
-      audio.footstep(sf, isSprinting);
+      audio.footstep(getSurface(character.group.position.x, character.group.position.z), isSprinting);
     }
 
-    // ── 더스트 파티클 ──
+    // Sprint dust
     dustSpawnT -= dt;
     if (isSprinting && moving && dustSpawnT <= 0 && dustCount < DUST_MAX) {
       const backDir = -character.group.rotation.y;
-      const bx = character.group.position.x + Math.sin(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
-      const bz = character.group.position.z + Math.cos(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
       const idx = dustCount * 3;
-      dustPos[idx] = bx;
+      dustPos[idx] = character.group.position.x + Math.sin(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
       dustPos[idx + 1] = character.group.position.y + 0.05 + Math.random() * 0.15;
-      dustPos[idx + 2] = bz;
+      dustPos[idx + 2] = character.group.position.z + Math.cos(backDir) * 0.3 + (Math.random() - 0.5) * 0.3;
       dustVel[idx] = (Math.random() - 0.5) * 0.5;
       dustVel[idx + 1] = 0.3 + Math.random() * 0.4;
       dustVel[idx + 2] = (Math.random() - 0.5) * 0.5;
@@ -356,6 +352,8 @@ export function init(): void {
       dustCount++;
       dustSpawnT = 0.03;
     }
+
+    // Update dust (compact dead particles)
     let writeIdx = 0;
     for (let i = 0; i < dustCount; i++) {
       dustAlpha[i] -= dt * 2.5;
@@ -364,7 +362,9 @@ export function init(): void {
       dustPos[wi] = dustPos[si] + dustVel[si] * dt;
       dustPos[wi + 1] = dustPos[si + 1] + dustVel[si + 1] * dt;
       dustPos[wi + 2] = dustPos[si + 2] + dustVel[si + 2] * dt;
-      dustVel[wi] = dustVel[si]; dustVel[wi + 1] = dustVel[si + 1] * 0.95; dustVel[wi + 2] = dustVel[si];
+      dustVel[wi] = dustVel[si];
+      dustVel[wi + 1] = dustVel[si + 1] * 0.95;
+      dustVel[wi + 2] = dustVel[si + 2];
       dustAlpha[writeIdx] = dustAlpha[i];
       writeIdx++;
     }
@@ -372,26 +372,26 @@ export function init(): void {
     dustGeo.setDrawRange(0, dustCount);
     dustGeo.attributes.position.needsUpdate = true;
 
-    // ── 가장 가까운 프로젝트 ──
+    // Nearest project cube
     nearestProject = null;
     let nearestDist = Infinity;
-    projectMeshes.forEach(m => {
+    for (const m of projectMeshes) {
       const dx = character.group.position.x - m.position.x;
       const dy = character.group.position.y - m.position.y;
       const dz = character.group.position.z - m.position.z;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (d < 3.0 && d < nearestDist) { nearestDist = d; nearestProject = m; }
-    });
+    }
 
     if (nearestProject) hud.showProjectHint(nearestProject.userData.project);
     else hud.hideProjectHint();
 
-    // ── 사운드: 큐브 접근 틱 ──
+    // Cube approach tick
     const curNearIdx = nearestProject ? nearestProject.userData.index : -1;
     if (curNearIdx !== prevNearestIdx && curNearIdx >= 0) audio.cubeTick();
     prevNearestIdx = curNearIdx;
 
-    // E키 → interact()
+    // Interact
     if (input.keys['KeyE'] && nearestProject) {
       interact(nearestProject);
       input.keys['KeyE'] = false;
@@ -400,7 +400,7 @@ export function init(): void {
     updateZones(t, dt, character.group.position, nearestProject);
     animals.update(dt, t, character.group.position);
 
-    // ── 사운드: 존 진입 차임 ──
+    // Zone chime on enter
     for (let zi = 0; zi < zones.length; zi++) {
       const dx = character.group.position.x - zones[zi].cx;
       const dz = character.group.position.z - zones[zi].cz;
@@ -409,12 +409,17 @@ export function init(): void {
       if (inZone) activeZoneSet.add(zi); else activeZoneSet.delete(zi);
     }
 
-    // ── 카메라 ──
+    // Camera (pre-allocated vectors - no GC pressure)
     const camH = input.camDist * 0.55 + input.pitch * input.camDist * 0.8;
     const camZ = input.camDist * Math.cos(input.pitch * 0.5);
-    const dO = new THREE.Vector3(0, Math.max(1.5, camH), camZ).applyAxisAngle(new THREE.Vector3(0, 1, 0), input.yaw);
-    camPos.lerp(character.group.position.clone().add(dO), 4 * dt);
-    camLookAt.lerp(character.group.position.clone().add(camLookOffset), 6 * dt);
+
+    _camOffset.set(0, Math.max(1.5, camH), camZ).applyAxisAngle(Y_AXIS, input.yaw);
+    _camTarget.copy(character.group.position).add(_camOffset);
+    camPos.lerp(_camTarget, 4 * dt);
+
+    _lookTarget.copy(character.group.position).add(camLookOffset);
+    camLookAt.lerp(_lookTarget, 6 * dt);
+
     camera.position.copy(camPos);
     camera.lookAt(camLookAt);
 
@@ -430,9 +435,14 @@ export function init(): void {
     postfx.updateForTime(tw.getTimeLabel(), dt);
     postfx.render();
 
+    // FPS counter
     frameCount++;
     const now = performance.now();
-    if (now - fpsLastTime >= 1000) { fpsEl.textContent = frameCount + ' fps'; frameCount = 0; fpsLastTime = now; }
+    if (now - fpsLastTime >= 1000) {
+      fpsEl.textContent = frameCount + ' fps';
+      frameCount = 0;
+      fpsLastTime = now;
+    }
   }
 
   animate();

@@ -1,10 +1,8 @@
-// ─── 루비의 모험: 디아블로식 탑다운 ARPG (Refactored) ───
-// 클릭 이동/공격 · WASD 직접 이동 · 콤보 시스템
+// 루비의 모험: 디아블로식 탑다운 ARPG (Refactored)
+// 클릭 이동/공격, WASD 직접 이동, 콤보 시스템
 import { MinigameBase, rgba, C } from './base';
 
-// ══════════════════════════════════════════
-// ── Constants & Types ──
-// ══════════════════════════════════════════
+// Constants & Types
 
 const MAX_HP = 5, MOVE_SPD = 155, ATK_DUR = 0.2, CD_DUR = 0.12;
 const MELEE_R = 58, COMBO_WIN = 2.0, LUNGE = 18;
@@ -27,9 +25,7 @@ interface Slash { x: number; y: number; dir: number; combo: number; t: number; }
 type CState = 'idle' | 'atk' | 'cd';
 type Phase = 'intro' | 'play' | 'clear' | 'result' | 'dead';
 
-// ══════════════════════════════════════════
-// ── Game Class ──
-// ══════════════════════════════════════════
+// Game Class
 
 class RubyGame extends MinigameBase {
     protected readonly title = '루비의 모험';
@@ -113,7 +109,7 @@ class RubyGame extends MinigameBase {
         if (this.hp <= 0) this.phase = 'dead';
     }
 
-    // ── Update ──
+    // --- Update ---
     protected updateGame(dt: number): void {
         const now = performance.now() / 1000;
         if (this.phase === 'intro' || this.phase === 'clear') {
@@ -221,7 +217,7 @@ class RubyGame extends MinigameBase {
         this.updatePops(dt);
     }
 
-    // ── Render ──
+    // --- Render ---
     protected renderGame(now: number): void {
         const { cx, W, H } = this;
 
@@ -334,7 +330,7 @@ class RubyGame extends MinigameBase {
         this.drawResultBtns(bx, by + 48);
     }
 
-    // ── Input ──
+    // --- Input ---
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') {
             const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 48);
@@ -362,7 +358,7 @@ class RubyGame extends MinigameBase {
     }
 }
 
-// ── Factory ──
+// Factory
 export function createRubyGame(container: HTMLElement, onExit: () => void) {
     const game = new RubyGame(container, onExit);
     return { start: () => game.start(), stop: () => game.stop() };

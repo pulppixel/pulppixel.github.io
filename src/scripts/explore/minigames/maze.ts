@@ -1,10 +1,8 @@
-// ─── Math Master: 미로 탈출 (Refactored) ───
-// Recursive Backtracker + A* · 3 Stages · Fog of War
+// Math Master: 미로 탈출 (Refactored)
+// Recursive Backtracker + A*, 3 Stages, Fog of War
 import { MinigameBase, rgba, C, type Popup } from './base';
 
-// ══════════════════════════════════════════
-// ── Constants & Types ──
-// ══════════════════════════════════════════
+// Constants & Types
 
 const WL = 1, WR = 2, WU = 4, WD = 8, WV = 128;
 const MOVE_SPD = 200;
@@ -21,9 +19,7 @@ interface Trail { x: number; y: number; a: number; }
 
 type Phase = 'intro' | 'play' | 'clear' | 'result';
 
-// ══════════════════════════════════════════
-// ── Maze Generation (MazeGenerator.cs 포팅) ──
-// ══════════════════════════════════════════
+// Maze Generation (MazeGenerator.cs 포팅)
 
 function generateMaze(w: number, h: number): number[][] {
     const maze: number[][] = [];
@@ -50,9 +46,7 @@ function generateMaze(w: number, h: number): number[][] {
     return maze;
 }
 
-// ══════════════════════════════════════════
-// ── A* Pathfinder (MazePathFinder.cs 포팅) ──
-// ══════════════════════════════════════════
+// A* Pathfinder (MazePathFinder.cs 포팅)
 
 function astar(maze: number[][], w: number, h: number, sx: number, sy: number, ex: number, ey: number): { x: number; y: number }[] {
     const key = (x: number, y: number) => x * h + y;
@@ -98,9 +92,7 @@ function findDeadEnds(maze: number[][], w: number, h: number): { x: number; y: n
     return ends;
 }
 
-// ══════════════════════════════════════════
-// ── Game Class ──
-// ══════════════════════════════════════════
+// Game Class
 
 class MazeGame extends MinigameBase {
     protected readonly title = 'MAZE ESCAPE';
@@ -166,7 +158,7 @@ class MazeGame extends MinigameBase {
         return { x: Math.floor((px - this.ox) / this.cs), y: Math.floor((py - this.oy) / this.cs) };
     }
 
-    // ── Movement ──
+    // --- Movement ---
     private tryMove(dx: number, dy: number, dt: number): void {
         const spd = MOVE_SPD * dt, pad = 4;
         let nx = this.px + dx * spd, ny = this.py + dy * spd;
@@ -220,7 +212,7 @@ class MazeGame extends MinigameBase {
         }
     }
 
-    // ── Update ──
+    // --- Update ---
     protected updateGame(dt: number): void {
         // Dissolve particles
         let i = this.dissolve.length;
@@ -293,7 +285,7 @@ class MazeGame extends MinigameBase {
         }
     }
 
-    // ── Render ──
+    // --- Render ---
     protected renderGame(now: number): void {
         this.drawBg();
         this.drawGrid();
@@ -500,7 +492,7 @@ class MazeGame extends MinigameBase {
         return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}.${Math.floor((t % 1) * 10)}`;
     }
 
-    // ── Input ──
+    // --- Input ---
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result') {
             const hit = this.hitResultBtn(x, y, this.W / 2, this.resultBtnY);
@@ -527,7 +519,7 @@ class MazeGame extends MinigameBase {
     }
 }
 
-// ── Factory (main.ts 호환) ──
+// Factory (main.ts 호환)
 export function createMazeGame(container: HTMLElement, onExit: () => void) {
     const game = new MazeGame(container, onExit);
     return { start: () => game.start(), stop: () => game.stop() };

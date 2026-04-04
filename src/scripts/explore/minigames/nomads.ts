@@ -1,10 +1,8 @@
-// ─── Nomads Planet: Coin Dash v2 ───
-// 드리프트 물리 · NPC 4종 · 신호위반 추적 · 니어미스 · 타이머 · 코인트레일
+// Nomads Planet: Coin Dash v2
+// 드리프트 물리, NPC 4종, 신호위반 추적, 니어미스, 타이머, 코인트레일
 import { MinigameBase, rgba, C } from './base';
 
-// ══════════════════════════════════════════
-// ── Constants ──
-// ══════════════════════════════════════════
+// Constants
 
 const ROAD_W = 52;
 const HIT_R = 15;
@@ -40,9 +38,7 @@ const STAGES = [
     { coins: 18, rate: 0.6, spd: 185, time: 45, boosts: 3 },
 ];
 
-// ══════════════════════════════════════════
-// ── Types ──
-// ══════════════════════════════════════════
+// Types
 
 interface NpcCar { x: number; y: number; dir: 'n'|'s'|'e'|'w'; speed: number; curSpd: number; type: string; l: number; w: number; color: string; sym: string; obeysSignal: boolean; }
 interface Police { x: number; y: number; life: number; flash: number; }
@@ -55,9 +51,7 @@ type TfDir = 'h'|'v';
 type TfCol = 'green'|'yellow'|'red';
 type Phase = 'intro'|'play'|'clear'|'result'|'dead';
 
-// ══════════════════════════════════════════
-// ── Game ──
-// ══════════════════════════════════════════
+// Game
 
 class NomadsGame extends MinigameBase {
     protected readonly title = 'NOMADS PLANET';
@@ -66,7 +60,7 @@ class NomadsGame extends MinigameBase {
     private vx = [0,0]; private hy = [0,0];
     private tfAct: TfDir = 'h'; private tfCol: TfCol = 'green'; private tfT = TF_GREEN;
 
-    // Player — drift
+    // Player - drift
     private px = 0; private py = 0; private pDir = 0;
     private pvx = 0; private pvy = 0;
     private hp = 3; private iFrames = 0;
@@ -93,7 +87,7 @@ class NomadsGame extends MinigameBase {
     private sig(d: TfDir): TfCol { return d === this.tfAct ? this.tfCol : 'red'; }
     private sigCol(s: TfCol): string { return s === 'green' ? C.accent : s === 'yellow' ? C.yellow : C.red; }
 
-    // ── Lifecycle ──
+    // --- Lifecycle ---
 
     protected resetGame(): void {
         this.stage = 0; this.score = 0; this.combo = 0; this.maxCombo = 0;
@@ -182,7 +176,7 @@ class NomadsGame extends MinigameBase {
         return false;
     }
 
-    // ── Traffic FSM ──
+    // --- Traffic FSM ---
 
     private updateTraffic(dt: number): void {
         this.tfT -= dt;
@@ -239,7 +233,7 @@ class NomadsGame extends MinigameBase {
         return this.pvy > 0 ? 's' : 'n';
     }
 
-    // ── NPC ──
+    // --- NPC ---
 
     private pickType(): string {
         const w = NPC_WEIGHTS[this.stage]; let r = Math.random(), sum = 0;
@@ -282,7 +276,7 @@ class NomadsGame extends MinigameBase {
             const sig = this.sig(isNS ? 'v' : 'h');
             const cross = isNS ? this.hy : this.vx;
 
-            // ── 목표 속도 결정 ──
+            // --- 목표 속도 결정 ---
             let targetSpd = n.speed;
 
             // 적색 신호 브레이킹 존
@@ -307,11 +301,11 @@ class NomadsGame extends MinigameBase {
                 if (gap > 0 && gap < MIN_GAP * 2) targetSpd = Math.min(targetSpd, o.curSpd * (gap / (MIN_GAP * 2)));
             }
 
-            // ── 가감속 보간 ──
+            // --- 가감속 보간 ---
             if (n.curSpd < targetSpd) n.curSpd = Math.min(targetSpd, n.curSpd + NPC_ACCEL * dt);
             else if (n.curSpd > targetSpd) n.curSpd = Math.max(targetSpd, n.curSpd - NPC_BRAKE * dt);
 
-            // ── 이동 ──
+            // --- 이동 ---
             const spd = n.curSpd * dt;
             if (n.dir === 's') n.y += spd; else if (n.dir === 'n') n.y -= spd;
             else if (n.dir === 'e') n.x += spd; else n.x -= spd;
@@ -345,7 +339,7 @@ class NomadsGame extends MinigameBase {
         }
     }
 
-    // ── Player ──
+    // --- Player ---
 
     private hurtPlayer(): void {
         if (this.shield) { this.shield = false; this.addBurst(this.px, this.py, C.blue, 10, 150); this.addPop(this.px, this.py - 30, 'SHIELD!', true, 1.0); this.iFrames = 0.4; return; }
@@ -379,7 +373,7 @@ class NomadsGame extends MinigameBase {
         const curSpd = Math.hypot(this.pvx, this.pvy);
         if (curSpd > maxSpd) { this.pvx *= maxSpd / curSpd; this.pvy *= maxSpd / curSpd; }
 
-        // 건물 벽 충돌 — 축 분리로 슬라이딩
+        // 건물 벽 충돌 - 축 분리로 슬라이딩
         const nx = this.px + this.pvx * dt, ny = this.py + this.pvy * dt;
         if (this.isOnRoad(nx, ny)) { this.px = nx; this.py = ny; }
         else if (this.isOnRoad(nx, this.py)) { this.px = nx; this.pvy *= 0.2; }
@@ -415,7 +409,7 @@ class NomadsGame extends MinigameBase {
         this.boostT = Math.max(0, this.boostT - dt);
     }
 
-    // ── Update ──
+    // --- Update ---
 
     protected updateGame(dt: number): void {
         const now = performance.now() / 1000;
@@ -425,7 +419,7 @@ class NomadsGame extends MinigameBase {
 
         if (now - this.lastCoinT > COMBO_WIN) this.combo = 0;
 
-        // Timer — 0이 되면 스테이지 클리어 (코인 %로 별 등급)
+        // Timer - 0이 되면 스테이지 클리어 (코인 %로 별 등급)
         this.stageTime -= dt;
         if (this.stageTime <= 0) {
             this.stageTime = 0;
@@ -479,7 +473,7 @@ class NomadsGame extends MinigameBase {
         for (const bp of this.boostPads) if (Math.hypot(bp.x - this.px, bp.y - this.py) < 18) { this.boostT = 2.0; this.addPop(this.px, this.py - 25, 'BOOST!', true, 0.8); }
         for (let i = this.shields.length - 1; i >= 0; i--) if (Math.hypot(this.shields[i].x - this.px, this.shields[i].y - this.py) < 14) { this.shield = true; this.addPop(this.px, this.py - 25, 'SHIELD +1', true, 1.0); this.shields.splice(i, 1); }
 
-        // PERFECT — 전 코인 수집 시 조기 클리어 + 타임 보너스
+        // PERFECT - 전 코인 수집 시 조기 클리어 + 타임 보너스
         if (!this.coins.some(c => !c.collected)) {
             this.stageStars.push(3);
             const tb = Math.round(this.stageTime * 50);
@@ -494,7 +488,7 @@ class NomadsGame extends MinigameBase {
         this.updatePts(dt); this.updatePops(dt);
     }
 
-    // ── Render ──
+    // --- Render ---
 
     protected renderGame(now: number): void {
         const { cx, W, H, vx, hy } = this; const hw = ROAD_W / 2;
@@ -512,7 +506,7 @@ class NomadsGame extends MinigameBase {
         for (const y of hy) { cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
         cx.setLineDash([]);
 
-        // Buildings (도로 사이 블록 — 동적 계산)
+        // Buildings (도로 사이 블록 - 동적 계산)
         const xs: number[] = [0]; for (const x of vx) { xs.push(x - hw); xs.push(x + hw); } xs.push(W);
         const ys: number[] = [0]; for (const y of hy) { ys.push(y - hw); ys.push(y + hw); } ys.push(H);
         const bColors = [C.purple,C.accent,C.pink,C.yellow,C.cyan,C.blue,C.pink,C.yellow,C.purple,C.accent,C.cyan,C.pink];
@@ -533,13 +527,13 @@ class NomadsGame extends MinigameBase {
         // Signal pulses
         for (const p of this.pulses) { const pr = p.t/0.5; cx.beginPath(); cx.arc(p.x, p.y, ROAD_W*(1+pr*3), 0, Math.PI*2); cx.strokeStyle = rgba(p.col, 0.3*(1-pr)); cx.lineWidth = 2; cx.stroke(); }
 
-        // Traffic lights (4면 방향별 — 건너편 신호를 보는 구조)
+        // Traffic lights (4면 방향별 - 건너편 신호를 보는 구조)
         for (const ix of vx) for (const iy of hy) {
             const vS = this.sig('v'), hS = this.sig('h');
             const vCol = this.sigCol(vS), hCol = this.sigCol(hS);
             cx.fillStyle = rgba(this.sigCol(this.tfCol), 0.015); // active 신호 색상 반영 (yellow 포함)
             cx.fillRect(ix-hw, iy-hw, ROAD_W, ROAD_W);
-            // NS 방향 신호 (교차로 위/아래에 배치 — 남행/북행 운전자가 봄)
+            // NS 방향 신호 (교차로 위/아래에 배치 - 남행/북행 운전자가 봄)
             const drawSig = (sx: number, sy: number, col: string, glow: boolean) => {
                 if (glow) { cx.beginPath(); cx.arc(sx, sy, 9, 0, Math.PI*2); cx.fillStyle = rgba(col, 0.08); cx.fill(); }
                 cx.beginPath(); cx.arc(sx, sy, 4.5, 0, Math.PI*2); cx.fillStyle = rgba(col, 0.75); cx.fill();
@@ -702,7 +696,7 @@ class NomadsGame extends MinigameBase {
     }
     private get rBtnY() { return this.H/2+22+this.stageStars.length*16+28; }
 
-    // ── Input ──
+    // --- Input ---
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') { const h = this.hitResultBtn(x, y, this.W/2, this.rBtnY); if (h === 'retry') this.resetGame(); if (h === 'exit') this.stop(); return; }

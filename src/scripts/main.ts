@@ -42,9 +42,9 @@ const SPAWN = { x: 0, y: 1.0, z: 0 };
 // --- Skin palette tint helper ---
 const _tintColor = new THREE.Color();
 function applySkinPalette(
-    palette: SkinPalette,
-    particles: { geo: THREE.BufferGeometry; count: number },
-    dustMat: THREE.PointsMaterial,
+  palette: SkinPalette,
+  particles: { geo: THREE.BufferGeometry; count: number },
+  dustMat: THREE.PointsMaterial,
 ): void {
   // Tint pollen particles
   const pMat = (particles.geo.userData?.pointsMaterial as THREE.PointsMaterial | undefined);
@@ -204,8 +204,8 @@ export function init(): void {
   // --- Arcade transition overlay ---
   const arcadeOverlay = document.createElement('div');
   arcadeOverlay.style.cssText =
-      'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
-      'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
+    'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
+    'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
 
   // --- Minigames (with audio) ---

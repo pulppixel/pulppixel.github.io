@@ -162,9 +162,9 @@ export abstract class MinigameBase {
     document.addEventListener('touchend', onEnd);
     document.addEventListener('touchcancel', onEnd);
     this.boundHandlers.push(
-        { el: document, type: 'touchmove', fn: onMove as EventListener },
-        { el: document, type: 'touchend', fn: onEnd as EventListener },
-        { el: document, type: 'touchcancel', fn: onEnd as EventListener },
+      { el: document, type: 'touchmove', fn: onMove as EventListener },
+      { el: document, type: 'touchend', fn: onEnd as EventListener },
+      { el: document, type: 'touchcancel', fn: onEnd as EventListener },
     );
   }
 
@@ -225,7 +225,9 @@ export abstract class MinigameBase {
     this.mJoy = { x: 0, y: 0 }; this.mAction = false; this.mJump = false;
   }
 
-  // --- PUBLIC API ---
+  // =============================================
+  // PUBLIC API
+  // =============================================
 
   start(): void {
     this.mob = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;

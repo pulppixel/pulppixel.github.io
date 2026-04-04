@@ -142,75 +142,75 @@ const title = 'pulppixel - 3D Explore';
   </style>
 </head>
 <body>
-<div id="nav">
-  <a href="/" class="logo">pulppixel<span>.</span></a>
-  <div class="nav-links">
-    <a href="/" class="classic-link">classic view</a>
-    <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
-    <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
-    <button id="sound-toggle" title="Toggle sound">♪</button>
+  <div id="nav">
+    <a href="/" class="logo">pulppixel<span>.</span></a>
+    <div class="nav-links">
+      <a href="/" class="classic-link">classic view</a>
+      <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
+      <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
+      <button id="sound-toggle" title="Toggle sound">♪</button>
+    </div>
   </div>
-</div>
 
-<div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, 6 yrs, explore my projects</p></div>
-<div id="controls-hint">
-  <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
-  <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
-</div>
-<div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
-<div id="project-label"></div>
-<div id="crosshair"></div>
-<div id="zone-hint"></div>
-
-<div id="quest-log">
-  <div class="quest-header"><span class="quest-icon">◆</span> WARP <button id="quest-toggle">▼</button></div>
-  <div id="quest-list"></div>
-  <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
-  <button id="quest-reset">↻ reset</button>
-</div>
-
-<div id="tw-panel">
-  <div class="tw-label">TIME</div>
-  <div class="tw-row">
-    <button data-time="auto" class="tw-on">Auto</button>
-    <button data-time="dawn">Dawn</button>
-    <button data-time="day">Day</button>
-    <button data-time="sunset">Sunset</button>
-    <button data-time="night">Night</button>
+  <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, 6 yrs, explore my projects</p></div>
+  <div id="controls-hint">
+    <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
+    <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
   </div>
-  <div class="tw-label">WEATHER</div>
-  <div class="tw-row">
-    <button data-weather="clear" class="tw-on">Clear</button>
-    <button data-weather="rain">Rain</button>
-    <button data-weather="snow">Snow</button>
-  </div>
-  <div class="tw-label">CHARACTER</div>
-  <div class="tw-row">
-    <button data-skin="0" title="Bunny">Bunny</button>
-    <button data-skin="1" title="Frog">Frog</button>
-    <button data-skin="2" title="Bear">Bear</button>
-    <button data-skin="3" title="Robot">Robot</button>
-    <button data-skin="4" title="Penguin">Penguin</button>
-  </div>
-  <div class="tw-label">SEASON</div>
-  <div class="tw-row">
-    <button data-season="spring">Spring</button>
-    <button data-season="summer" class="tw-on">Summer</button>
-    <button data-season="autumn">Autumn</button>
-    <button data-season="winter">Winter</button>
-  </div>
-</div>
+  <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
+  <div id="project-label"></div>
+  <div id="crosshair"></div>
+  <div id="zone-hint"></div>
 
-<div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
-<div id="minigame-container" style="display:none;position:absolute;inset:0;z-index:25;"></div>
-<div id="joystick-base"><div id="joystick-thumb"></div></div>
-<button id="mobile-jump">▲</button>
-<button id="mobile-interact">E</button>
-<div id="fps"></div>
+  <div id="quest-log">
+    <div class="quest-header"><span class="quest-icon">◆</span> WARP <button id="quest-toggle">▼</button></div>
+    <div id="quest-list"></div>
+    <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
+    <button id="quest-reset">↻ reset</button>
+  </div>
 
-<script>
-  import { init } from "../scripts/main";
-  init();
-</script>
+  <div id="tw-panel">
+    <div class="tw-label">TIME</div>
+    <div class="tw-row">
+      <button data-time="auto" class="tw-on">Auto</button>
+      <button data-time="dawn">Dawn</button>
+      <button data-time="day">Day</button>
+      <button data-time="sunset">Sunset</button>
+      <button data-time="night">Night</button>
+    </div>
+    <div class="tw-label">WEATHER</div>
+    <div class="tw-row">
+      <button data-weather="clear" class="tw-on">Clear</button>
+      <button data-weather="rain">Rain</button>
+      <button data-weather="snow">Snow</button>
+    </div>
+    <div class="tw-label">CHARACTER</div>
+    <div class="tw-row">
+      <button data-skin="0" title="Bunny">Bunny</button>
+      <button data-skin="1" title="Frog">Frog</button>
+      <button data-skin="2" title="Bear">Bear</button>
+      <button data-skin="3" title="Robot">Robot</button>
+      <button data-skin="4" title="Penguin">Penguin</button>
+    </div>
+    <div class="tw-label">SEASON</div>
+    <div class="tw-row">
+      <button data-season="spring">Spring</button>
+      <button data-season="summer" class="tw-on">Summer</button>
+      <button data-season="autumn">Autumn</button>
+      <button data-season="winter">Winter</button>
+    </div>
+  </div>
+
+  <div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
+  <div id="minigame-container" style="display:none;position:absolute;inset:0;z-index:25;"></div>
+  <div id="joystick-base"><div id="joystick-thumb"></div></div>
+  <button id="mobile-jump">▲</button>
+  <button id="mobile-interact">E</button>
+  <div id="fps"></div>
+
+  <script>
+    import { init } from "../scripts/main";
+    init();
+  </script>
 </body>
 </html>

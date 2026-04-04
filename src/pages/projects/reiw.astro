@@ -1,32 +1,46 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import YouTube from '../../components/YouTube.astro';
 ---
 
 <ProjectLayout
-  title="REIW - 3D 메타버스"
-  subtitle="채팅, 친구 시스템을 구조적으로 재설계하고, 하우징과 NPC 퀘스트를 구현. ETERNA 아키텍처의 토대가 된 프로젝트."
-  period="2025.06 - 2025.11"
-  role="채팅 재설계, 하우징, 퀘스트"
-  team="시니어 1 + 본인 + 주니어 3"
-  tags={['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM SDK', 'FlatBuffers', 'DOTween']}
+    title="REIW - 3D 메타버스"
+    subtitle="채팅, 친구 시스템을 구조적으로 재설계하고, 하우징과 NPC 퀘스트를 구현. ETERNA 아키텍처의 토대가 된 프로젝트."
+    period="2025.06 - 2025.11"
+    role="채팅 재설계, 하우징, 퀘스트"
+    team="시니어 1 + 본인 + 주니어 3"
+    tags={['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM SDK', 'FlatBuffers', 'DOTween']}
 >
 
-<h2>배경</h2>
-<p>
-  IW Zombie에서 처음 도입한 채팅 구조의 한계가 보였고, 여기서 전면 재설계했습니다.
-  이 경험이 ETERNA의 Service/Repository/State 아키텍처의 직접적인 토대가 되었습니다.
-</p>
+  <h2>배경</h2>
+  <p>
+    IW Zombie에서 처음 도입한 채팅 구조의 한계가 보였고, 여기서 전면 재설계했습니다.
+    이 경험이 ETERNA의 Service/Repository/State 아키텍처의 직접적인 토대가 되었습니다.
+  </p>
 
-<div class="media-placeholder">📸 REIW 메타버스 화면 (추가 예정)</div>
+  <h2>채팅 재설계</h2>
+  <p>
+    World/Whisper/Current/Guild/Party/System 채널 분리, 음성 메시지 송수신,
+    좋아요 표기 동기화 등 Tencent IM 기반 채팅을 구조적으로 재설계했습니다.
+  </p>
 
-<h2>주요 작업</h2>
-<ul>
-  <li>Tencent IM 기반 채팅, 친구 시스템 구조적 재설계</li>
-  <li>하우징 프로토타입 구현 - 배치, 편집, 충돌체크, Undo/Redo, 저장</li>
-  <li>NPC 퀘스트 시스템 구현, 서버팀에 FlatBuffers 프로토콜 정리 및 요청</li>
-  <li>DataTableSO 에디터 툴 제작 - 수십 개 분산 데이터를 단일 컬렉션으로 통합</li>
-</ul>
+  <img src="/images/re_chat1.png" alt="REIW 채팅 시스템 - 채널별 분리, 음성 메시지, 3D 월드와 통합된 UI" />
 
-<div class="media-placeholder">🎥 하우징 시스템 영상 (추가 예정)</div>
+  <YouTube id="-YoK5RMqHQ4" title="REIW - 시스템 채팅 동작" />
+
+  <YouTube id="692BVO18U6I" title="REIW - 다수 유저 접속 + 채팅 부하 테스트" />
+
+  <h2>하우징 프로토타입</h2>
+  <p>배치, 편집, 충돌 체크, Undo/Redo, 저장까지 구현한 하우징 시스템입니다.</p>
+
+  <img src="/images/re_housing1.png" alt="REIW 하우징 - 건축 블록 배치, 회전, 수직 이동 UI" />
+
+  <h2>기타</h2>
+  <ul>
+    <li>NPC 퀘스트 시스템 구현, 서버팀에 FlatBuffers 프로토콜 정리 및 요청</li>
+    <li>DataTableSO 에디터 툴 제작 - 수십 개 분산 데이터를 단일 컬렉션으로 통합</li>
+  </ul>
+
+  <YouTube id="qwujR5SPmfA" title="REIW - 음성파일 송수신" />
 
 </ProjectLayout>

@@ -1,65 +1,82 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import YouTube from '../../components/YouTube.astro';
 ---
 
 <ProjectLayout
-  title="ETERNA - 아고라 시스템"
-  subtitle="디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. 소프트런칭에 필요한 소셜 기능 전체를 완성했습니다."
-  period="2025.11 - 2026.04"
-  role="아키텍처 설계, 구현 전담"
-  team="시니어 1 + 본인 + 주니어 3 (서브 리드)"
-  tags={['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM SDK', 'FlatBuffers', 'Whisper', 'UaaL']}
-  links={[
-    { label: 'Source Code', url: 'https://github.com/pulppixel' },
-  ]}
-  badge="ARCHITECT"
+    title="ETERNA - 아고라 시스템"
+    subtitle="디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. 소프트런칭에 필요한 소셜 기능 전체를 완성했습니다."
+    period="2025.11 - 2026.04"
+    role="아키텍처 설계, 구현 전담"
+    team="시니어 1 + 본인 + 주니어 3 (서브 리드)"
+    tags={['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM SDK', 'FlatBuffers', 'Whisper', 'UaaL']}
+    links={[
+      { label: 'Source Code', url: 'https://github.com/pulppixel' },
+    ]}
+    badge="ARCHITECT"
 >
 
-<h2>배경</h2>
-<p>
-  ETERNA는 유료 구독(하이퍼 이더) 전용 실시간 커뮤니티 플랫폼입니다.
-  "아고라"는 디스코드의 서버와 유사한 개념으로, 다수의 채널을 묶는 그룹 단위입니다.
-  각 채널에는 실제 필드(씬)가 존재하며 최대 16명(인간 8 + AI Mirror 8)이 참여할 수 있습니다.
-</p>
+  <h2>배경</h2>
+  <p>
+    ETERNA는 유료 구독(하이퍼 이더) 전용 실시간 커뮤니티 플랫폼입니다.
+    "아고라"는 디스코드의 서버와 유사한 개념으로, 다수의 채널을 묶는 그룹 단위입니다.
+    각 채널에는 실제 필드(씬)가 존재하며 최대 16명(인간 8 + AI Mirror 8)이 참여할 수 있습니다.
+  </p>
 
-<div class="media-placeholder">📸 아고라 메인 화면 스크린샷 (추가 예정)</div>
+  <img src="/images/et_scene1.png" alt="ETERNA 인게임 - 아고라 채널 내부 필드에서 다수 캐릭터가 활동하는 모습" />
 
-<h2>설계</h2>
-<p>
-  DI/MVVM 등 여러 접근을 비교한 끝에, Unity 환경에서의 복잡도와 팀 러닝커브를 고려해
-  Service/Repository/State 3계층 아키텍처로 설계했습니다.
-</p>
+  <h2>설계</h2>
+  <p>
+    DI/MVVM 등 여러 접근을 비교한 끝에, Unity 환경에서의 복잡도와 팀 러닝커브를 고려해
+    Service/Repository/State 3계층 아키텍처로 설계했습니다.
+  </p>
 
-<ul>
-  <li><code>Repository</code> - 네트워크 I/O 추상화. 인터페이스로 분리. Observable(서버 Push) + Request 메서드</li>
-  <li><code>Service</code> - 비즈니스 로직, 알림 생성, IM 콜백 구독, Repository 이벤트 -> State 반영</li>
-  <li><code>State</code> - 순수 상태 보관. ReactiveProperty/Subject로 UI 바인딩. 로직 없음</li>
-  <li><code>ServiceProvider</code> - static lazy singleton. 인스턴스 생성, 초기화, Dispose 관리</li>
-</ul>
+  <ul>
+    <li><code>Repository</code> - 네트워크 I/O 추상화. 인터페이스로 분리. Observable(서버 Push) + Request 메서드</li>
+    <li><code>Service</code> - 비즈니스 로직, 알림 생성, IM 콜백 구독, Repository 이벤트 -> State 반영</li>
+    <li><code>State</code> - 순수 상태 보관. ReactiveProperty/Subject로 UI 바인딩. 로직 없음</li>
+    <li><code>ServiceProvider</code> - static lazy singleton. 인스턴스 생성, 초기화, Dispose 관리</li>
+  </ul>
 
-<p>
-  Tencent IM SDK를 Repository 인터페이스로 격리했습니다.
-  콜백 기반 SDK를 Observable/async로 래핑하여, 기능을 사용하는 곳에서
-  Tencent IM SDK를 직접 참조하지 않도록 했습니다.
-</p>
+  <p>
+    Tencent IM SDK를 Repository 인터페이스로 격리했습니다.
+    콜백 기반 SDK를 Observable/async로 래핑하여, 기능을 사용하는 곳에서
+    Tencent IM SDK를 직접 참조하지 않도록 했습니다.
+  </p>
 
-<div class="media-placeholder">📐 아키텍처 다이어그램 (추가 예정)</div>
+  <img src="/images/et_agora2.png" alt="아고라 채널 기록 UI - 다수 아고라 가입, 채널 히스토리 조회 화면" />
 
-<h2>구현</h2>
+  <h2>구현</h2>
 
-<ul>
-  <li>아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리 전체 구현</li>
-  <li>크로스플랫폼 STT 직접 구현 - Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍, 녹음도 별도 라이브러리 없이 제작</li>
-  <li>한글 조합 입력 문제 분석 및 커스텀 InputField 제작</li>
-  <li>UaaL(Unity as a Library) 양방향 통신 적용 가능성 검증</li>
-</ul>
+  <ul>
+    <li>아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리 전체 구현</li>
+    <li>크로스플랫폼 STT 직접 구현 - Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍, 녹음도 별도 라이브러리 없이 제작</li>
+    <li>한글 조합 입력 문제 분석 및 커스텀 InputField 제작</li>
+    <li>UaaL(Unity as a Library) 양방향 통신 적용 가능성 검증</li>
+  </ul>
 
-<div class="media-placeholder">🎥 동작 영상 (추가 예정)</div>
+  <img src="/images/et_dialog3.png" alt="NPC 대화 시스템 - STT 입력과 토픽 선택 UI" />
 
-<h2>문서화</h2>
-<p>
-  InputField 사용법, 아고라 작업 가이드 등 후속 작업자용 문서를 작성하여
-  바로 투입될 수 있도록 정리했습니다.
-</p>
+  <p>아래는 채널 접속/삭제 시 실시간 대응하는 영상입니다.</p>
+  <YouTube id="NqkNEjDdxw0" title="ETERNA - 채널 접속 및 삭제 대응" />
+
+  <h2>모바일 이동 로직 개선</h2>
+  <YouTube id="CYy0mqAkOOM" title="ETERNA - 모바일 이동 로직 개선" />
+
+  <h2>알림 관리</h2>
+  <p>
+    아고라 가입 신청이 들어오면 실시간 알림이 표시되고,
+    관리자가 승인/거절할 수 있는 UI를 구현했습니다.
+  </p>
+  <img src="/images/et_agora3.png" alt="알림 관리 - 아고라 가입 신청 승인/거절 UI" />
+
+  <h2>UaaL 양방향 통신 검증</h2>
+  <YouTube id="DW-QP3Gskfw" title="UaaL(Unity as a Library) 양방향 통신 POC" />
+
+  <h2>문서화</h2>
+  <p>
+    InputField 사용법, 아고라 작업 가이드 등 후속 작업자용 문서를 작성하여
+    바로 투입될 수 있도록 정리했습니다.
+  </p>
 
 </ProjectLayout>

@@ -1,43 +1,52 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import YouTube from '../../components/YouTube.astro';
 ---
 
 <ProjectLayout
-  title="STELSI - UE5 메타버스"
-  subtitle="외주 진행 중이던 UE5 메타버스 프로젝트에 중간 투입. 인게임 영상 재생, 360도 촬영 툴, UI 작업과 외주 관리를 담당. SM그룹, JPA(정림건축) 등과 MOU 및 투자 유치에 기여."
-  period="2023.08 - 2024.12"
-  role="인게임 영상 재생, 촬영 툴, UI, 외주 관리"
-  team="외주 포함 다수"
-  tags={['Unreal Engine 5', 'C++', 'Bink2']}
+    title="STELSI - UE5 메타버스"
+    subtitle="외주 진행 중이던 UE5 메타버스 프로젝트에 중간 투입. 인게임 영상 재생, 360도 촬영 툴, UI 작업과 외주 관리를 담당. SM그룹, JPA(정림건축) 등과 MOU 및 투자 유치에 기여."
+    period="2023.08 - 2024.12"
+    role="인게임 영상 재생, 촬영 툴, UI, 외주 관리"
+    team="외주 포함 다수"
+    tags={['Unreal Engine 5', 'C++', 'Bink2']}
 >
 
-<h2>배경</h2>
-<p>
-  외주로 진행 중이던 UE5 메타버스 프로젝트에 중간 투입되었습니다.
-  건축 시각화와 가상 공간 체험이 핵심인 프로젝트로, 유명 건축사와의 협업을 통해 투자 유치를 목표로 했습니다.
-</p>
+  <h2>배경</h2>
+  <p>
+    외주로 진행 중이던 UE5 메타버스 프로젝트에 중간 투입되었습니다.
+    건축 시각화와 가상 공간 체험이 핵심인 프로젝트로, 유명 건축사와의 협업을 통해 투자 유치를 목표로 했습니다.
+  </p>
 
-<div class="media-placeholder">📸 STELSI 메타버스 화면 (추가 예정)</div>
+  <YouTube id="74h6nIhaLkw" title="STELSI - 정림건축(JPA) 협업 영상" />
 
-<h2>구현</h2>
-<ul>
-  <li><strong>인게임 영상 재생</strong> - Bink2를 활용한 경량 영상 재생 시스템 구현. 메타버스 내에서 프로모션 영상을 끊김 없이 재생</li>
-  <li><strong>360도 파노라마 촬영 툴</strong> - 가상 공간의 특정 지점에서 360도 파노라마를 캡처하는 에디터 툴 제작</li>
-  <li><strong>UI 작업</strong> - UE5 UMG 기반 인터페이스 구현</li>
-  <li><strong>외주 관리</strong> - 외주 개발사와의 커뮤니케이션 및 일정/품질 관리</li>
-</ul>
+  <h2>구현</h2>
+  <ul>
+    <li><strong>인게임 영상 재생</strong> - Bink2를 활용한 경량 영상 재생 시스템 구현. 메타버스 내에서 프로모션 영상을 끊김 없이 재생</li>
+    <li><strong>360도 파노라마 촬영 툴</strong> - 가상 공간의 특정 지점에서 360도 파노라마를 캡처하는 에디터 툴 제작</li>
+    <li><strong>UI 작업</strong> - UE5 UMG 기반 인터페이스 구현</li>
+    <li><strong>외주 관리</strong> - 외주 개발사와의 커뮤니케이션 및 일정/품질 관리</li>
+  </ul>
 
-<h2>학습</h2>
-<p>
-  이 프로젝트와 병행하여 인프런에서 이득우의 언리얼 프로그래밍 Part 1~4(에픽게임즈 공인 강사, 넥슨 코리아 공식 교육 교재)를 수강했습니다.
-  언리얼 C++ 기초, 게임 프레임워크, 네트워크 멀티플레이, GAS(게임플레이 어빌리티 시스템)를 엔진 소스코드 기반으로 학습하고 실무에 적용했습니다.
-</p>
+  <h2>모바일 앱</h2>
+  <YouTube id="XhND7V-02ks" title="STELSI - 모바일앱 홍보 영상" />
 
-<div class="media-placeholder">🎥 STELSI 시연 영상 (추가 예정)</div>
+  <h2>멀티플레이어 아트 전시 갤러리</h2>
+  <YouTube id="ZW0vNjduID8" title="STELSI - 멀티플레이어 아트 전시 갤러리" />
 
-<h2>성과</h2>
-<ul>
-  <li>SM그룹, JPA(정림건축) 등 유명 건축사와 MOU 및 투자 유치에 기여</li>
-</ul>
+  <h2>외주 프로젝트 - 인테리어 콘텐츠</h2>
+  <p>STELSI 본 프로젝트와 별개로, 외주용으로 제작한 인테리어 시각화 콘텐츠입니다.</p>
+  <YouTube id="SEMX5VcF088" title="외주 - 언리얼 인테리어 시각화" />
+
+  <h2>학습</h2>
+  <p>
+    이 프로젝트와 병행하여 인프런에서 이득우의 언리얼 프로그래밍 Part 1~4(에픽게임즈 공인 강사, 넥슨 코리아 공식 교육 교재)를 수강했습니다.
+    언리얼 C++ 기초, 게임 프레임워크, 네트워크 멀티플레이, GAS(게임플레이 어빌리티 시스템)를 엔진 소스코드 기반으로 학습하고 실무에 적용했습니다.
+  </p>
+
+  <h2>성과</h2>
+  <ul>
+    <li>SM그룹, JPA(정림건축) 등 유명 건축사와 MOU 및 투자 유치에 기여</li>
+  </ul>
 
 </ProjectLayout>

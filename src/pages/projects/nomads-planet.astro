@@ -1,80 +1,82 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import YouTube from '../../components/YouTube.astro';
 ---
 
 <ProjectLayout
-  title="Nomads Planet"
-  subtitle="Unity Netcode + Vivox 기반 멀티플레이어 차량 메타버스. Matchmaking부터 Dedicated Server까지 1인 구현. 2023 K-메타버스 경진대회 장려상 수상."
-  period="2023.06 - 2023.09"
-  role="기획, 설계, 구현 (1인)"
-  team="1인"
-  tags={['Unity', 'C#', 'Unity Netcode (NGO)', 'Vivox', 'Addressable', 'URP', 'DOTween', 'Relay', 'Lobby', 'Matchmaker']}
-  links={[
-    { label: 'Source Code', url: 'https://github.com/pulppixel/pulppixel.github.io/tree/main/code-samples/nomads-planet' },
-    { label: 'GitHub', url: 'https://github.com/pulppixel' },
-    { label: 'YouTube', url: 'https://youtube.com/playlist?list=PLUkUNnTP7B0JmUN6L3dE0iYC4oIBOwWSL' },
-  ]}
-  badge="수상"
+    title="Nomads Planet"
+    subtitle="Unity Netcode + Vivox 기반 멀티플레이어 차량 메타버스. Matchmaking부터 Dedicated Server까지 1인 구현. 2023 K-메타버스 경진대회 장려상 수상."
+    period="2023.06 - 2023.09"
+    role="기획, 설계, 구현 (1인)"
+    team="1인"
+    tags={['Unity', 'C#', 'Unity Netcode (NGO)', 'Vivox', 'Addressable', 'URP', 'DOTween', 'Relay', 'Lobby', 'Matchmaker']}
+    links={[
+      { label: 'Source Code', url: 'https://github.com/pulppixel/pulppixel.github.io/tree/main/code-samples/nomads-planet' },
+      { label: 'GitHub', url: 'https://github.com/pulppixel' },
+      { label: 'YouTube', url: 'https://youtube.com/playlist?list=PLUkUNnTP7B0JmUN6L3dE0iYC4oIBOwWSL' },
+    ]}
+    badge="수상"
 >
 
-<h2>배경</h2>
-<p>
-  2023 K-메타버스 경진대회 출품을 위해 1인 개발한 프로젝트입니다.
-  멀티플레이어 네트워킹에 초점을 맞추고, 크로스플랫폼(PC, Mac, Android, iOS)을 지원하며
-  Dedicated Server(Linux)까지 직접 구성했습니다.
-</p>
+  <h2>배경</h2>
+  <p>
+    2023 K-메타버스 경진대회 출품을 위해 1인 개발한 프로젝트입니다.
+    멀티플레이어 네트워킹에 초점을 맞추고, 크로스플랫폼(PC, Mac, Android, iOS)을 지원하며
+    Dedicated Server(Linux)까지 직접 구성했습니다.
+  </p>
 
-<div class="media-placeholder">📸 게임 화면 스크린샷 (추가 예정)</div>
+  <img src="/images/nomads_incar.jpg" alt="Nomads Planet - 1인칭 차량 시점. 리더보드, 미니맵, 코인 수집이 보이는 인게임 화면" />
 
-<h2>아키텍처 - 3-Singleton 구조</h2>
-<p>
-  <code>ApplicationController</code>가 실행 모드를 판별하고,
-  <code>ClientSingleton</code> / <code>HostSingleton</code> / <code>ServerSingleton</code> 각각이
-  자기 GameManager를 소유하는 구조로 설계했습니다.
-  <code>#if UNITY_SERVER</code> 전처리기로 Dedicated Server 빌드를 분리했고,
-  서버/클라이언트의 책임이 코드 레벨에서 명확히 나뉩니다.
-</p>
+  <YouTube id="5xdDs5nPkOY" title="Nomads Planet - 시연 영상" />
 
-<h2>네트워크 - 직접 구현한 것들</h2>
-<ul>
-  <li><code>NetworkServer</code> - ConnectionApproval에서 UserData payload를 파싱하고, 인증 ID 매핑(<code>_clientIdToAuth</code>, <code>_authIdToUserData</code>)을 관리. 접속 후 3초 지연 스폰으로 씬 로딩 타이밍 보정</li>
-  <li><code>MatchplayMatchmaker</code> - Unity Matchmaker 티켓 생성 -> 폴링 -> 매칭 결과 처리. 취소/에러/타임아웃 케이스 전부 핸들링</li>
-  <li><code>MatchplayBackfiller</code> - Backfill 티켓으로 빈 자리를 자동 충원. 플레이어 추가/제거 시 티켓 업데이트, 풀방이면 Backfill 중단</li>
-  <li><code>MultiplayAllocationService</code> - Multiplay 서버 할당 구독 + SQP(Server Query Protocol) 핸들링. 서버 상태를 주기적으로 보고</li>
-  <li><code>ClientNetworkTransform</code> - Client-authoritative transform 오버라이드. <code>OnIsServerAuthoritative() -> false</code></li>
-</ul>
+  <h2>아키텍처 - 3-Singleton 구조</h2>
+  <p>
+    <code>ApplicationController</code>가 실행 모드를 판별하고,
+    <code>ClientSingleton</code> / <code>HostSingleton</code> / <code>ServerSingleton</code> 각각이
+    자기 GameManager를 소유하는 구조로 설계했습니다.
+    <code>#if UNITY_SERVER</code> 전처리기로 Dedicated Server 빌드를 분리했고,
+    서버/클라이언트의 책임이 코드 레벨에서 명확히 나뉩니다.
+  </p>
 
-<h2>게임플레이 시스템</h2>
+  <h2>네트워크 - 직접 구현한 것들</h2>
+  <ul>
+    <li><code>NetworkServer</code> - ConnectionApproval에서 UserData payload를 파싱하고, 인증 ID 매핑(<code>_clientIdToAuth</code>, <code>_authIdToUserData</code>)을 관리. 접속 후 3초 지연 스폰으로 씬 로딩 타이밍 보정</li>
+    <li><code>MatchplayMatchmaker</code> - Unity Matchmaker 티켓 생성 -> 폴링 -> 매칭 결과 처리. 취소/에러/타임아웃 케이스 전부 핸들링</li>
+    <li><code>MatchplayBackfiller</code> - Backfill 티켓으로 빈 자리를 자동 충원. 플레이어 추가/제거 시 티켓 업데이트, 풀방이면 Backfill 중단</li>
+    <li><code>MultiplayAllocationService</code> - Multiplay 서버 할당 구독 + SQP(Server Query Protocol) 핸들링. 서버 상태를 주기적으로 보고</li>
+    <li><code>ClientNetworkTransform</code> - Client-authoritative transform 오버라이드. <code>OnIsServerAuthoritative() -> false</code></li>
+  </ul>
 
-<ul>
-  <li><strong>코인 풀링</strong> - <code>Coin</code>(abstract) -> <code>RespawningCoin</code> / <code>BountyCoin</code> 상속 구조. <code>CoinSpawner</code>가 서버에서만 생성하고, 수집 시 위치만 리셋하여 오브젝트 수를 보존하는 풀링 패턴</li>
-  <li><strong>NPC 교통 시스템</strong> - <code>TrafficController</code> -> <code>TrafficFlow</code> -> <code>CarDetector</code> 계층 구조. 신호등 FSM(Red -> Green -> Yellow 사이클)에 따라 NPC 차량이 차선별로 대기/출발하고, DOTween의 <code>DOPath</code>로 Catmull-Rom 커브를 따라 좌회전/우회전</li>
-  <li><strong>실시간 리더보드</strong> - <code>NetworkList&lt;LeaderboardEntityState&gt;</code>로 동기화. <code>INetworkSerializable</code> 직접 구현. 코인 변경 시 자동 정렬, 본인 순위가 화면 밖이면 강제 표시</li>
-  <li><strong>부스터 존</strong> - <code>NetworkVariable&lt;float&gt;</code>로 부스터 잔량 동기화, 쿨다운 후 자동 충전. Tick Rate 기반 소비</li>
-</ul>
+  <h2>게임플레이 시스템</h2>
+  <ul>
+    <li><strong>코인 풀링</strong> - <code>Coin</code>(abstract) -> <code>RespawningCoin</code> / <code>BountyCoin</code> 상속 구조. <code>CoinSpawner</code>가 서버에서만 생성하고, 수집 시 위치만 리셋하여 오브젝트 수를 보존하는 풀링 패턴</li>
+    <li><strong>NPC 교통 시스템</strong> - <code>TrafficController</code> -> <code>TrafficFlow</code> -> <code>CarDetector</code> 계층 구조. 신호등 FSM(Red -> Green -> Yellow 사이클)에 따라 NPC 차량이 차선별로 대기/출발하고, DOTween의 <code>DOPath</code>로 Catmull-Rom 커브를 따라 좌회전/우회전</li>
+    <li><strong>실시간 리더보드</strong> - <code>NetworkList&lt;LeaderboardEntityState&gt;</code>로 동기화. <code>INetworkSerializable</code> 직접 구현. 코인 변경 시 자동 정렬, 본인 순위가 화면 밖이면 강제 표시</li>
+    <li><strong>부스터 존</strong> - <code>NetworkVariable&lt;float&gt;</code>로 부스터 잔량 동기화, 쿨다운 후 자동 충전. Tick Rate 기반 소비</li>
+  </ul>
 
-<h2>Vivox 채팅</h2>
-<ul>
-  <li>로비(Menu)와 인게임(Game) 채널을 분리하여 운영</li>
-  <li>텍스트 채팅 - 동적 말풍선 크기 조정(<code>ChatBubbleResizer</code>), 보낸 시각/발신자 표시, 자동 스크롤</li>
-  <li>참가자 로스터(<code>RosterUI</code>) - 채널별 참가자 목록 실시간 갱신</li>
-  <li>연결 상태 표시 - <code>ConnectionRecoveryState</code>에 따라 인디케이터 색상 변경</li>
-</ul>
+  <h2>Vivox 채팅</h2>
+  <ul>
+    <li>로비(Menu)와 인게임(Game) 채널을 분리하여 운영</li>
+    <li>텍스트 채팅 - 동적 말풍선 크기 조정(<code>ChatBubbleResizer</code>), 보낸 시각/발신자 표시, 자동 스크롤</li>
+    <li>참가자 로스터(<code>RosterUI</code>) - 채널별 참가자 목록 실시간 갱신</li>
+    <li>연결 상태 표시 - <code>ConnectionRecoveryState</code>에 따라 인디케이터 색상 변경</li>
+  </ul>
 
-<h2>기타</h2>
-<ul>
-  <li>Addressable System으로 모바일 초기 앱 사이즈 경량화</li>
-  <li>Unity Localization으로 영어/한글 2개 국어 지원 (텍스트 + AI 음성)</li>
-  <li>캐릭터/차량 선택 영속화 (Easy Save 3) - 마지막 선택을 기억</li>
-  <li>플랫폼별 입력 분기 - PC는 키보드/마우스, 모바일은 가상 조이스틱(<code>FingersJoystickScript</code>)</li>
-</ul>
+  <h2>기타</h2>
+  <ul>
+    <li>Addressable System으로 모바일 초기 앱 사이즈 경량화</li>
+    <li>Unity Localization으로 영어/한글 2개 국어 지원 (텍스트 + AI 음성)</li>
+    <li>캐릭터/차량 선택 영속화 (Easy Save 3) - 마지막 선택을 기억</li>
+    <li>플랫폼별 입력 분기 - PC는 키보드/마우스, 모바일은 가상 조이스틱(<code>FingersJoystickScript</code>)</li>
+  </ul>
 
-<div class="media-placeholder">🎥 시연 영상 (추가 예정)</div>
+  <h2>성과</h2>
+  <p>
+    2023 K-메타버스 경진대회 장려상(버넥트 대표상, 과학기술정보통신부) 수상.
+    MacOS, Android, iOS, Linux(Dedicated Server) 크로스플랫폼 시연 완료.
+  </p>
 
-<h2>성과</h2>
-<p>
-  2023 K-메타버스 경진대회 장려상(버넥트 대표상, 과학기술정보통신부) 수상.
-  MacOS, Android, iOS, Linux(Dedicated Server) 크로스플랫폼 시연 완료.
-</p>
+  <img src="/images/nomads_awards.jpg" alt="2023 K-메타버스 경진대회 장려상 수상 - 버넥트 대표상, 과학기술정보통신부" />
 
 </ProjectLayout>

@@ -18,12 +18,11 @@ import YouTube from '../../components/YouTube.astro';
 
   <h2>배경</h2>
   <p>
-    기획안을 분석해 보니 Realtime Rendering이 필요없는 일반 앱이었습니다.
-    Unity로 만들 이유가 없다고 판단하고, .NET MAUI와 Flutter를 각각 MVP로 만들어 비교한 뒤
-    Flutter를 선택했습니다. MAUI 버전도 MVVM + 5개 프로젝트 분리(App, DB, Feature, Web3, SignalR Hub)로
-    146파일까지 만들었기 때문에 토이 수준이 아닌 실제 비교였습니다.
-    시니어에게 두 결과물을 시연해서 설득했고,
-    리스크 대비 폴백 플랜도 함께 제시했습니다.
+    기획안 분석 결과 Realtime Rendering 기술이 불필요함을 파악하고,
+    최적화된 앱 개발을 위해 Unity 대신 .NET MAUI와 Flutter로 각각 MVP를 구현하여 성능 및 개발 효율을 비교 검증한 후 Flutter를 최종 채택했습니다.
+    MAUI 기반 MVP 역시 MVVM 패턴과 5계층 프로젝트 분리를 적용하여 실무 수준의 완성도로 구현 및 검증을 진행했습니다.
+    이를 바탕으로 시니어 개발진 대상 시연 및 기술 리뷰를 진행하여 스택 전환에 대한 타당성을 입증하고,
+    리스크에 대비한 폴백 플랜(Fallback Plan)을 함께 제시하여 기술 도입을 성공적으로 주도했습니다.
     159개 소스 파일, 약 18,850줄.
   </p>
 

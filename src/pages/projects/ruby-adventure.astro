@@ -5,7 +5,7 @@ import YouTube from '../../components/YouTube.astro';
 
 <ProjectLayout
     title="루비의 모험"
-    subtitle="1인 개발 3D 액션 RPG. 클릭 이동 + 콤보 전투, NavMesh AI, 스킬 시스템, 인벤토리, 대화 시스템까지 직접 구현. 졸업전시 우수상 수상 및 재학생 대표 발표."
+    subtitle="기획부터 구현까지 1인 개발로 완성한 3D 액션 RPG. 클릭 기반 이동 및 콤보 전투, NavMesh 기반 AI 등 핵심 게임 시스템을 독자적으로 설계 및 개발했습니다. 재학생 대표로 발표도 했습니다."
     period="2019.09 - 2019.11"
     role="기획, 설계, 구현, 레벨디자인 (1인)"
     team="1인"
@@ -31,8 +31,8 @@ import YouTube from '../../components/YouTube.astro';
   <h2>플레이어 FSM</h2>
   <p>
     <code>PlayerController</code>에 직접 설계한 상태 머신을 구현했습니다.
-    IDLE -> MOVE -> ATTACK -> SKILL -> ITEM 5개 상태를 <code>state</code>/<code>nextState</code> 이중 변수로 관리하고,
-    매 프레임 "상태 전이 조건 -> 전이 실행 -> 상태별 루프" 3단계로 처리합니다.
+    5가지 핵심 상태를 이중 변수(state/nextState) 기반의 커스텀 상태 머신(FSM)으로 설계하여,
+    매 프레임 명확한 조건 검사와 상태 전이가 이루어지도록 로직을 구조화했습니다.
   </p>
   <ul>
     <li>마우스 우클릭 하나로 이동과 공격을 통합 - Raycast로 바닥/적/인터랙트 오브젝트를 판별하고, 거리에 따라 이동 또는 즉시 공격으로 분기</li>

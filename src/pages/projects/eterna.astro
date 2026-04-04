@@ -5,7 +5,7 @@ import YouTube from '../../components/YouTube.astro';
 
 <ProjectLayout
     title="ETERNA - 아고라 시스템"
-    subtitle="디스코드형 커뮤니티 시스템의 아키텍처 설계부터 구현까지 전담. 소프트런칭에 필요한 소셜 기능 전체를 완성했습니다."
+    subtitle="확장 가능한 커뮤니티 아키텍처 설계 및 구현 전담. (3-Tier Service/Repository/State 패턴 적용). 소프트런칭에 필수적인 핵심 소셜 기능 전반을 설계 및 구현하여 서비스 안정성을 확보했습니다."
     period="2025.11 - 2026.04"
     role="아키텍처 설계, 구현 전담"
     team="시니어 1 + 본인 + 주니어 3 (서브 리드)"
@@ -39,9 +39,9 @@ import YouTube from '../../components/YouTube.astro';
   </ul>
 
   <p>
-    Tencent IM SDK를 Repository 인터페이스로 격리했습니다.
-    콜백 기반 SDK를 Observable/async로 래핑하여, 기능을 사용하는 곳에서
-    Tencent IM SDK를 직접 참조하지 않도록 했습니다.
+    외부 SDK(Tencent IM) 의존성을 낮추기 위해 Repository 패턴으로 추상화 계층을 분리했습니다.
+    콜백 기반의 비동기 로직을 Observable 및 async/await 기반으로 래핑하여,
+    비즈니스 로직에서의 코드 가독성과 유지보수성을 극대화했습니다.
   </p>
 
   <img src="/images/et_agora2.png" alt="아고라 채널 기록 UI - 다수 아고라 가입, 채널 히스토리 조회 화면" />
@@ -51,7 +51,7 @@ import YouTube from '../../components/YouTube.astro';
   <ul>
     <li>아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리 전체 구현</li>
     <li>크로스플랫폼 STT 직접 구현 - Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍, 녹음도 별도 라이브러리 없이 제작</li>
-    <li>한글 조합 입력 문제 분석 및 커스텀 InputField 제작</li>
+    <li>한글 조합 문자(Composition) 입력 시 발생하는 런타임 이슈를 분석하고, 이를 해결한 커스텀 InputField를 개발하여 사용자 경험(UX)을 개선</li>
     <li>UaaL(Unity as a Library) 양방향 통신 적용 가능성 검증</li>
   </ul>
 

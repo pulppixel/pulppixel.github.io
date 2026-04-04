@@ -10,36 +10,18 @@ export function buildWaterEdge(scene: THREE.Scene): void {
     const foamMat = new THREE.MeshBasicMaterial({
         color: 0xc8f0f5, transparent: true, opacity: 0.18,
     });
-    const reefMat = stdMat(0x6a9888, 0.7);
-    const sandMat = stdMat(0xc8b898, 0.8);
 
     for (const p of PLATFORMS) {
         if (p.h <= 0) continue;
+        if (p.w < 10) continue;
         const hw = p.w / 2, hd = p.d / 2;
-
-        // Reef base (wider than platform, at water level)
-        const reef = new THREE.Mesh(
-            new THREE.BoxGeometry(p.w + 1.8, 0.12, p.d + 1.8),
-            reefMat,
-        );
-        reef.position.set(p.x, 0.06, p.z);
-        reef.receiveShadow = true;
-        scene.add(reef);
-
-        // Sandy transition ring (between reef and cliff)
-        const sand = new THREE.Mesh(
-            new THREE.BoxGeometry(p.w + 0.8, 0.08, p.d + 0.8),
-            sandMat,
-        );
-        sand.position.set(p.x, 0.15, p.z);
-        scene.add(sand);
 
         // Foam strips on 4 sides
         const foamData: [number, number, number, number, number, number][] = [
-            [p.x, 0.09, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
-            [p.x, 0.09, p.z - hd - 1.1, p.w + 2.4, 0.03, 0.5],
-            [p.x + hw + 1.1, 0.09, p.z, 0.5, 0.03, p.d + 1.4],
-            [p.x - hw - 1.1, 0.09, p.z, 0.5, 0.03, p.d + 1.4],
+            [p.x, 0.2, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
+            [p.x, 0.2, p.z - hd - 1.1, p.w + 2.4, 0.03, 0.5],
+            [p.x + hw + 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
+            [p.x - hw - 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
         ];
         for (const [fx, fy, fz, fw, fh, fd] of foamData) {
             const foam = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, fd), foamMat);
@@ -68,9 +50,6 @@ export function buildBushes(scene: THREE.Scene): void {
         [-35, -35], [-21, -42], [-33, -45], [-23, -35],
         // Zone 3 - Overworld
         [-7, -53], [7, -63], [-6, -60], [8, -54],
-        // Bridges
-        [11, -23], [-11, -23], [1, -33], [-1, -45],
-        [17, -30], [-17, -30],
     ];
 
     spots.forEach(([sx, sz], i) => {

@@ -377,12 +377,12 @@ export function createAnimals(scene: THREE.Scene): Animals {
   ];
 
   const birds: Bird[] = [
-    createBird(scene, -8, getGroundHeight(-8, -4) + 4.2, -4, 0x5588cc),
-    createBird(scene, 12, getGroundHeight(12, -14) + 3.8, -14, 0xe87040),
-    createBird(scene, -8, getGroundHeight(-8, -52) + 6.2, -52, 0x5588cc),
+    createBird(scene, -6, getGroundHeight(-6, -3) + 4.2, -3, 0x5588cc),
+    createBird(scene, 7, getGroundHeight(7, -15) + 3.8, -15, 0xe87040),
+    createBird(scene, -7, getGroundHeight(-7, -54) + 6.2, -54, 0x5588cc),
   ];
 
-  const bfSpawns: [number, number][] = [[-5, -3], [7, -8], [10, -20], [-9, -25], [3, -50]];
+  const bfSpawns: [number, number][] = [[-4, -2], [5, -4], [8, -17], [-7, -22], [3, -55]];
   const butterflies = bfSpawns.map((s, i) =>
     createButterfly(scene, s[0], s[1], BF_COLS[i % BF_COLS.length]),
   );

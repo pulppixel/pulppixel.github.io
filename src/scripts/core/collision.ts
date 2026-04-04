@@ -9,7 +9,7 @@ export interface FenceCollider {
 
 // --- Adjacency detection (shared with terrain.ts fence visuals) ---
 
-const ADJ_THRESHOLD = 5.0;
+const ADJ_THRESHOLD = 2.0;
 
 export function isEdgeConnected(
   ex: number, ez: number,
@@ -18,6 +18,7 @@ export function isEdgeConnected(
 ): boolean {
   for (const q of PLATFORMS) {
     if (q === self || q.h <= 0) continue;
+    if (q.w < 10 && self.w >= 10) continue;
     if (axis === 'x') {
       const qEdge = dir > 0 ? q.x - q.w / 2 : q.x + q.w / 2;
       const pEdge = self.x + dir * self.w / 2;

@@ -19,6 +19,9 @@ export function buildOcean(scene: THREE.Scene, isMobile: boolean): THREE.Mesh {
   const waterMat = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
     uniforms: {
       uTime: { value: 0 },
       uDeep: { value: new THREE.Color(0x3ab0c8) },

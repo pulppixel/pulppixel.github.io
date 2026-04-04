@@ -124,40 +124,18 @@ export function buildPlatforms(scene: THREE.Scene, isMobile: boolean): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
     const pal = getZonePalette(p.x, p.z);
-    const isMain = p.w >= 14;
 
-    const stoneH = Math.max(0.1, p.h - 0.30);
+    // Stone body (single color, full height minus grass)
+    const stoneH = Math.max(0.1, p.h - 0.12);
+    const stone = stdBox(p.w, stoneH, p.d, pal.stone);
+    stone.position.set(p.x, stoneH / 2, p.z);
+    scene.add(stone);
 
-    if (isMain && stoneH > 0.3) {
-      // Two-layer cliff strata for main islands
-      const bottomH = stoneH * 0.6;
-      const topH = stoneH * 0.4;
-
-      const stoneBot = stdBox(p.w, bottomH, p.d, pal.stoneDark);
-      stoneBot.position.set(p.x, bottomH / 2, p.z);
-      scene.add(stoneBot);
-
-      const stoneTop = stdBox(p.w, topH, p.d, pal.stone);
-      stoneTop.position.set(p.x, bottomH + topH / 2, p.z);
-      scene.add(stoneTop);
-    } else {
-      // Single stone for bridges
-      const stone = stdBox(p.w, stoneH, p.d, pal.stone);
-      stone.position.set(p.x, stoneH / 2, p.z);
-      scene.add(stone);
-    }
-
-    // Dirt layer
-    const dirt = stdBox(p.w, 0.15, p.d, pal.dirt);
-    dirt.position.set(p.x, stoneH + 0.075, p.z);
-    scene.add(dirt);
-
-    // Grass layer (zone-colored)
+    // Grass cap only (no dirt, no strata, no accent)
     const grass = stdBox(p.w + 0.1, 0.12, p.d + 0.1, pal.grass);
     grass.position.set(p.x, p.h - 0.06, p.z);
     scene.add(grass);
 
-    // Grass edge wireframe
     if (!isMobile) {
       const edge = new THREE.LineSegments(
           new THREE.EdgesGeometry(new THREE.BoxGeometry(p.w + 0.1, 0.12, p.d + 0.1)),
@@ -165,13 +143,6 @@ export function buildPlatforms(scene: THREE.Scene, isMobile: boolean): void {
       );
       edge.position.copy(grass.position);
       scene.add(edge);
-    }
-
-    // Accent stripe at dirt-stone junction (thin visible line)
-    if (isMain) {
-      const accent = stdBox(p.w + 0.05, 0.04, p.d + 0.05, pal.stoneDark);
-      accent.position.set(p.x, stoneH - 0.02, p.z);
-      scene.add(accent);
     }
   }
 }
@@ -207,54 +178,35 @@ function addTree(scene: THREE.Scene, tx: number, tz: number, h: number, type: Le
 }
 
 export function buildTrees(scene: THREE.Scene): void {
-  // All positions verified to be safely on platforms (1.5+ unit margin from edge)
   const trees: [number, number, number, LeafType][] = [
-    // Spawn island (0,0, 14x12)
+    // Spawn island
     [-4, 4, 3.5, 'green'],
     [5, 3, 3, 'green'],
 
-    // Zone 0 - Nether (0,-18, 18x14)
+    // Zone 0 - Nether
     [-7, -14, 5, 'green'],
     [7, -15, 4, 'green'],
     [-5, -23, 4, 'green'],
     [6, -22, 3.5, 'green'],
 
-    // Z0->Z1 bridge platforms
-    [10, -22, 3, 'green'],
-    [20, -30, 3, 'orange'],
-
-    // Zone 1 - Treasure Isle (28,-40, 18x14)
+    // Zone 1 - Treasure Isle
     [24, -36, 4.5, 'green'],
     [33, -38, 4, 'green'],
     [30, -44, 3.5, 'green'],
     [22, -42, 3, 'green'],
 
-    // Z0->Z2 bridge platforms
-    [-10, -22, 3, 'green'],
-    [-20, -30, 3.5, 'orange'],
-
-    // Zone 2 - Beacon Peak (-28,-40, 18x14)
+    // Zone 2 - Beacon Peak
     [-33, -36, 5, 'orange'],
     [-24, -38, 4, 'orange'],
     [-30, -44, 3.5, 'orange'],
     [-22, -42, 3, 'orange'],
 
-    // Z0->Z3 center bridges
-    [-2, -29, 3, 'green'],
-    [2, -42, 3, 'pink'],
-
-    // Zone 3 - Overworld (0,-58, 18x14)
+    // Zone 3 - Overworld
     [-6, -55, 5, 'pink'],
     [5, -56, 4, 'pink'],
     [-4, -63, 4.5, 'pink'],
     [7, -62, 5, 'pink'],
     [-2, -59, 3.5, 'pink'],
-
-    // Z1->Z3 bridge (15,-50, 8x7)
-    [14, -48, 3, 'orange'],
-
-    // Z2->Z3 bridge (-15,-50, 8x7)
-    [-14, -48, 3.5, 'pink'],
   ];
   for (const [x, z, h, type] of trees) addTree(scene, x, z, h, type);
 }
@@ -274,9 +226,6 @@ export function buildFlowers(scene: THREE.Scene): void {
     [-32, -37], [-25, -39], [-29, -43], [-23, -36], [-34, -41],
     // Zone 3 - Overworld
     [-5, -54], [4, -56], [-3, -61], [6, -59], [0, -57],
-    // Bridges (1-2 per bridge)
-    [9, -23], [-9, -23], [0, -30], [0, -43],
-    [19, -31], [-19, -31], [14, -49], [-14, -49],
   ];
 
   const tuftGeo = new THREE.BoxGeometry(0.15, 0.4, 0.15);
@@ -360,6 +309,7 @@ export function buildMushrooms(scene: THREE.Scene): void {
 export function buildRocks(scene: THREE.Scene): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
+    if (p.w < 10) continue;
     const pal = getZonePalette(p.x, p.z);
     const isMain = p.w >= 14;
     const count = isMain ? 6 : 2;
@@ -416,6 +366,7 @@ export function buildFences(scene: THREE.Scene): void {
 
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
+    if (p.w < 10) continue;
     const hw = p.w / 2, hd = p.d / 2;
     const isMain = p.w >= 14;
 

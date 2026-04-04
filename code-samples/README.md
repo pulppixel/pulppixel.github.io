@@ -5,10 +5,11 @@
 
 | 프로젝트 | 언어 | 핵심 키워드 |
 |---------|------|-----------|
+| [ETERNA](./eterna/) | C# (Unity) | Service/Repository/State 3계층, R3 Reactive, Tencent IM SDK 격리, FlatBuffers |
 | [Nomads Planet](./nomads-planet/) | C# (Unity) | Netcode 매치메이킹, Dedicated Server, NPC 교통 FSM |
 | [루비의 모험](./ruby-adventure/) | C# (Unity) | FSM, Stat Modifier, NavMesh AI, Interactable 상속 |
 | [SPODY](./spody/) | C# (Unity) | Kinect 깊이 센서, OpenCV PerspectiveTransform, 자동 캘리브레이션 |
 | [Math Master](./math-master/) | C# (Unity) | Fraction 도메인 타입, Maze 생성/탐색 알고리즘, 자체 Tween |
 | [STELSI Wallet](./stelsi-wallet/) | Dart (Flutter) | BIP39/BIP44 HD 지갑, 스마트 컨트랙트 R/W, SecureStorage |
 
-> ETERNA, REIW, IW Zombie 등은 추후 추가 예정입니다.
+> REIW, IW Zombie 등은 추후 추가 예정입니다.

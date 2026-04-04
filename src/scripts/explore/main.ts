@@ -13,6 +13,7 @@ import { createNomadsGame } from './minigames/nomads';
 import { createHaulGame } from './minigames/haul';
 import { createAudio } from './audio';
 import { createTimeWeather } from './timeweather';
+import { createPostFX } from './postfx';
 
 export function init(): void {
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
@@ -32,6 +33,13 @@ export function init(): void {
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
     water,
   }, isMobile);
+
+  // ── 포스트 프로세싱 ──
+  const postfx = createPostFX(renderer, scene, camera, isMobile);
+
+  window.addEventListener('resize', () => {
+    postfx.resize(innerWidth, innerHeight);
+  });
 
   // ── 사운드 ──
   const audio = createAudio();
@@ -119,7 +127,6 @@ export function init(): void {
     if (!isMobile) document.exitPointerLock();
 
     audio.mgEnter();
-    arcadeOverlay.style.opacity = '1';
 
     // Phase 1: Fade to black (0.45s)
     arcadeOverlay.style.opacity = '1';
@@ -393,7 +400,8 @@ export function init(): void {
     updateEnvironment(t, particles, stars, clouds, water);
     audio.update(dt);
     tw.update(dt);
-    renderer.render(scene, camera);
+    postfx.updateForTime(tw.getTimeLabel(), dt);
+    postfx.render();
 
     frameCount++;
     const now = performance.now();

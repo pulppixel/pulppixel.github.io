@@ -1,4 +1,5 @@
 // Shared mesh/material utilities
+// v2: Material caching for draw call reduction
 import * as THREE from 'three';
 
 // --- Position ---
@@ -8,10 +9,18 @@ export function setPos<T extends THREE.Object3D>(obj: T, x: number, y: number, z
   return obj;
 }
 
-// --- Materials ---
+// --- Materials (cached) ---
+
+const _matCache = new Map<string, THREE.MeshStandardMaterial>();
 
 export function stdMat(color: number, roughness = 0.85): THREE.MeshStandardMaterial {
-  return new THREE.MeshStandardMaterial({ color, metalness: 0.05, roughness });
+  const key = `${color}|${roughness}`;
+  let m = _matCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({ color, metalness: 0.05, roughness });
+    _matCache.set(key, m);
+  }
+  return m;
 }
 
 // --- Mesh Factories ---
@@ -27,23 +36,23 @@ export function stdBox(w: number, h: number, d: number, color: number): THREE.Me
 /** Accent box with emissive glow. Used for gems, crystals, special items. */
 export function glowBox(w: number, h: number, d: number, color: number, ei = 0.3): THREE.Mesh {
   return new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({
-      color, emissive: color, emissiveIntensity: ei,
-      metalness: 0.2, roughness: 0.5,
-      transparent: true, opacity: 0.9,
-    }),
+      new THREE.BoxGeometry(w, h, d),
+      new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: ei,
+        metalness: 0.2, roughness: 0.5,
+        transparent: true, opacity: 0.9,
+      }),
   );
 }
 
 /** Double-sided plane for eyes, blush, symbols. */
 export function facePlane(w: number, h: number, color: number, opacity = 1): THREE.Mesh {
   return new THREE.Mesh(
-    new THREE.PlaneGeometry(w, h),
-    new THREE.MeshBasicMaterial({
-      color, side: THREE.DoubleSide,
-      transparent: opacity < 1, opacity,
-    }),
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({
+        color, side: THREE.DoubleSide,
+        transparent: opacity < 1, opacity,
+      }),
   );
 }
 
@@ -51,15 +60,15 @@ export function facePlane(w: number, h: number, color: number, opacity = 1): THR
 
 export function addEdges(mesh: THREE.Mesh, color: number, opacity = 0.2): void {
   mesh.add(new THREE.LineSegments(
-    new THREE.EdgesGeometry(mesh.geometry),
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
+      new THREE.EdgesGeometry(mesh.geometry),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
   ));
 }
 
 export function wireOnly(geo: THREE.BufferGeometry, color: number, opacity = 0.3): THREE.LineSegments {
   return new THREE.LineSegments(
-    new THREE.EdgesGeometry(geo),
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
+      new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
   );
 }
 
@@ -89,7 +98,7 @@ export function textSprite(text: string, color: string): THREE.Sprite {
   tex.minFilter = THREE.LinearFilter;
 
   const sprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }),
+      new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }),
   );
   sprite.scale.set(5.5, 0.7, 1);
   return sprite;

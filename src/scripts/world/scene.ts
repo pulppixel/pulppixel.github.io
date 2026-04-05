@@ -1,7 +1,7 @@
 // Scene setup + per-frame environment update
 import * as THREE from 'three';
 import { COMPANIES } from '../core/data';
-import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots } from './terrain';
+import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots, flushInstances } from './terrain';
 import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';
 import { buildWaterEdge, buildBushes, buildZoneDecor } from './zonedetails';
@@ -47,6 +47,8 @@ export function createScene(isMobile: boolean): SceneContext {
   buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots(scene);
+  flushInstances(scene);
+
   buildWaterEdge(scene);
   buildBushes(scene);
   buildZoneDecor(scene);
@@ -162,11 +164,11 @@ export function createScene(isMobile: boolean): SceneContext {
 // --- Per-frame environment animation ---
 
 export function updateEnvironment(
-  t: number,
-  particles: SceneContext['particles'],
-  stars: SceneContext['stars'],
-  clouds?: THREE.Group[],
-  water?: THREE.Mesh,
+    t: number,
+    particles: SceneContext['particles'],
+    stars: SceneContext['stars'],
+    clouds?: THREE.Group[],
+    water?: THREE.Mesh,
 ): void {
   // Pollen drift
   const pa = particles.geo.attributes.position.array as Float32Array;

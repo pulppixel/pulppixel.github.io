@@ -55,6 +55,9 @@ export abstract class MinigameBase {
   protected abstract readonly title: string;
   protected abstract readonly titleColor: string;
   protected cursorStyle = 'default';
+  private _dpr = 1;
+  private _lw = 0;
+  private _lh = 0;
 
   private aId = 0;
   private readonly container: HTMLElement;
@@ -85,8 +88,8 @@ export abstract class MinigameBase {
   protected onMouseMoveAt(_x: number, _y: number): void {}
   protected onResized(): void {}
 
-  get W(): number { return this.cv.width; }
-  get H(): number { return this.cv.height; }
+  get W(): number { return this._lw; }
+  get H(): number { return this._lh; }
 
   // --- MOBILE CONTROLS ---
 
@@ -403,7 +406,15 @@ export abstract class MinigameBase {
 
   // --- Internal ---
 
-  private rsz(): void { this.cv.width = innerWidth; this.cv.height = innerHeight; this.onResized(); }
+  private rsz(): void {
+    this._dpr = Math.min(devicePixelRatio || 1, 2.5);
+    this._lw = innerWidth;
+    this._lh = innerHeight;
+    this.cv.width = this._lw * this._dpr;
+    this.cv.height = this._lh * this._dpr;
+    this.cx.setTransform(this._dpr, 0, 0, this._dpr, 0, 0);
+    this.onResized();
+  }
 
   private bind(el: EventTarget, type: string, fn: EventListener, opts?: AddEventListenerOptions): void {
     el.addEventListener(type, fn, opts); this.boundHandlers.push({ el, type, fn });

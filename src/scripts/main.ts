@@ -122,8 +122,17 @@ export function init(): void {
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const animals = createAnimals(scene);
   const animalInteraction = createAnimalInteraction(scene);
-  const seasons = createSeasonSystem(scene);
-  const wind = createWindSystem(scene);
+  const seasons = createSeasonSystem(scene, isMobile);
+  // --- Season system ---
+  document.querySelectorAll('[data-season]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      seasons.setSeason((btn as HTMLElement).dataset.season as any);
+      document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('tw-on'));
+      btn.classList.add('tw-on');
+    });
+  });
+
+  const wind = createWindSystem(scene, isMobile);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -176,16 +185,6 @@ export function init(): void {
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
     isGrounded = false;
-  });
-
-  // --- Season system ---
-  const season = createSeasonSystem(scene);
-  document.querySelectorAll('[data-season]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      season.setSeason((btn as HTMLElement).dataset.season as any);
-      document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('tw-on'));
-      btn.classList.add('tw-on');
-    });
   });
 
   // --- Mobile jump button ---

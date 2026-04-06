@@ -34,7 +34,7 @@ const NPC_DEFS: NPCDef[] = [
         wanderRadius: 3,
     },
     {
-        x: -4, z: -15,
+        x: -6, z: -13,
         color: 0xff6b9d, bodyColor: 0xe8c8c0,
         name: '오버월드 주민',
         accessory: 'straw',
@@ -208,13 +208,16 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
             tail.rotation.x = 0.3;
             headGrp.add(tail);
             // 안대 (왼쪽 눈 위)
-            const patch = facePlane(0.10, 0.09, 0x1a1a1a);
-            patch.position.set(-0.08, 0.0, 0.177);
-            patch.renderOrder = 1;
+            const patchMat = new THREE.MeshBasicMaterial({
+                color: 0x1a1a1a, side: THREE.DoubleSide,
+                polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+            });
+            const patch = new THREE.Mesh(new THREE.PlaneGeometry(0.10, 0.09), patchMat);
+            patch.position.set(-0.08, 0.0, 0.18);
             headGrp.add(patch);
             // 안대 끈
-            const strap = facePlane(0.38, 0.02, 0x1a1a1a);
-            strap.position.set(0, 0.03, 0.176);
+            const strap = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.02), patchMat);
+            strap.position.set(0, 0.03, 0.179);
             headGrp.add(strap);
             break;
         }

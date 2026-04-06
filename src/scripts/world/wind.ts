@@ -18,7 +18,6 @@ interface SwayTarget {
 }
 
 const LEAF_HEX = new Set([0x4aaa4a, 0x3a8a3a, 0xf09050, 0xe87040, 0xf0a0b8, 0xe888a0]);
-const HEDGE_HEX = new Set([0x4a9a4a, 0x5aaa5a, 0x3a8a3a]);
 const FLOWER_HEX = new Set([0xf5a8c0, 0xf0d060, 0x88c8e8, 0xf5c8e0]);
 
 function colorClose(c: THREE.Color, targets: Set<number>, threshold = 0.2): boolean {
@@ -53,6 +52,8 @@ export function createWindSystem(scene: THREE.Scene, isMobile = false): WindSyst
       const y = obj.position.y;
 
       if (y > 2.0 && colorClose(c, LEAF_HEX)) {
+        const geo = obj.geometry;
+        if (geo instanceof THREE.BoxGeometry && geo.parameters.height < 0.7) return;
         targets.push({
           mesh: obj,
           baseX: obj.position.x, baseY: obj.position.y, baseZ: obj.position.z,
@@ -60,18 +61,6 @@ export function createWindSystem(scene: THREE.Scene, isMobile = false): WindSyst
           amplitude: 0.03 + Math.random() * 0.04,
           speed: 0.8 + Math.random() * 0.6,
           type: 'leaf',
-        });
-        return;
-      }
-
-      if (y > 0.3 && colorClose(c, HEDGE_HEX)) {
-        targets.push({
-          mesh: obj,
-          baseX: obj.position.x, baseY: obj.position.y, baseZ: obj.position.z,
-          phase: Math.random() * Math.PI * 2,
-          amplitude: 0.01 + Math.random() * 0.015,
-          speed: 0.6 + Math.random() * 0.4,
-          type: 'hedge',
         });
         return;
       }

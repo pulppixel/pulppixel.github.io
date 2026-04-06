@@ -22,13 +22,13 @@ interface ZoneCloud {
 export function createZoneParticles(scene: THREE.Scene): ZoneParticles {
     const DEFS = [
         // Pink Hub — slowly rising wisps (핑크빛 부유 입자)
-        { cx: 0, cz: -18, h: 1.0, color: 0xff6b9d, type: 'wisp' as const, count: 35, size: 0.07, orbitOff: [0, 0] },
+        { cx: 0, cz: -18, h: 4.0, color: 0xff6b9d, type: 'wisp' as const, count: 35, size: 0.07, orbitOff: [0, 0] },
         // Green Treasure — fireflies (반딧불이 랜덤 워크)
-        { cx: 28, cz: -40, h: 2.5, color: 0x6ee7b7, type: 'firefly' as const, count: 30, size: 0.06, orbitOff: [0, 0] },
+        { cx: 28, cz: -40, h: 9.0, color: 0x6ee7b7, type: 'firefly' as const, count: 30, size: 0.06, orbitOff: [0, 0] },
         // Purple Nether — orbiting wisps around crystal spire (크리스탈 첨탑 주변 공전)
-        { cx: -28, cz: -40, h: 2.0, color: 0xa78bfa, type: 'orbit' as const, count: 35, size: 0.065, orbitOff: [5, -4] },
+        { cx: -28, cz: -40, h: 8.0, color: 0xa78bfa, type: 'orbit' as const, count: 35, size: 0.065, orbitOff: [5, -4] },
         // Yellow Beacon — falling cherry blossom petals (벚꽃잎 낙하)
-        { cx: 0, cz: -58, h: 3.2, color: 0xfbbf24, type: 'petal' as const, count: 40, size: 0.1, orbitOff: [0, 0] },
+        { cx: 0, cz: -58, h: 12.0, color: 0xfbbf24, type: 'petal' as const, count: 40, size: 0.1, orbitOff: [0, 0] },
     ];
 
     const clouds: ZoneCloud[] = [];

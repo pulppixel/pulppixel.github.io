@@ -210,7 +210,7 @@ export const PROJECTS: ProjectData[] = [
   },
   {
     co: 'Beacon Peak (26)', title: 'HAUL', sub: '2D PvPvE Extraction',
-    period: '2025.10 - 현재', role: '기획, 설계, 구현 (1인)',
+    period: '2025.10 - Present', role: '기획, 설계, 구현 (1인)',
     badge: 'IN PROGRESS', bc: '#fbbf24', color: 0xfbbf24, coHex: '#fbbf24',
     desc: 'Server-authoritative 멀티플레이어. CSP, 서버 리콘, NPC AI 1인 구현 중.',
     tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],

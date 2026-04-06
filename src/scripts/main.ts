@@ -94,9 +94,13 @@ export function init(): void {
   if (soundBtn) {
     soundBtn.onclick = () => {
       const m = audio.toggleMute();
-      soundBtn.textContent = m ? '\u266A\u0338' : '\u266A';
+      soundBtn.textContent = m ? '🔇' : '🔊';
     };
   }
+
+  document.getElementById('guestbook-btn')?.addEventListener('click', () => {
+    enterMinigame('guestbook');
+  });
 
   // --- Dust particles ---
   const DUST_MAX = 80;
@@ -254,7 +258,7 @@ export function init(): void {
 
   // --- Minigame lazy loading ---
   const mgCache: Record<string, { start(): void; stop(): void }> = {};
-  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'ninetosix']);
+  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'ninetosix', 'guestbook']);
 
   async function loadMinigame(key: string): Promise<{ start(): void; stop(): void }> {
     if (mgCache[key]) return mgCache[key];
@@ -266,6 +270,7 @@ export function init(): void {
       case 'nomads':    game = (await import('./minigames/nomads')).createNomadsGame(mgContainer, exitMg, audio); break;
       case 'haul':      game = (await import('./minigames/haul')).createHaulGame(mgContainer, exitMg, audio); break;
       case 'ninetosix': game = (await import('./minigames/circles')).createNineToSixGame(mgContainer, exitMg, audio); break;
+      case 'guestbook': game = (await import('./minigames/guestbook')).createGuestbookGame(mgContainer, exitMg, audio); break;
       default: throw new Error(`Unknown minigame: ${key}`);
     }
     mgCache[key] = game;

@@ -206,7 +206,7 @@ export const PROJECTS: ProjectData[] = [
       '랭킹 시스템',
       'WebGL 빌드',
     ],
-    link: '/projects/frenzy-circle/', off: { x: 0, z: -1.5 }, minigame: 'ninetosix',
+    link: '/projects/frenzy-circle/', off: { x: 0, z: 2.0 }, minigame: 'ninetosix',
   },
   {
     co: 'Beacon Peak (26)', title: 'HAUL', sub: '2D PvPvE Extraction',

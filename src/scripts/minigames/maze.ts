@@ -7,6 +7,7 @@ import type { GameAudio } from '../system/audio';
 
 const WL = 1, WR = 2, WU = 4, WD = 8, WV = 128;
 const MOVE_SPD = 200;
+const MOVE_SPD_MOBILE = 120;
 const STAGES = [
     { w: 7, h: 7, fog: 0 },
     { w: 11, h: 11, fog: 0 },
@@ -160,8 +161,8 @@ class MazeGame extends MinigameBase {
     }
 
     // --- Movement ---
-    private tryMove(dx: number, dy: number, dt: number): void {
-        const spd = MOVE_SPD * dt, pad = 4;
+    private tryMove(dx: number, dy: number, dt: number, speed = MOVE_SPD): void {
+        const spd = speed * dt, pad = 4;
         let nx = this.px + dx * spd, ny = this.py + dy * spd;
         const { ox, oy, cs, mW, mH, maze } = this;
         if (dx !== 0) {
@@ -248,7 +249,7 @@ class MazeGame extends MinigameBase {
             mx = this.mJoy.x > 0.3 ? 1 : this.mJoy.x < -0.3 ? -1 : 0;
             my = this.mJoy.y > 0.3 ? 1 : this.mJoy.y < -0.3 ? -1 : 0;
         }
-        if (mx !== 0 || my !== 0) this.tryMove(mx, my, dt);
+        if (mx !== 0 || my !== 0) this.tryMove(mx, my, dt, this.mob ? MOVE_SPD_MOBILE : MOVE_SPD);
 
         const pg = this.gridOf(this.px, this.py);
         if (pg.x >= 0 && pg.x < this.mW && pg.y >= 0 && pg.y < this.mH) this.explored.add(`${pg.x},${pg.y}`);

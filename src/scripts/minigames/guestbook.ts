@@ -64,7 +64,15 @@ class GuestbookGame extends MinigameBase {
         this.calcScroll();
     }
 
+    private lastSubmitTime = 0;
+    private static COOLDOWN = 10000;
+
     private async submitEntry(): Promise<void> {
+        const now = Date.now();
+        if (now - this.lastSubmitTime < GuestbookGame.COOLDOWN) {
+            this.showToast(`${Math.ceil((GuestbookGame.COOLDOWN - (now - this.lastSubmitTime)) / 1000)}초 후 다시 시도해주세요`);
+            return;
+        }
         const nick = this.nickname.trim() || 'anonymous';
         const msg = this.message.trim();
         if (!msg || msg.length > MAX_MSG || nick.length > MAX_NICK) {
@@ -79,6 +87,7 @@ class GuestbookGame extends MinigameBase {
                 body: JSON.stringify({ nickname: nick, message: msg }),
             });
             if (!res.ok) throw new Error(`${res.status}`);
+            this.lastSubmitTime = now;
             this.audio?.mgCoin(3);
             this.showToast('등록 완료!');
             this.message = '';

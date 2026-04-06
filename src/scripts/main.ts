@@ -13,6 +13,7 @@ import { createAnimals } from './entity/animals';
 import { createAnimalInteraction } from './entity/interactions';
 import { createSeasonSystem } from './world/seasons';
 import { createWindSystem } from './world/wind';
+import { createParticleEffects } from './world/particles';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -133,6 +134,7 @@ export function init(): void {
   });
 
   const wind = createWindSystem(scene, isMobile);
+  const particleFx = createParticleEffects(scene, isMobile);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -510,6 +512,7 @@ export function init(): void {
     tw.update(dt);
     audio.setBGMMood(tw.getTimeLabel());
     seasons.update(dt);
+    particleFx.update(dt, t, tw.getTimeLabel(), seasons.getSeason());
     postfx.updateForTime(tw.getTimeLabel(), dt);
     postfx.render();
 

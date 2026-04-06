@@ -16,6 +16,7 @@ interface NPCDef {
     name: string;
     lines: string[];
     wanderRadius?: number;
+    accessory?: 'guide' | 'straw' | 'pirate' | 'sage' | 'crown';
 }
 
 const NPC_DEFS: NPCDef[] = [
@@ -23,6 +24,7 @@ const NPC_DEFS: NPCDef[] = [
         x: 1, z: -3,
         color: 0x6ee7b7, bodyColor: 0xd8d0c0,
         name: '안내자',
+        accessory: 'guide',
         lines: [
             '반갑다, 여행자! 여기가 pulppixel의 세계야.',
             'WASD로 이동, Space로 점프. 간단하지?',
@@ -35,6 +37,7 @@ const NPC_DEFS: NPCDef[] = [
         x: -4, z: -15,
         color: 0xff6b9d, bodyColor: 0xe8c8c0,
         name: '오버월드 주민',
+        accessory: 'straw',
         lines: [
             '여긴 오버월드. 모든 건 여기서 시작됐지.',
             'SPODY... Kinect로 바닥을 터치스크린으로 만들었어.',
@@ -46,6 +49,7 @@ const NPC_DEFS: NPCDef[] = [
         x: 32, z: -37,
         color: 0x6ee7b7, bodyColor: 0xc8d8c0,
         name: '보물섬 해적',
+        accessory: 'pirate',
         lines: [
             '요호! 보물섬에 온 걸 환영하네!',
             'STELSI Wallet... Unity를 버리고 Flutter로 갈아탔지. 혼자서.',
@@ -57,6 +61,7 @@ const NPC_DEFS: NPCDef[] = [
         x: -24, z: -37,
         color: 0xa78bfa, bodyColor: 0xc8c0d8,
         name: '네더 현자',
+        accessory: 'sage',
         lines: [
             '네더의 기운을 느끼는가... 여기엔 최신작들이 있다.',
             'ETERNA... 디스코드 같은 커뮤니티를 Unity 위에 올렸지.',
@@ -69,6 +74,7 @@ const NPC_DEFS: NPCDef[] = [
         x: 3, z: -55,
         color: 0xfbbf24, bodyColor: 0xd8d0b0,
         name: '봉화대 수호자',
+        accessory: 'crown',
         lines: [
             '정상에 올라왔구나! 여기까지 온 사람은 드물어.',
             'HAUL... 서버가 모든 걸 결정하는 구조야. 클라이언트는 예측만 해.',
@@ -140,16 +146,141 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     head.castShadow = true;
     headGrp.add(head);
 
-    // Hat
-    const hat = new THREE.Mesh(
-        new THREE.BoxGeometry(0.42, 0.10, 0.38),
-        new THREE.MeshStandardMaterial({
-            color: def.color, emissive: def.color,
-            emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.7,
-        }),
-    );
-    hat.position.y = 0.23;
-    headGrp.add(hat);
+    // Accessory
+    const accMat = new THREE.MeshStandardMaterial({
+        color: def.color, emissive: def.color,
+        emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.7,
+    });
+
+    switch (def.accessory) {
+        case 'guide': {
+            // 기본 모자 + 머리 위 회전 ◆ 큐브
+            const hat = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.10, 0.38), accMat);
+            hat.position.y = 0.23;
+            headGrp.add(hat);
+            const gem = new THREE.Mesh(
+                new THREE.BoxGeometry(0.12, 0.12, 0.12),
+                new THREE.MeshStandardMaterial({
+                    color: 0x7dd3fc, emissive: 0x7dd3fc, emissiveIntensity: 0.6,
+                    metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.85,
+                }),
+            );
+            gem.position.y = 0.42;
+            gem.rotation.y = Math.PI / 4;
+            gem.rotation.x = Math.PI / 4;
+            gem.name = 'guide-gem'; // update에서 회전용
+            headGrp.add(gem);
+            break;
+        }
+        case 'straw': {
+            // 넓은 챙 밀짚모자
+            const brim = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.32, 0.34, 0.04, 8),
+                accMat,
+            );
+            brim.position.y = 0.20;
+            headGrp.add(brim);
+            const top = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.14, 0.18, 0.12, 8),
+                accMat,
+            );
+            top.position.y = 0.28;
+            headGrp.add(top);
+            break;
+        }
+        case 'pirate': {
+            // 빨간 두건 (납작, 뒤로 삐침)
+            const bandana = new THREE.Mesh(
+                new THREE.BoxGeometry(0.42, 0.06, 0.40),
+                new THREE.MeshStandardMaterial({
+                    color: 0xe53e3e, emissive: 0xe53e3e,
+                    emissiveIntensity: 0.1, metalness: 0.1, roughness: 0.8,
+                }),
+            );
+            bandana.position.set(0, 0.20, -0.02);
+            headGrp.add(bandana);
+            // 뒤로 늘어지는 천
+            const tail = new THREE.Mesh(
+                new THREE.BoxGeometry(0.20, 0.14, 0.04),
+                bandana.material,
+            );
+            tail.position.set(0, 0.14, -0.20);
+            tail.rotation.x = 0.3;
+            headGrp.add(tail);
+            // 안대 (왼쪽 눈 위)
+            const patch = facePlane(0.10, 0.09, 0x1a1a1a);
+            patch.position.set(-0.08, 0.0, 0.177);
+            patch.renderOrder = 1;
+            headGrp.add(patch);
+            // 안대 끈
+            const strap = facePlane(0.38, 0.02, 0x1a1a1a);
+            strap.position.set(0, 0.03, 0.176);
+            headGrp.add(strap);
+            break;
+        }
+        case 'sage': {
+            // 뾰족 후드
+            const hood = new THREE.Mesh(
+                new THREE.ConeGeometry(0.22, 0.28, 4),
+                accMat,
+            );
+            hood.position.y = 0.32;
+            hood.rotation.y = Math.PI / 4;
+            headGrp.add(hood);
+            // 후드 뒷면 (늘어진 천)
+            const cape = new THREE.Mesh(
+                new THREE.BoxGeometry(0.30, 0.24, 0.04),
+                accMat,
+            );
+            cape.position.set(0, 0.06, -0.18);
+            headGrp.add(cape);
+            // 지팡이 (body에 붙임, headGrp 아님)
+            const staff = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.02, 0.025, 0.9, 6),
+                stdMat(0x8b7355),
+            );
+            staff.position.set(0.28, 0.45, 0);
+            staff.rotation.z = -0.15;
+            g.add(staff);
+            // 지팡이 끝 보석
+            const orb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 8, 6),
+                new THREE.MeshStandardMaterial({
+                    color: def.color, emissive: def.color,
+                    emissiveIntensity: 0.5, metalness: 0.2, roughness: 0.3,
+                }),
+            );
+            orb.position.set(0.24, 0.92, 0);
+            orb.name = 'sage-orb';
+            g.add(orb);
+            break;
+        }
+        case 'crown': {
+            // 왕관 베이스
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(0.40, 0.06, 0.36),
+                accMat,
+            );
+            base.position.y = 0.21;
+            headGrp.add(base);
+            // 왕관 뾰족이 3개
+            for (let i = -1; i <= 1; i++) {
+                const spike = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.04, 0.12, 4),
+                    accMat,
+                );
+                spike.position.set(i * 0.12, 0.30, 0);
+                headGrp.add(spike);
+            }
+            break;
+        }
+        default: {
+            // fallback: 기존 모자
+            const hat = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.10, 0.38), accMat);
+            hat.position.y = 0.23;
+            headGrp.add(hat);
+        }
+    }
 
     // Eyes
     const eyeL = facePlane(0.06, 0.07, 0x1a1520);
@@ -428,8 +559,20 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                 // Walk phase reset when not walking
                 if (!isWalking) npc.walkPhase = 0;
 
-                // Dialogue (talk 상태에서만)
+                // Accessory animation
+                if (npc.def.accessory === 'guide') {
+                    const gem = npc.parts.head.getObjectByName('guide-gem');
+                    if (gem) {
+                        gem.rotation.y += dt * 2;
+                        gem.position.y = 0.42 + Math.sin(t * 3) * 0.03;
+                    }
+                }
+                if (npc.def.accessory === 'sage') {
+                    const orb = npc.parts.group.getObjectByName('sage-orb') as THREE.Mesh;
+                    if (orb) (orb.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3 + Math.sin(t * 2.5) * 0.3;
+                }
 
+                // Dialogue (talk 상태에서만)
                 if (npc.state === 'talk') {
                     npc.lineTimer += dt;
                     if (npc.lineTimer >= LINE_INTERVAL) {

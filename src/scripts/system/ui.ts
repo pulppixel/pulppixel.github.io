@@ -40,11 +40,16 @@ export function createWarp(onTeleport: (x: number, z: number, h: number) => void
   document.getElementById('quest-reset')!.onclick = () => { visited.clear(); updateProgress(); };
 
   let collapsed = false;
-  document.getElementById('quest-toggle')!.onclick = () => {
+  const qHeader = document.getElementById('quest-toggle')!.parentElement!;
+  const toggleQuest = () => {
     collapsed = !collapsed;
     ql.style.display = collapsed ? 'none' : 'block';
+    (document.querySelector('.quest-progress')!as HTMLElement).style.display = collapsed ? 'none' : 'flex';
+    document.getElementById('quest-reset')!.style.display = collapsed ? 'none' : 'block';
     document.getElementById('quest-toggle')!.textContent = collapsed ? '\u25B6' : '\u25BC';
   };
+  qHeader.style.cursor = 'pointer';
+  qHeader.onclick = toggleQuest;
 
   return {
     visit(index: number) { if (!visited.has(index)) { visited.add(index); updateProgress(); } },

@@ -11,4 +11,3 @@ export default defineConfig({
   integrations: [sitemap()],
   output: 'static',
 });
-const STORAGE_KEY = 'pp-gems';

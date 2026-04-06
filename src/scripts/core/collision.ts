@@ -3,22 +3,19 @@ import { PLATFORMS, type Platform } from './data';
 
 export interface FenceCollider {
   x: number; z: number;
-  hw: number; hd: number; // half-width, half-depth
-  top: number;            // fence top Y
+  hw: number; hd: number;
+  top: number;
 }
-
-// --- Adjacency detection (shared with terrain.ts fence visuals) ---
 
 const ADJ_THRESHOLD = 2.0;
 
 export function isEdgeConnected(
-  ex: number, ez: number,
-  axis: 'x' | 'z', dir: number,
-  self: Platform,
+    ex: number, ez: number,
+    axis: 'x' | 'z', dir: number,
+    self: Platform,
 ): boolean {
   for (const q of PLATFORMS) {
-    if (q === self || q.h <= 0) continue;
-    if (q.w < 10 && self.w >= 10) continue;
+    if (q === self || q.h <= 0 || (q.w < 10 && self.w >= 10)) continue;
     if (axis === 'x') {
       const qEdge = dir > 0 ? q.x - q.w / 2 : q.x + q.w / 2;
       const pEdge = self.x + dir * self.w / 2;
@@ -34,17 +31,14 @@ export function isEdgeConnected(
   return false;
 }
 
-// --- Collider generation (runs once at module load) ---
-
 function computeColliders(): FenceCollider[] {
   const STEP = 1.15;
   const THICK = 0.25;
   const colliders: FenceCollider[] = [];
 
   function closeSeg(
-    start: number, end: number,
-    runsZ: boolean, _edgePos: number, fenceTop: number,
-    _axis: 'x' | 'z', dir: number, p: Platform,
+      start: number, end: number, runsZ: boolean,
+      fenceTop: number, dir: number, p: Platform,
   ): void {
     const halfLen = (end - start) / 2 + 0.15;
     const mid = (start + end) / 2;
@@ -56,8 +50,7 @@ function computeColliders(): FenceCollider[] {
   }
 
   for (const p of PLATFORMS) {
-    if (p.h <= 0) continue;
-    if (p.w < 10) continue;
+    if (p.h <= 0 || p.w < 10) continue;
     const hw = p.w / 2, hd = p.d / 2;
     const isMain = p.w >= 14;
     const fenceTop = p.h + (isMain ? 0.85 : 0.70);
@@ -74,7 +67,6 @@ function computeColliders(): FenceCollider[] {
       if (len < 0.5) continue;
       const steps = Math.max(1, Math.round(len / STEP));
       const runsZ = edge.axis === 'x';
-
       let segStart: number | null = null;
 
       for (let i = 0; i <= steps; i++) {
@@ -85,19 +77,17 @@ function computeColliders(): FenceCollider[] {
         if (!isEdgeConnected(ex, ez, edge.axis, edge.dir, p)) {
           if (segStart === null) segStart = along;
           if (i === steps) {
-            closeSeg(segStart, along, runsZ, 0, fenceTop, edge.axis, edge.dir, p);
+            closeSeg(segStart, along, runsZ, fenceTop, edge.dir, p);
             segStart = null;
           }
-        } else {
-          if (segStart !== null) {
-            const prev = edge.from + ((i - 1) / steps) * len;
-            closeSeg(segStart, prev, runsZ, 0, fenceTop, edge.axis, edge.dir, p);
-            segStart = null;
-          }
+        } else if (segStart !== null) {
+          const prev = edge.from + ((i - 1) / steps) * len;
+          closeSeg(segStart, prev, runsZ, fenceTop, edge.dir, p);
+          segStart = null;
         }
       }
       if (segStart !== null) {
-        closeSeg(segStart, edge.to, runsZ, 0, fenceTop, edge.axis, edge.dir, p);
+        closeSeg(segStart, edge.to, runsZ, fenceTop, edge.dir, p);
       }
     }
 
@@ -117,5 +107,4 @@ function computeColliders(): FenceCollider[] {
   return colliders;
 }
 
-// Computed once (PLATFORMS is const)
 computeColliders();

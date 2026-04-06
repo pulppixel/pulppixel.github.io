@@ -1,5 +1,4 @@
 // Shared mesh/material utilities
-// v2: Material caching for draw call reduction
 import * as THREE from 'three';
 
 // --- Position ---
@@ -25,7 +24,6 @@ export function stdMat(color: number, roughness = 0.85): THREE.MeshStandardMater
 
 // --- Mesh Factories ---
 
-/** Standard colored box with shadow. Used for terrain, fences, decorations. */
 export function stdBox(w: number, h: number, d: number, color: number): THREE.Mesh {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), stdMat(color));
   m.castShadow = true;
@@ -33,7 +31,6 @@ export function stdBox(w: number, h: number, d: number, color: number): THREE.Me
   return m;
 }
 
-/** Accent box with emissive glow. Used for gems, crystals, special items. */
 export function glowBox(w: number, h: number, d: number, color: number, ei = 0.3): THREE.Mesh {
   return new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
@@ -45,7 +42,6 @@ export function glowBox(w: number, h: number, d: number, color: number, ei = 0.3
   );
 }
 
-/** Double-sided plane for eyes, blush, symbols. */
 export function facePlane(w: number, h: number, color: number, opacity = 1): THREE.Mesh {
   return new THREE.Mesh(
       new THREE.PlaneGeometry(w, h),
@@ -83,13 +79,10 @@ export function textSprite(text: string, color: string): THREE.Sprite {
   ctx.font = '600 22px JetBrains Mono, monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-
-  // Text
   ctx.fillStyle = color;
   ctx.globalAlpha = 0.85;
   ctx.fillText(text, 256, 32);
 
-  // Subtle shadow for readability
   ctx.globalAlpha = 0.2;
   ctx.fillStyle = '#000';
   ctx.fillText(text, 257, 33);

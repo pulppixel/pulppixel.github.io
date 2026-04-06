@@ -10,9 +10,9 @@ export interface InputState {
 }
 
 export function createInput(
-  canvas: HTMLCanvasElement,
-  isMobile: boolean,
-  isPanelOpen: () => boolean,
+    canvas: HTMLCanvasElement,
+    isMobile: boolean,
+    isPanelOpen: () => boolean,
 ): InputState {
   const state: InputState = {
     keys: {},
@@ -25,8 +25,6 @@ export function createInput(
 
   document.addEventListener('keydown', e => { state.keys[e.code] = true; });
   document.addEventListener('keyup', e => { state.keys[e.code] = false; });
-
-  // --- Desktop: pointer lock ---
 
   if (!isMobile) {
     canvas.addEventListener('click', () => { if (!isPanelOpen()) canvas.requestPointerLock(); });
@@ -45,8 +43,6 @@ export function createInput(
     });
   }
 
-  // --- Zoom (both platforms) ---
-
   canvas.addEventListener('wheel', e => {
     state.camDist = Math.max(2.5, Math.min(12, state.camDist + e.deltaY * 0.004));
   }, { passive: true });
@@ -62,7 +58,7 @@ export function createInput(
   const JR = 55, MZ = 0.65;
 
   const pDist = (a: Touch, b: Touch) =>
-    Math.sqrt((a.clientX - b.clientX) ** 2 + (a.clientY - b.clientY) ** 2);
+      Math.sqrt((a.clientX - b.clientX) ** 2 + (a.clientY - b.clientY) ** 2);
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
@@ -75,9 +71,7 @@ export function createInput(
     }
 
     const t = e.changedTouches[0];
-    const yr = t.clientY / innerHeight;
-
-    if (state.moveTid === null && yr >= MZ) {
+    if (state.moveTid === null && t.clientY / innerHeight >= MZ) {
       state.moveTid = t.identifier;
       moveOrig = { x: t.clientX, y: t.clientY };
       state.jIn = { x: 0, y: 0 };

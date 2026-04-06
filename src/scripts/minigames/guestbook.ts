@@ -1,17 +1,16 @@
-// ETERNA Guestbook: Supabase REST API 직접 호출
-// 미니게임 톤앤매너 유지 (JetBrains Mono, 다크 터미널)
+// ETERNA Guestbook — Supabase REST API
 import { MinigameBase, rgba, C } from './base';
 import type { GameAudio } from '../system/audio';
 
 const SB_URL = 'https://fmizlkvnlantaopdwwrn.supabase.co';
 const SB_KEY = 'sb_publishable_-XhnhEFgHoZvBD8jEl1hlQ_IXoDJHO1';
 const API = `${SB_URL}/rest/v1/guestbook`;
-const HEADERS = {
-    apikey: SB_KEY,
-    Authorization: `Bearer ${SB_KEY}`,
-    'Content-Type': 'application/json',
-    Prefer: 'return=minimal',
-};
+const AUTH_HEADERS = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+const POST_HEADERS = { ...AUTH_HEADERS, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+const MAX_MSG = 200;
+const MAX_NICK = 20;
+const FETCH_LIMIT = 50;
+const ENTRY_H = 52;
 
 interface GuestEntry {
     id: number;
@@ -31,25 +30,17 @@ class GuestbookGame extends MinigameBase {
     private entries: GuestEntry[] = [];
     private scroll = 0;
     private maxScroll = 0;
-
-    // Write mode
     private nickname = '';
     private message = '';
-    private activeField: 'nick' | 'msg' = 'nick';
     private sending = false;
     private toast = '';
     private toastLife = 0;
-
-    // DOM input (canvas 위 투명 input)
-    private inputEl: HTMLInputElement | null = null;
-    private msgEl: HTMLTextAreaElement | null = null;
     private formWrap: HTMLDivElement | null = null;
 
     protected resetGame(): void {
         this.phase = 'loading';
         this.entries = [];
         this.scroll = 0;
-        this.nickname = '';
         this.message = '';
         this.sending = false;
         this.toast = '';
@@ -60,24 +51,23 @@ class GuestbookGame extends MinigameBase {
     private async fetchEntries(): Promise<void> {
         try {
             const res = await fetch(
-                `${API}?select=*&order=created_at.desc&limit=50`,
-                { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } },
+                `${API}?select=*&order=created_at.desc&limit=${FETCH_LIMIT}`,
+                { headers: AUTH_HEADERS },
             );
             if (!res.ok) throw new Error(`${res.status}`);
             this.entries = await res.json();
-            this.phase = 'browse';
-            this.calcScroll();
-        } catch (e) {
+        } catch {
             this.entries = [];
-            this.phase = 'browse';
             this.showToast('불러오기 실패');
         }
+        this.phase = 'browse';
+        this.calcScroll();
     }
 
     private async submitEntry(): Promise<void> {
         const nick = this.nickname.trim() || 'anonymous';
         const msg = this.message.trim();
-        if (!msg || msg.length > 200 || nick.length > 20) {
+        if (!msg || msg.length > MAX_MSG || nick.length > MAX_NICK) {
             this.showToast('1~200자 메시지를 입력하세요');
             return;
         }
@@ -85,7 +75,7 @@ class GuestbookGame extends MinigameBase {
         try {
             const res = await fetch(API, {
                 method: 'POST',
-                headers: HEADERS,
+                headers: POST_HEADERS,
                 body: JSON.stringify({ nickname: nick, message: msg }),
             });
             if (!res.ok) throw new Error(`${res.status}`);
@@ -108,12 +98,9 @@ class GuestbookGame extends MinigameBase {
     }
 
     private calcScroll(): void {
-        const entryH = 52;
         const listH = this.H - 140;
-        this.maxScroll = Math.max(0, this.entries.length * entryH - listH);
+        this.maxScroll = Math.max(0, this.entries.length * ENTRY_H - listH);
     }
-
-    // --- DOM form (canvas 위 HTML input) ---
 
     private createForm(): void {
         if (this.formWrap) return;
@@ -129,17 +116,17 @@ class GuestbookGame extends MinigameBase {
     `;
 
         wrap.innerHTML = `
-      <div style="font-size:10px;color:#a78bfa;letter-spacing:0.1em;margin-bottom:12px">◆ LEAVE A MESSAGE</div>
-      <input id="gb-nick" type="text" maxlength="20" placeholder="닉네임 (선택)"
+      <div style="font-size:10px;color:#a78bfa;letter-spacing:0.1em;margin-bottom:12px">◆ 방명록 작성</div>
+      <input id="gb-nick" type="text" maxlength="${MAX_NICK}" placeholder="닉네임 (선택)"
         style="width:100%;background:#161618;border:1px solid #2a2a30;color:#e8e8ec;
-        padding:10px 14px;border-radius:4px;font-family:inherit;font-size:12px;box-sizing:border-box;
-        margin-bottom:8px;outline:none;" />
-      <textarea id="gb-msg" maxlength="200" placeholder="메시지를 남겨주세요 (1~200자)"
+        padding:10px 14px;border-radius:4px;font-family:inherit;font-size:12px;
+        box-sizing:border-box;margin-bottom:8px;outline:none;" />
+      <textarea id="gb-msg" maxlength="${MAX_MSG}" placeholder="메시지를 남겨주세요 (1~${MAX_MSG}자)"
         style="width:100%;height:80px;background:#161618;border:1px solid #2a2a30;
-        color:#e8e8ec;padding:10px 14px;border-radius:4px;font-family:inherit;box-sizing:border-box;
-        font-size:12px;resize:none;outline:none;margin-bottom:4px;" ></textarea>
+        color:#e8e8ec;padding:10px 14px;border-radius:4px;font-family:inherit;
+        box-sizing:border-box;font-size:12px;resize:none;outline:none;margin-bottom:4px;"></textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-        <span id="gb-count" style="font-size:10px;color:#5a5a66">0/200</span>
+        <span id="gb-count" style="font-size:10px;color:#5a5a66">0/${MAX_MSG}</span>
         <div style="display:flex;gap:6px;">
           <button id="gb-cancel" style="background:none;border:1px solid #333;color:#8a8a9a;
             padding:6px 14px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;">취소</button>
@@ -149,15 +136,12 @@ class GuestbookGame extends MinigameBase {
       </div>
     `;
 
-        const container = this.cv.parentElement!;
-        container.appendChild(wrap);
+        this.cv.parentElement!.appendChild(wrap);
         this.formWrap = wrap;
 
         const nickEl = wrap.querySelector('#gb-nick') as HTMLInputElement;
         const msgEl = wrap.querySelector('#gb-msg') as HTMLTextAreaElement;
         const countEl = wrap.querySelector('#gb-count') as HTMLElement;
-        const cancelBtn = wrap.querySelector('#gb-cancel') as HTMLButtonElement;
-        const submitBtn = wrap.querySelector('#gb-submit') as HTMLButtonElement;
 
         nickEl.value = this.nickname;
         msgEl.value = '';
@@ -165,16 +149,16 @@ class GuestbookGame extends MinigameBase {
 
         msgEl.addEventListener('input', () => {
             this.message = msgEl.value;
-            countEl.textContent = `${msgEl.value.length}/200`;
+            countEl.textContent = `${msgEl.value.length}/${MAX_MSG}`;
         });
         nickEl.addEventListener('input', () => { this.nickname = nickEl.value; });
-        cancelBtn.addEventListener('click', () => {
+        wrap.querySelector('#gb-cancel')!.addEventListener('click', () => {
             this.destroyForm();
             this.phase = 'browse';
         });
-        submitBtn.addEventListener('click', () => { this.submitEntry(); });
+        wrap.querySelector('#gb-submit')!.addEventListener('click', () => this.submitEntry());
 
-        // ESC로도 닫기 방지 (base의 ESC = stop 방지)
+        // Prevent ESC from closing the entire minigame while typing
         nickEl.addEventListener('keydown', (e) => e.stopPropagation());
         msgEl.addEventListener('keydown', (e) => {
             e.stopPropagation();
@@ -185,16 +169,8 @@ class GuestbookGame extends MinigameBase {
     }
 
     private destroyForm(): void {
-        if (this.formWrap) {
-            this.formWrap.remove();
-            this.formWrap = null;
-        }
-    }
-
-    // --- Lifecycle ---
-
-    start(): void {
-        super.start();
+        this.formWrap?.remove();
+        this.formWrap = null;
     }
 
     stop(): void {
@@ -211,17 +187,14 @@ class GuestbookGame extends MinigameBase {
         this.drawBg();
         this.drawGrid(0.012);
 
-        // Header
         this.drawHudTitle();
         cx.font = '400 9px "JetBrains Mono"';
         cx.fillStyle = '#5a5a66';
         cx.textAlign = 'left';
         cx.fillText(`${this.entries.length} messages`, 20, 46);
 
-        // Write button
         if (this.phase === 'browse') {
-            const bw = 80, bh = 28;
-            const bx = W - bw - 60, by = 22;
+            const bw = 80, bh = 28, bx = W - bw - 60, by = 22;
             cx.beginPath();
             cx.roundRect(bx, by, bw, bh, 4);
             cx.fillStyle = rgba('#a78bfa', 0.08);
@@ -232,12 +205,11 @@ class GuestbookGame extends MinigameBase {
             cx.font = '500 10px "JetBrains Mono"';
             cx.fillStyle = '#a78bfa';
             cx.textAlign = 'center';
-            cx.fillText('✏️ 작성', bx + bw / 2, by + bh / 2 + 3);
+            cx.fillText('✎ 작성', bx + bw / 2, by + bh / 2 + 3);
         }
 
         this.drawCloseBtn();
 
-        // Loading
         if (this.phase === 'loading') {
             cx.font = '400 12px "JetBrains Mono"';
             cx.fillStyle = rgba('#a78bfa', 0.5 + Math.sin(now * 4) * 0.3);
@@ -246,10 +218,8 @@ class GuestbookGame extends MinigameBase {
             return;
         }
 
-        // Entry list
         const listTop = 64;
         const listH = H - listTop - 20;
-        const entryH = 52;
 
         cx.save();
         cx.beginPath();
@@ -266,78 +236,62 @@ class GuestbookGame extends MinigameBase {
 
         for (let i = 0; i < this.entries.length; i++) {
             const e = this.entries[i];
-            const y = listTop + i * entryH - this.scroll;
-            if (y + entryH < listTop || y > listTop + listH) continue;
+            const y = listTop + i * ENTRY_H - this.scroll;
+            if (y + ENTRY_H < listTop || y > listTop + listH) continue;
 
-            // Entry bg
             cx.fillStyle = i % 2 === 0 ? rgba('#a78bfa', 0.015) : 'transparent';
-            cx.fillRect(16, y, W - 32, entryH - 2);
+            cx.fillRect(16, y, W - 32, ENTRY_H - 2);
 
-            // Left accent line
             cx.fillStyle = rgba('#a78bfa', 0.15);
-            cx.fillRect(16, y + 4, 2, entryH - 10);
+            cx.fillRect(16, y + 4, 2, ENTRY_H - 10);
 
-            // Nickname
             cx.font = '600 10px "JetBrains Mono"';
             cx.fillStyle = '#a78bfa';
             cx.textAlign = 'left';
             cx.fillText(e.nickname, 28, y + 16);
 
-            // Timestamp
             const date = new Date(e.created_at);
             const ts = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
             cx.font = '400 9px "JetBrains Mono"';
             cx.fillStyle = '#3a3a44';
             cx.fillText(ts, 28 + cx.measureText(e.nickname).width + 8, y + 16);
 
-            // Message
             cx.font = '400 11px "JetBrains Mono"';
             cx.fillStyle = '#a8a8b3';
-            const maxMsgW = W - 60;
             const truncated = e.message.length > 60 ? e.message.slice(0, 60) + '...' : e.message;
             cx.fillText(truncated, 28, y + 34);
         }
 
         cx.restore();
 
-        // Scrollbar
         if (this.maxScroll > 0) {
-            const barH = Math.max(20, listH * (listH / (this.entries.length * entryH)));
+            const barH = Math.max(20, listH * (listH / (this.entries.length * ENTRY_H)));
             const barY = listTop + (this.scroll / this.maxScroll) * (listH - barH);
             cx.fillStyle = rgba('#a78bfa', 0.15);
             cx.fillRect(W - 8, barY, 3, barH);
         }
 
-        // Toast
         if (this.toastLife > 0) {
-            const a = Math.min(1, this.toastLife);
             cx.font = '500 11px "JetBrains Mono"';
-            cx.fillStyle = rgba('#a78bfa', a * 0.8);
+            cx.fillStyle = rgba('#a78bfa', Math.min(1, this.toastLife) * 0.8);
             cx.textAlign = 'center';
             cx.fillText(this.toast, W / 2, H - 30);
         }
     }
 
-    // --- Input ---
-
     protected onClickAt(x: number, y: number): void {
-        // Write button
         if (this.phase === 'browse') {
-            const bw = 80, bh = 28;
-            const bx = this.W - bw - 60, by = 22;
+            const bw = 80, bh = 28, bx = this.W - bw - 60, by = 22;
             if (x >= bx && x <= bx + bw && y >= by && y <= by + bh) {
                 this.phase = 'write';
                 this.createForm();
-                return;
             }
         }
     }
 
-    // Scroll
     protected onResized(): void { this.calcScroll(); }
 }
 
-// Mouse wheel scroll 지원을 위해 start() override
 const origStart = GuestbookGame.prototype.start;
 GuestbookGame.prototype.start = function (this: GuestbookGame) {
     origStart.call(this);

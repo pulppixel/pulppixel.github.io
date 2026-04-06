@@ -4,7 +4,7 @@ import { COMPANIES } from '../core/data';
 import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots, flushInstances } from './terrain';
 import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';
-import { buildWaterEdge, buildBushes, buildZoneDecor } from './zonedetails';
+import { buildWaterEdge, buildBushes, buildZoneDecor, buildZoneBoundaries } from './zonedetails';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -52,6 +52,7 @@ export function createScene(isMobile: boolean): SceneContext {
   buildWaterEdge(scene);
   buildBushes(scene);
   buildZoneDecor(scene);
+  buildZoneBoundaries(scene);
   const skyUniforms = buildSkyDome(scene);
   const water = buildOcean(scene, isMobile);
   const clouds = buildClouds(scene);

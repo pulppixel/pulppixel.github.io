@@ -11,5 +11,3 @@ export default defineConfig({
   integrations: [sitemap()],
   output: 'static',
 });
-
-<meta property="og:image" content={new URL(ogImage, Astro.site)} />

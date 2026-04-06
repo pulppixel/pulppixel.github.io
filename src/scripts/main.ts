@@ -14,6 +14,8 @@ import { createAnimalInteraction } from './entity/interactions';
 import { createSeasonSystem } from './world/seasons';
 import { createWindSystem } from './world/wind';
 import { createParticleEffects } from './world/particles';
+import { createCollectibles } from './system/collectibles';
+import { createNPCs } from './entity/npcs';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -182,11 +184,25 @@ export function init(): void {
     });
   });
 
+  const collectibles = createCollectibles(scene, audio, isMobile);
+  const npcs = createNPCs(scene, camera);
+
   // Warp teleport
   const warp = createWarp((x: number, z: number, h: number) => {
+    warpOverlay.style.transition = 'opacity 0.12s ease-in';
+    warpOverlay.style.opacity = '1';
+    setTimeout(() => {
+      warpOverlay.style.transition = 'opacity 0.4s ease-out';
+      warpOverlay.style.opacity = '0';
+    }, 120);
+
+    // 텔레포트
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
     isGrounded = false;
+
+    // 사운드 (기존 zoneChime 활용)
+    audio.zoneChime(0x6ee7b7);
   });
 
   // --- Mobile jump button ---
@@ -208,6 +224,14 @@ export function init(): void {
     'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
     'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
+
+  // --- warp transition overlay ---
+  const warpOverlay = document.createElement('div');
+  warpOverlay.style.cssText =
+      'position:fixed;inset:0;pointer-events:none;z-index:22;' +
+      'opacity:0;transition:opacity 0.12s ease-in, opacity 0.4s ease-out;' +
+      'background:radial-gradient(circle,rgba(110,231,183,0.15) 0%,rgba(110,231,183,0.05) 50%,transparent 70%);';
+  document.body.appendChild(warpOverlay);
 
   // --- Minigames (with audio) ---
   const mgContainer = document.getElementById('minigame-container')!;
@@ -476,6 +500,9 @@ export function init(): void {
     updateZones(t, dt, character.group.position, nearestProject);
     animals.update(dt, t, character.group.position);
     animalInteraction.update(dt, t, character.group.position);
+
+    collectibles.update(dt, t, character.group.position);
+    npcs.update(dt, t, character.group.position);
 
     for (let zi = 0; zi < zones.length; zi++) {
       const dx = character.group.position.x - zones[zi].cx;

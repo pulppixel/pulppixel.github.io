@@ -69,12 +69,12 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     // Zone ground accent
     const pf = new THREE.Mesh(
-      new THREE.BoxGeometry(7.6, 0.06, 7.6),
-      new THREE.MeshStandardMaterial({
-        color: co.color, metalness: 0.15, roughness: 0.7,
-        emissive: new THREE.Color(co.color), emissiveIntensity: 0.03,
-        transparent: true, opacity: 0.2,
-      }),
+        new THREE.BoxGeometry(7.6, 0.06, 7.6),
+        new THREE.MeshStandardMaterial({
+          color: co.color, metalness: 0.15, roughness: 0.7,
+          emissive: new THREE.Color(co.color), emissiveIntensity: 0.03,
+          transparent: true, opacity: 0.2,
+        }),
     );
     pf.position.set(cx, ph + 0.04, cz);
     pf.receiveShadow = true;
@@ -95,8 +95,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     // Zone ring
     const rn = new THREE.Mesh(
-      new THREE.RingGeometry(3.7, 3.85, 4),
-      new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide }),
+        new THREE.RingGeometry(3.7, 3.85, 4),
+        new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide }),
     );
     rn.rotation.x = -Math.PI / 2;
     rn.position.set(cx, ph + 0.09, cz);
@@ -113,8 +113,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     // Fill + burst ring
     const fl = new THREE.Mesh(
-      new THREE.CircleGeometry(3.7, 4),
-      new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide }),
+        new THREE.CircleGeometry(3.7, 4),
+        new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide }),
     );
     fl.rotation.x = -Math.PI / 2;
     fl.position.set(cx, ph + 0.01, cz);
@@ -153,12 +153,12 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       ms.rotation.set(Math.PI / 4, 0, Math.PI / 4);
       ms.userData = { project: proj, baseY: cubeBaseY, index: projectMeshes.length, zone: zi };
       ms.add(new THREE.LineSegments(pcE,
-        new THREE.LineBasicMaterial({ color: proj.color, transparent: true, opacity: 0.3 })));
+          new THREE.LineBasicMaterial({ color: proj.color, transparent: true, opacity: 0.3 })));
 
       // Ground glow ring
       const glowRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.5, 0.65, 16),
-        new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide }),
+          new THREE.RingGeometry(0.5, 0.65, 16),
+          new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide }),
       );
       glowRing.rotation.x = -Math.PI / 2;
       glowRing.position.set(px, ph + 0.02, pz);
@@ -166,8 +166,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
       // Beacon beam
       const beam = new THREE.Mesh(
-        new THREE.BoxGeometry(0.03, 3, 0.03),
-        new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.08 }),
+          new THREE.BoxGeometry(0.03, 3, 0.03),
+          new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.08 }),
       );
       beam.position.set(px, ph + 1.8, pz);
       scene.add(beam);
@@ -230,11 +230,11 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     // Campfire
     const log1 = stdBox(0.7, 0.15, 0.15, WOOD); log1.rotation.y = 0.4; log1.position.set(cx, ph + 0.08, cz - 2); scene.add(log1);
     const log2 = stdBox(0.7, 0.15, 0.15, WOOD); log2.rotation.y = -0.4; log2.position.set(cx, ph + 0.2, cz - 2); scene.add(log2);
-    const fire = glowBox(0.3, 0.5, 0.3, 0xf08030, 0.9);
+    const fire = glowBox(0.3, 0.5, 0.3, 0xe88040, 0.55);
     fire.position.set(cx, ph + 0.5, cz - 2); scene.add(fire);
-    za({ mesh: fire, type: 'pulse', baseEi: 0.9, range: 0.5, alwaysOn: true });
+    za({ mesh: fire, type: 'pulse', baseEi: 0.55, range: 0.25, alwaysOn: true });
 
-    const fireLight = new THREE.PointLight(0xf5a040, 0.8, 6);
+    const fireLight = new THREE.PointLight(0xf5a040, 0.6, 6);
     fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
 
     // Flowers around tree
@@ -297,9 +297,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     const portalFill = glowBox(3.2, 3.0, 0.08, COL, 0.4);
     (portalFill.material as THREE.MeshStandardMaterial).transparent = true;
-    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.06;
-    (portalFill.material as THREE.MeshStandardMaterial).blending = THREE.AdditiveBlending;
-    (portalFill.material as THREE.MeshStandardMaterial).depthWrite = false;
+    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.15;
     portalFill.position.set(cx, ph + 2.0, cz - 5); scene.add(portalFill);
     za({ mesh: portalFill, type: 'pulse', baseOp: 0.15, range: 0.08 });
 
@@ -338,8 +336,8 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     za({ mesh: crystal, type: 'spin', axis: 'y', speed: 0.6, baseY: ph + 2.2, float: 0.2 });
 
     const beam = new THREE.Mesh(
-      new THREE.BoxGeometry(0.15, 12, 0.15),
-      new THREE.MeshBasicMaterial({ color: CRYSTAL, transparent: true, opacity: 0.08 }),
+        new THREE.BoxGeometry(0.15, 12, 0.15),
+        new THREE.MeshBasicMaterial({ color: CRYSTAL, transparent: true, opacity: 0.08 }),
     );
     beam.position.set(cx, ph + 8, cz - 4.5); scene.add(beam);
     za({ mesh: beam, type: 'pulse', baseOp: 0.08, range: 0.05 });

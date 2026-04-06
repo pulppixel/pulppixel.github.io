@@ -29,7 +29,7 @@ export function buildSkyDome(scene: THREE.Scene): Record<string, { value: any }>
     `,
   });
 
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(90, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(120, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat);
   sky.renderOrder = -1;
   scene.add(sky);
   return mat.uniforms;

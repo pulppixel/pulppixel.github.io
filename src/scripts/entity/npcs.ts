@@ -458,7 +458,6 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                             npc.bubbleAlpha *= 0.85;
                         }
                     } else {
-                        npc.bubbleVisible = true;
                         const sx = (_screenPos.x * 0.5 + 0.5) * window.innerWidth;
                         const sy = (-_screenPos.y * 0.5 + 0.5) * window.innerHeight;
 

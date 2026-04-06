@@ -6,7 +6,7 @@
 // - Collection: scale-down animation + sound + floating text
 import * as THREE from 'three';
 import { getGroundHeight } from '../core/data';
-import type { GameAudio } from '../system/audio';
+import type { GameAudio } from './audio.ts';
 
 // =============================================
 // Gem definitions
@@ -39,23 +39,6 @@ const GEMS: GemDef[] = [
     { x: -6, z: -62, name: '벚꽃 보석', color: 0xff6b9d },
     { x: 6, z: -55, name: '정원의 조각', color: 0xf5a8c0 },
 ];
-
-// =============================================
-// Persistence
-// =============================================
-
-const STORAGE_KEY = 'pp-gems';
-
-function loadCollected(): Set<number> {
-    try {
-        const d = localStorage.getItem(STORAGE_KEY);
-        return d ? new Set(JSON.parse(d)) : new Set();
-    } catch { return new Set(); }
-}
-
-function saveCollected(s: Set<number>): void {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...s])); } catch {}
-}
 
 // =============================================
 // Floating text (수집 시 이름 표시)
@@ -144,7 +127,7 @@ export function createCollectibles(
     audio: GameAudio | null,
     isMobile: boolean,
 ): CollectibleSystem {
-    const collectedSet = loadCollected();
+    const collectedSet = new Set<number>();
     const states: GemState[] = [];
     const floatTexts: FloatText[] = [];
     const hudEl = createHUD();
@@ -269,7 +252,6 @@ export function createCollectibles(
                     s.collected = true;
                     s.collectT = 0;
                     collectedSet.add(i);
-                    saveCollected(collectedSet);
                     updateHUD();
 
                     // Sound
@@ -291,7 +273,6 @@ export function createCollectibles(
 
         reset() {
             collectedSet.clear();
-            saveCollected(collectedSet);
             for (const s of states) {
                 s.collected = false;
                 s.collectT = 0;

@@ -83,10 +83,10 @@ export function createScene(isMobile: boolean): SceneContext {
 
   // Zone area lights
   const zoneLights: [number, number, number, number, number, number][] = [
-    [0xa78bfa, 0.5, 18, 0, 6, -18],
-    [0x6ee7b7, 0.4, 16, 28, 5, -40],
-    [0xfbbf24, 0.4, 16, -28, 5, -40],
-    [0xff6b9d, 0.4, 16, 0, 6, -58],
+    [0xa78bfa, 0.5, 18, 0, 8, -18],     // Hub (h=4 + 4)
+    [0x6ee7b7, 0.4, 16, 28, 13, -40],   // Treasure (h=9 + 4)
+    [0xfbbf24, 0.4, 16, -28, 12, -40],  // Nether (h=8 + 4)
+    [0xff6b9d, 0.4, 16, 0, 16, -58],    // Overworld (h=12 + 4)
   ];
   for (const [c, intensity, dist, x, y, z] of zoneLights) {
     const l = new THREE.PointLight(c, intensity, dist);

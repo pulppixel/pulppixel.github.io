@@ -46,8 +46,8 @@ function makeWaterMat(): THREE.ShaderMaterial {
 
 const FALL_X = -9;       // 섬 왼쪽 가장자리
 const FALL_Z = -58;      // 섬 Z 중앙
-const FALL_TOP = 3.2;    // 절벽 꼭대기
-const FALL_BOT = -0.2;   // 수면 근처
+const FALL_TOP = 12.0;   // 절벽 꼭대기
+const FALL_BOT = -1.0;   // 수면 근처
 const FALL_WIDTH = 2.5;  // 폭포 폭
 
 interface WaterfallP {

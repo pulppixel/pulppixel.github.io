@@ -34,8 +34,8 @@ const BOUND_Z_MAX = 10;
 const STEP_H = 0.35;
 const GRAVITY = -18.9;
 const JUMP_FORCE = 9.6;
-const WATER_Y = -1.5;
-const SPAWN = { x: 0, y: 1.0, z: 0 };
+const SPAWN = { x: 0, y: 1.5, z: 0 };
+const WATER_Y = -3.0;
 
 const twToggle = document.getElementById('tw-toggle')!;
 const twPanel = document.getElementById('tw-panel')!;

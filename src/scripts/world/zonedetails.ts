@@ -19,7 +19,7 @@ export function buildWaterEdge(scene: THREE.Scene): void {
 
         // Foam strips on 4 sides
         const foamData: [number, number, number, number, number, number][] = [
-            [p.x, 0.2, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
+            [p.x, p.h + 0.15, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
             [p.x, 0.2, p.z - hd - 1.1, p.w + 2.4, 0.03, 0.5],
             [p.x + hw + 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
             [p.x - hw - 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
@@ -133,9 +133,9 @@ function woodBeam(
 // --- Spawn (0, 0, h=0.5) - Welcome area ---
 
 function buildSpawnDecor(scene: THREE.Scene): void {
-    const h = 0.5;
+    const h = 1.0;
 
-    // Welcome signpost
+    // Welcome to signpost
     woodBeam(scene, 0, h + 0.6, 5, 0.12, 1.2, 0.12);
     const sign = stdBox(1.4, 0.5, 0.08, 0xb09868);
     sign.position.set(0, h + 1.35, 5.05);
@@ -144,7 +144,7 @@ function buildSpawnDecor(scene: THREE.Scene): void {
     // Ground path (stone strip from spawn toward zone 0)
     for (let i = 0; i < 4; i++) {
         const pathStone = stdBox(1.2, 0.04, 0.8, 0xb0a898);
-        pathStone.position.set(0 + (i % 2) * 0.3, h + 0.02, 2 - i * 2.5);
+        pathStone.position.set((i % 2) * 0.3, h + 0.02, 2 - i * 2.5);
         scene.add(pathStone);
     }
 }
@@ -152,7 +152,7 @@ function buildSpawnDecor(scene: THREE.Scene): void {
 // --- Nether (0, -18, h=1.0) - Mystical ruins ---
 
 function buildNetherDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -18, h = 1.0;
+    const cx = 0, cz = -18, h = 4.0;
     const PURPLE_DK = 0x504068, PURPLE_LT = 0x706088;
 
     // Ruined wall segments at the back (behind monument)
@@ -229,7 +229,7 @@ function buildNetherDecor(scene: THREE.Scene): void {
 // --- Treasure Isle (28, -40, h=2.5) - Tropical dock ---
 
 function buildTreasureDecor(scene: THREE.Scene): void {
-    const cx = 28, cz = -40, h = 2.5;
+    const cx = 28, cz = -40, h = 9.0;
 
     // Wooden dock structure (at the front edge)
     const dockY = h + 0.02;
@@ -335,7 +335,7 @@ function buildTreasureDecor(scene: THREE.Scene): void {
 // --- Beacon Peak (-28, -40, h=2.0) - Highland lookout ---
 
 function buildBeaconDecor(scene: THREE.Scene): void {
-    const cx = -28, cz = -40, h = 2.0;
+    const cx = -28, cz = -40, h = 8.0;
     const AMBER = 0xa09060, STONE_A = 0x908070;
 
     // Stone stairway (3 steps at the back, visual only)
@@ -478,7 +478,7 @@ function buildBeaconDecor(scene: THREE.Scene): void {
 // --- Overworld (0, -58, h=3.2) - Sacred garden ---
 
 function buildOverworldDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -58, h = 3.2;
+    const cx = 0, cz = -58, h = 12.0;
     const GARDEN_STONE = 0xa09898;
 
     // Wooden arch / torii-style gate (front entrance)
@@ -631,14 +631,14 @@ function buildOverworldDecor(scene: THREE.Scene): void {
 
     // --- 좌우 절벽 기둥 (폭포 양옆에만, 중앙 비워둠) ---
     // 왼쪽 (z-)
-    const rkL1 = stdBox(0.6, 2.8, 0.7, CL_DK); rkL1.position.set(fX - 0.4, 1.4, fZ - 1.6); rkL1.castShadow = true; scene.add(rkL1);
-    const rkL2 = stdBox(0.4, 1.8, 0.5, CL); rkL2.position.set(fX - 0.3, 0.9, fZ - 2.2); rkL2.castShadow = true; scene.add(rkL2);
+    const rkL1 = stdBox(0.6, 10.0, 0.7, CL_DK); rkL1.position.set(fX - 0.4, 5.0, fZ - 1.6); rkL1.castShadow = true; scene.add(rkL1);
+    const rkL2 = stdBox(0.4, 8.0, 0.5, CL); rkL2.position.set(fX - 0.3, 4.0, fZ - 2.2); rkL2.castShadow = true; scene.add(rkL2);
     // 오른쪽 (z+)
-    const rkR1 = stdBox(0.6, 2.5, 0.7, CL_DK); rkR1.position.set(fX - 0.4, 1.25, fZ + 1.6); rkR1.castShadow = true; scene.add(rkR1);
-    const rkR2 = stdBox(0.4, 2.0, 0.5, CL); rkR2.position.set(fX - 0.3, 1.0, fZ + 2.2); rkR2.castShadow = true; scene.add(rkR2);
+    const rkR1 = stdBox(0.6, 9.5, 0.7, CL_DK); rkR1.position.set(fX - 0.4, 4.75, fZ + 1.6); rkR1.castShadow = true; scene.add(rkR1);
+    const rkR2 = stdBox(0.4, 8.0, 0.5, CL); rkR2.position.set(fX - 0.3, 4.0, fZ + 2.2); rkR2.castShadow = true; scene.add(rkR2);
 
     // --- 얇은 뒷벽 (폭포 바로 뒤, 물 사이로 살짝 보이는 정도) ---
-    const backWall = stdBox(0.25, 2.6, 2.2, CL); backWall.position.set(fX - 0.6, 1.3, fZ); scene.add(backWall);
+    const backWall = stdBox(0.25, 11.0, 2.2, CL); backWall.position.set(fX - 0.6, 5.5, fZ); scene.add(backWall);
 
     // --- 오버행 선반 (물이 쏟아지는 턱) ---
     scene.add(setPos(stdBox(0.35, 0.1, 2.4, CL_LT), fX - 0.1, h + 0.06, fZ));
@@ -689,13 +689,13 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
 
     const ZONES: ZDef[] = [
         // Overworld hub — from spawn (south)
-        { x: 0, z: -18, w: 18, d: 14, h: 1.0, color: 0xff6b9d, gateEdge: 's', gateOff: 0 },
+        { x: 0, z: -18, w: 18, d: 14, h: 4.0, color: 0xff6b9d, gateEdge: 's', gateOff: 0 },
         // Treasure Isle — stepping stones arrive at south edge near x=22
-        { x: 28, z: -40, w: 18, d: 14, h: 2.5, color: 0x6ee7b7, gateEdge: 's', gateOff: -6 },
+        { x: 28, z: -40, w: 18, d: 14, h: 9.0, color: 0x6ee7b7, gateEdge: 's', gateOff: -6 },
         // The Nether — stepping stones arrive at south edge near x=-22
-        { x: -28, z: -40, w: 18, d: 14, h: 2.0, color: 0xa78bfa, gateEdge: 's', gateOff: 6 },
+        { x: -28, z: -40, w: 18, d: 14, h: 8.0, color: 0xa78bfa, gateEdge: 's', gateOff: 6 },
         // Beacon Peak — from center path (south)
-        { x: 0, z: -58, w: 18, d: 14, h: 3.2, color: 0xfbbf24, gateEdge: 's', gateOff: 0 },
+        { x: 0, z: -58, w: 18, d: 14, h: 12.0, color: 0xfbbf24, gateEdge: 's', gateOff: 0 },
     ];
 
     // Shared geometries
@@ -846,71 +846,6 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
             light.position.set(cx, z.h + 2.3, cz);
             scene.add(light);
         }
-
-        // ========================================
-        // 4. ENTRANCE GATE
-        // Pillar pair + cross beam + accent bands + top gem
-        // 플랫폼 가장자리 바로 바깥에 배치 (fence gap 위치)
-        // ========================================
-        const spacing = 1.5;
-        let gx: number, gz: number;
-
-        switch (z.gateEdge) {
-            case 's': gx = z.x + z.gateOff; gz = z.z + hd + 0.35; break;
-            case 'n': gx = z.x + z.gateOff; gz = z.z - hd - 0.35; break;
-            case 'e': gx = z.x + hw + 0.35; gz = z.z + z.gateOff; break;
-            case 'w': gx = z.x - hw - 0.35; gz = z.z + z.gateOff; break;
-        }
-
-        const isVerticalGate = z.gateEdge === 'e' || z.gateEdge === 'w';
-
-        if (isVerticalGate) {
-            // Pillars along z-axis
-            for (const pz of [gz - spacing, gz + spacing]) {
-                const p = new THREE.Mesh(gatePillarGeo, gateStoneMat);
-                p.position.set(gx, z.h + 1.6, pz);
-                p.castShadow = true;
-                scene.add(p);
-                scene.add(setPos(new THREE.Mesh(gateAccentGeo, gateAccentMat), gx, z.h + 0.5, pz));
-                scene.add(setPos(new THREE.Mesh(gateAccentGeo, gateAccentMat), gx, z.h + 2.7, pz));
-            }
-            const beam = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.2, spacing * 2 + 0.5), gateStoneMat);
-            beam.position.set(gx, z.h + 3.3, gz);
-            scene.add(beam);
-        } else {
-            // Pillars along x-axis
-            for (const px of [gx - spacing, gx + spacing]) {
-                const p = new THREE.Mesh(gatePillarGeo, gateStoneMat);
-                p.position.set(px, z.h + 1.6, gz);
-                p.castShadow = true;
-                scene.add(p);
-                scene.add(setPos(new THREE.Mesh(gateAccentGeo, gateAccentMat), px, z.h + 0.5, gz));
-                scene.add(setPos(new THREE.Mesh(gateAccentGeo, gateAccentMat), px, z.h + 2.7, gz));
-            }
-            const beam = new THREE.Mesh(new THREE.BoxGeometry(spacing * 2 + 0.5, 0.2, 0.28), gateStoneMat);
-            beam.position.set(gx, z.h + 3.3, gz);
-            scene.add(beam);
-        }
-
-        // Gate top gem + light
-        const topGem = new THREE.Mesh(gateGemGeo, gemMat);
-        topGem.position.set(gx, z.h + 3.6, gz);
-        topGem.rotation.y = Math.PI / 4;
-        scene.add(topGem);
-
-        const gateLight = new THREE.PointLight(z.color, 0.5, 7);
-        gateLight.position.set(gx, z.h + 3.8, gz);
-        scene.add(gateLight);
-
-        // Gate base step (시각적 안내 — "여기로 들어오세요")
-        const stepW = isVerticalGate ? 0.6 : spacing * 2 + 0.8;
-        const stepD = isVerticalGate ? spacing * 2 + 0.8 : 0.6;
-        const gateStep = new THREE.Mesh(
-            new THREE.BoxGeometry(stepW, 0.05, stepD),
-            borderMat,
-        );
-        gateStep.position.set(gx, z.h + 0.03, gz);
-        scene.add(gateStep);
     }
 
     // ========================================
@@ -920,7 +855,7 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
         color: 0x6ee7b7, emissive: 0x6ee7b7, emissiveIntensity: 0.08,
         metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.25,
     });
-    const sp = { x: 0, z: 0, w: 14, d: 12, h: 0.5 };
+    const sp = { x: 0, z: 0, w: 14, d: 12, h: 1.0 };
     const shw = sp.w / 2, shd = sp.d / 2;
     scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(sp.w, 0.05, 0.1), spawnBorderMat), sp.x, sp.h + 0.03, sp.z - shd + 0.08));
     scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(sp.w, 0.05, 0.1), spawnBorderMat), sp.x, sp.h + 0.03, sp.z + shd - 0.08));

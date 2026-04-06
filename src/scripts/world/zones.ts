@@ -125,7 +125,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
         new THREE.MeshBasicMaterial({
           color: co.color, transparent: true, opacity: 0,
           side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,  // ★ 밝은 배경에서도 가시적
+          blending: THREE.AdditiveBlending,
         }),
     );
     burstRing.rotation.x = -Math.PI / 2;

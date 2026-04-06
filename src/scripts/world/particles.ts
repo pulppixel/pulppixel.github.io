@@ -101,18 +101,12 @@ function createFireflies(scene: THREE.Scene, count: number) {
 
     // 플랫폼 근처 spawn 위치
     const ZONES: [number, number, number][] = [
-        // Spawn
-        [-3, 1.2, 2], [4, 1.2, -2],
-        // Zone 0
-        [-6, 1.8, -16], [5, 1.8, -20], [0, 1.8, -14],
-        // Zone 1
-        [26, 3.2, -38], [32, 3.2, -42],
-        // Zone 2
-        [-30, 2.8, -38], [-24, 2.8, -42],
-        // Zone 3
-        [-4, 4.0, -56], [5, 4.0, -60], [0, 4.0, -54],
-        // Stepping stones
-        [14, 2.2, -28], [-14, 1.8, -28], [0, 2.0, -35],
+        [-3, 1.8, 2], [4, 1.8, -2],           // Spawn (h=1.0)
+        [-6, 4.8, -16], [5, 4.8, -20], [0, 4.8, -14],  // Zone 0 (h=4.0)
+        [26, 9.8, -38], [32, 9.8, -42],       // Zone 1 (h=9.0)
+        [-30, 8.8, -38], [-24, 8.8, -42],     // Zone 2 (h=8.0)
+        [-4, 12.8, -56], [5, 12.8, -60], [0, 12.8, -54],  // Zone 3 (h=12.0)
+        [14, 6.8, -28], [-14, 5.8, -28], [0, 7.5, -35],   // Stepping stones
     ];
 
     const flies: Firefly[] = [];
@@ -178,7 +172,7 @@ interface SmokeP {
     baseSize: number;
 }
 
-const FIRE_X = 0, FIRE_Y = 3.7, FIRE_Z = -60;
+const FIRE_X = 0, FIRE_Y = 13.5, FIRE_Z = -60;
 
 function createSmoke(scene: THREE.Scene, count: number) {
     const buf = createBuf(count);

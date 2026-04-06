@@ -6,11 +6,11 @@ import { stdMat } from '../core/helpers';
 export function buildOcean(scene: THREE.Scene, isMobile: boolean): THREE.Mesh {
   // Ocean floor - brighter to show through translucent water
   const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(160, 120),
+      new THREE.PlaneGeometry(220, 180),
       stdMat(0x2a9098, 0.6),
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, -1.8, -29);
+  floor.position.set(0, -5.0, -29);
   floor.receiveShadow = true;
   scene.add(floor);
 
@@ -93,11 +93,11 @@ export function buildOcean(scene: THREE.Scene, isMobile: boolean): THREE.Mesh {
   });
 
   const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(160, 120, seg, seg),
+      new THREE.PlaneGeometry(220, 180, seg, seg),
       waterMat,
   );
   water.rotation.x = -Math.PI / 2;
-  water.position.set(0, -0.05, -29);
+  water.position.set(0, -2.0, -29);
   water.renderOrder = 1;
   scene.add(water);
 

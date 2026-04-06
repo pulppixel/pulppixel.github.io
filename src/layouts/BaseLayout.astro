@@ -25,11 +25,18 @@ const resolvedOg = ogImage
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:image" content={resolvedOg} />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://pulppixel.github.io" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://pulppixel.github.io"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content={title}/>
+  <meta name="twitter:description" content={description}/>
+  <link rel="canonical" href={`https://pulppixel.github.io${Astro.url.pathname}`}/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="author" content="Hwankee Baik"/>
+  <meta property="og:locale" content="ko_KR"/>
+  <meta property="og:site_name" content="Pulppixel"/>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />

@@ -1,4 +1,5 @@
 // Scene setup + per-frame environment update
+// v2: 모바일 최적화 — PointLight 최소화, exposure 하향
 import * as THREE from 'three';
 import { COMPANIES } from '../core/data';
 import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots, flushInstances } from './terrain';
@@ -32,7 +33,7 @@ export function createScene(isMobile: boolean): SceneContext {
   renderer.setSize(innerWidth, innerHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.4;
+  renderer.toneMappingExposure = isMobile ? 1.1 : 1.4; // 모바일: 낮춰서 over-exposure 방지
   renderer.shadowMap.enabled = !isMobile;
   if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
@@ -44,15 +45,15 @@ export function createScene(isMobile: boolean): SceneContext {
   buildMushrooms();
   buildRocks(scene);
   buildFences(scene);
-  buildLanterns(scene);
+  buildLanterns(scene, isMobile);
   buildZonePatches(scene);
   buildPathDots();
   flushInstances(scene);
 
   buildWaterEdge(scene);
   buildBushes(scene);
-  buildZoneDecor(scene);
-  buildZoneBoundaries(scene);
+  buildZoneDecor(scene, isMobile);
+  buildZoneBoundaries(scene, isMobile);
   const skyUniforms = buildSkyDome(scene);
   const water = buildOcean(scene, isMobile);
   const clouds = buildClouds(scene);
@@ -81,17 +82,19 @@ export function createScene(isMobile: boolean): SceneContext {
   fill.position.set(-10, 15, -8);
   scene.add(fill);
 
-  // Zone area lights
-  const zoneLights: [number, number, number, number, number, number][] = [
-    [0xa78bfa, 0.5, 18, 0, 8, -18],     // Hub (h=4 + 4)
-    [0x6ee7b7, 0.4, 16, 28, 13, -40],   // Treasure (h=9 + 4)
-    [0xfbbf24, 0.4, 16, -28, 12, -40],  // Nether (h=8 + 4)
-    [0xff6b9d, 0.4, 16, 0, 16, -58],    // Overworld (h=12 + 4)
-  ];
-  for (const [c, intensity, dist, x, y, z] of zoneLights) {
-    const l = new THREE.PointLight(c, intensity, dist);
-    l.position.set(x, y, z);
-    scene.add(l);
+  // Zone area lights — 모바일: intensity 낮추고 distance 줄여서 부하 감소
+  if (!isMobile) {
+    const zoneLights: [number, number, number, number, number, number][] = [
+      [0xa78bfa, 0.5, 18, 0, 8, -18],
+      [0x6ee7b7, 0.4, 16, 28, 13, -40],
+      [0xfbbf24, 0.4, 16, -28, 12, -40],
+      [0xff6b9d, 0.4, 16, 0, 16, -58],
+    ];
+    for (const [c, intensity, dist, x, y, z] of zoneLights) {
+      const l = new THREE.PointLight(c, intensity, dist);
+      l.position.set(x, y, z);
+      scene.add(l);
+    }
   }
 
   // --- Pollen particles ---
@@ -171,7 +174,6 @@ export function updateEnvironment(
     clouds?: THREE.Group[],
     water?: THREE.Mesh,
 ): void {
-  // Pollen drift
   const pa = particles.geo.attributes.position.array as Float32Array;
   for (let i = 0; i < particles.count; i++) {
     pa[i * 3 + 1] += Math.sin(t * 0.4 + i) * 0.002;
@@ -180,7 +182,6 @@ export function updateEnvironment(
   }
   particles.geo.attributes.position.needsUpdate = true;
 
-  // Sparkle twinkle (every 6th for perf)
   const sCol = stars.geo.getAttribute('color');
   for (let i = 0; i < stars.count; i += 6) {
     const f = 0.6 + Math.sin(t * 1.2 + i * 0.3) * 0.4;
@@ -190,7 +191,6 @@ export function updateEnvironment(
   }
   sCol.needsUpdate = true;
 
-  // Cloud drift
   if (clouds) {
     for (let i = 0; i < clouds.length; i++) {
       clouds[i].position.x += 0.15 * (0.5 + (i % 3) * 0.2) * (1 / 60);
@@ -198,7 +198,6 @@ export function updateEnvironment(
     }
   }
 
-  // Water time uniform
   if (water) {
     (water.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
   }

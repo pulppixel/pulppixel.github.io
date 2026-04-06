@@ -39,7 +39,7 @@ function zoneHeight(x: number, z: number): number {
 
 // --- Factory ---
 
-export function createZones(scene: THREE.Scene): ZonesContext {
+export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext {
   const zones: ZoneState[] = [];
   const projectMeshes: THREE.Mesh[] = [];
   const zoneAnims: ZoneAnim[] = [];
@@ -107,9 +107,14 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     pl.position.set(cx, ph + 1.1, cz - 3.6);
     scene.add(pl);
 
-    const pL = new THREE.PointLight(co.color, 0.2, 5);
-    pL.position.set(cx, ph + 2.5, cz - 3.6);
-    scene.add(pL);
+    let pL: THREE.PointLight;
+    if (!isMobile) {
+      pL = new THREE.PointLight(co.color, 0.2, 5);
+      pL.position.set(cx, ph + 2.5, cz - 3.6);
+      scene.add(pL);
+    } else {
+      pL = new THREE.PointLight(co.color, 0, 0); // dummy, no scene.add
+    }
 
     // Fill + burst ring
     const fl = new THREE.Mesh(
@@ -234,8 +239,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     fire.position.set(cx, ph + 0.5, cz - 2); scene.add(fire);
     za({ mesh: fire, type: 'pulse', baseEi: 0.55, range: 0.25, alwaysOn: true });
 
-    const fireLight = new THREE.PointLight(0xf5a040, 0.6, 6);
-    fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
+    if (!isMobile) {
+      const fireLight = new THREE.PointLight(0xf5a040, 0.6, 6);
+      fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
+    }
 
     // Flowers around tree
     const flowerCols = [COL, 0xf5d060, 0x88c8e8, 0xe888a0];
@@ -275,8 +282,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     emerald.position.set(cx + 3.5, ph + 2.5, cz - 3); scene.add(emerald);
     za({ mesh: emerald, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 2.5, float: 0.25 });
 
-    const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
-    treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
+    if (!isMobile) {
+      const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
+      treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
+    }
 
     [[-2, -2], [2, -2], [-3, 0], [3, 0], [-1, -5], [1, -5]].forEach(([ox, oz]) => {
       const coin = glowBox(0.25, 0.06, 0.25, GOLD, 0.2);
@@ -314,8 +323,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       scene.add(rune);
     });
 
-    const portalLight = new THREE.PointLight(COL, 0.8, 8);
-    portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
+    if (!isMobile) {
+      const portalLight = new THREE.PointLight(COL, 0.8, 8);
+      portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
+    }
   }
 
   // --- Zone 3: Beacon Peak ---
@@ -348,8 +359,10 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       c.position.set(cx + ox, ph + h / 2, cz + oz); scene.add(c);
     });
 
-    const beaconLight = new THREE.PointLight(COL, 0.7, 8);
-    beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
+    if (!isMobile) {
+      const beaconLight = new THREE.PointLight(COL, 0.7, 8);
+      beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
+    }
   }
 
   // --- Update ---

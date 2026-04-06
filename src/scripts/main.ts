@@ -119,7 +119,7 @@ export function init(): void {
 
   applySkinPalette(character.palette, particles, dustMat);
 
-  const { zones, projectMeshes, update: updateZones } = createZones(scene);
+  const { zones, projectMeshes, update: updateZones } = createZones(scene, isMobile);
   const animals = createAnimals(scene);
   const animalInteraction = createAnimalInteraction(scene);
   const seasons = createSeasonSystem(scene, isMobile);

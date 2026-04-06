@@ -5,8 +5,8 @@
 // - HUD counter
 // - Collection: scale-down animation + sound + floating text
 import * as THREE from 'three';
-import { getGroundHeight } from '../core/data';
-import type { GameAudio } from './audio.ts';
+import {getGroundHeight} from '../core/data';
+import type {GameAudio} from './audio.ts';
 
 // =============================================
 // Gem definitions
@@ -110,7 +110,7 @@ const GEM_RADIUS = 0.18;
 interface GemState {
     mesh: THREE.Mesh;
     glow: THREE.Mesh; // 바닥 글로우
-    light: THREE.PointLight;
+    light: THREE.PointLight | null;
     baseY: number;
     collected: boolean;
     collectT: number; // 수집 애니메이션 타이머
@@ -184,10 +184,13 @@ export function createCollectibles(
         scene.add(glow);
 
         // 포인트 라이트 (작은 빛)
-        const light = new THREE.PointLight(def.color, 0.3, 3);
-        light.position.set(def.x, baseY + 0.3, def.z);
-        light.visible = !isCollected;
-        scene.add(light);
+        let light: THREE.PointLight | null = null;
+        if (!isMobile) {
+            light = new THREE.PointLight(def.color, 0.3, 3);
+            light.position.set(def.x, baseY + 0.3, def.z);
+            light.visible = !isCollected;
+            scene.add(light);
+        }
 
         states.push({
             mesh, glow, light, baseY,
@@ -220,11 +223,15 @@ export function createCollectibles(
                     const scale = Math.max(0, 1 - p * p); // ease-in 축소
                     s.mesh.scale.setScalar(scale);
                     s.glow.scale.setScalar(scale);
-                    s.light.intensity = 0.3 * scale;
+                    if (s.light) {
+                        s.light.intensity = 0.3 * scale;
+                    }
                     if (p >= 1) {
                         s.mesh.visible = false;
                         s.glow.visible = false;
-                        s.light.visible = false;
+                        if (s.light) {
+                            s.light.visible = false;
+                        }
                     }
                     continue;
                 }
@@ -234,9 +241,8 @@ export function createCollectibles(
                 s.mesh.rotation.y = t * 1.5 + i * 0.8;
                 s.mesh.position.y = s.baseY + Math.sin(t * 2 + i * 1.2) * 0.12;
 
-                const pulse = 0.3 + Math.sin(t * 3 + i) * 0.15;
-                (s.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
-                s.light.intensity = 0.2 + Math.sin(t * 3 + i) * 0.1;
+                (s.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3 + Math.sin(t * 3 + i) * 0.15;
+                if (s.light) s.light.intensity = 0.2 + Math.sin(t * 3 + i) * 0.1;
 
                 // Glow ring pulse
                 (s.glow.material as THREE.MeshBasicMaterial).opacity = 0.1 + Math.sin(t * 2.5 + i) * 0.05;
@@ -280,7 +286,9 @@ export function createCollectibles(
                 s.mesh.scale.setScalar(1);
                 s.glow.visible = true;
                 s.glow.scale.setScalar(1);
-                s.light.visible = true;
+                if (s.light) {
+                    s.light.visible = true;
+                }
             }
             updateHUD();
         },

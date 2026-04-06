@@ -1,6 +1,6 @@
 // Static world geometry: terrain, vegetation, fences, lanterns
 // v3: InstancedMesh batching for static repeated elements
-//     ~250 draw calls → ~15 for batched categories
+//     ~250 draw calls -> ~15 for batched categories
 import * as THREE from 'three';
 import { COMPANIES, PLATFORMS } from '../core/data';
 import { stdMat, stdBox } from '../core/helpers';
@@ -183,8 +183,8 @@ export function buildTrees(scene: THREE.Scene): void {
 
 // =============================================
 // Flowers & Grass
-// 잔디 tufts + 꽃 줄기 → BATCHED (wind 미대상)
-// 꽃 머리 → 개별 유지 (wind 대상)
+// 잔디 tufts + 꽃 줄기 -> BATCHED (wind 미대상)
+// 꽃 머리 -> 개별 유지 (wind 대상)
 // =============================================
 
 export function buildFlowers(scene: THREE.Scene): void {
@@ -227,12 +227,12 @@ export function buildFlowers(scene: THREE.Scene): void {
     const palKey = Object.entries(PALETTES).find(([, v]) => v === pal)?.[0] || 'bridge';
     const colors = zoneFlowerColors[palKey] || zoneFlowerColors.bridge;
 
-    // Grass tufts → BATCHED
+    // Grass tufts -> BATCHED
     for (let j = 0; j < 2 + (i % 2); j++) {
       ib('tuft', tuftGeo, tuftMat, sx + (j - 1) * 0.25, base + 0.2, sz + (j % 2) * 0.2);
     }
 
-    // Flower stem → BATCHED, flower head → 개별 (wind 대상)
+    // Flower stem -> BATCHED, flower head -> 개별 (wind 대상)
     if (i % 2 === 0) {
       ib('stem', stemGeo, stemMat, sx + 0.3, base + 0.175, sz);
 
@@ -315,9 +315,9 @@ export function buildRocks(scene: THREE.Scene): void {
 
 // =============================================
 // Fences
-// walls, posts, corners → BATCHED
-// hedges, hedge flowers, corner balls → 개별 (wind 대상)
-// rails → 개별 (각각 다른 길이)
+// walls, posts, corners -> BATCHED
+// hedges, hedge flowers, corner balls -> 개별 (wind 대상)
+// rails -> 개별 (각각 다른 길이)
 // =============================================
 
 export function buildFences(scene: THREE.Scene): void {
@@ -410,14 +410,14 @@ export function buildFences(scene: THREE.Scene): void {
             }
           }
         } else if (i % 2 === 0) {
-          // Small platform post → BATCHED
+          // Small platform post -> BATCHED
           ib('fp', postGeo, postMat, fx, p.h + 0.35, fz);
         }
       }
 
       if (runStart !== null) openRuns.push({ start: runStart, end: edge.to });
 
-      // Rails → 개별 (각각 다른 길이의 geometry)
+      // Rails -> 개별 (각각 다른 길이의 geometry)
       if (!isMain) {
         for (const run of openRuns) {
           if (run.end - run.start < 0.5) continue;
@@ -467,7 +467,7 @@ export function buildFences(scene: THREE.Scene): void {
           scene.add(ball);
         }
       } else {
-        // Small platform corner post → BATCHED
+        // Small platform corner post -> BATCHED
         ib('fp', postGeo, postMat, cx, p.h + 0.35, cz);
       }
     }
@@ -476,10 +476,10 @@ export function buildFences(scene: THREE.Scene): void {
 
 // Lanterns
 
-export function buildLanterns(scene: THREE.Scene): void {
+export function buildLanterns(scene: THREE.Scene, isMobile = false): void {
   // 주요 갈림길에만 배치 (디딤돌 위 과밀 방지)
   const spots: [number, number][] = [
-    [0, -4],                           // Spawn→Hub 입구
+    [0, -4],                           // Spawn->Hub 입구
     [10, -24], [-10, -24], [1, -30],   // Hub 출구 갈림길 3개
     [0, -48],                           // 센터루트 후반
   ];
@@ -497,10 +497,12 @@ export function buildLanterns(scene: THREE.Scene): void {
     ib('lant-post', postGeo, postMat, lx, base + 0.75, lz);
     ib('lant-lamp', lampGeo, lampMat, lx, base + 1.65, lz);
 
-    // PointLight는 instance 불가 → 개별 유지
-    const light = new THREE.PointLight(0xf5c870, 0.4, 6);
-    light.position.set(lx, base + 1.9, lz);
-    scene.add(light);
+    // PointLight는 instance 불가 -> 개별 유지
+    if (!isMobile) {
+      const light = new THREE.PointLight(0xf5c870, 0.4, 6);
+      light.position.set(lx, base + 1.9, lz);
+      scene.add(light);
+    }
   }
 }
 

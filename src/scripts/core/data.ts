@@ -1,5 +1,5 @@
 // World data: zones, platforms, projects
-// PEAK redesign: ascending height from Spawn(1.0) → Summit(12.0)
+// PEAK redesign: ascending height from Spawn(1.0) -> Summit(12.0)
 // Collision logic is in collision.ts
 
 export interface CompanyData {
@@ -45,7 +45,7 @@ export const COMPANIES: CompanyData[] = [
 // PEAK 등산 컨셉: Spawn이 최하단, Beacon Peak가 정상
 //
 // Height map:
-//   Spawn(1.0) → Hub(4.0) → East(9.0) / West(8.0) → Summit(12.0)
+//   Spawn(1.0) -> Hub(4.0) -> East(9.0) / West(8.0) -> Summit(12.0)
 //
 // Jump physics: JUMP_FORCE=9.6, GRAVITY=-18.9
 //   max_jump_height ≈ 2.44 units
@@ -61,29 +61,29 @@ export const PLATFORMS: Platform[] = [
   { x: -28, z: -40, w: 18, d: 14, h: 8.0 },      // Zone 2 — Western Ridge (The Nether)
   { x: 0, z: -58, w: 18, d: 14, h: 12.0 },       // Zone 3 — Summit! (Beacon Peak)
 
-  // ===== SPAWN → ZONE 0 (gentle intro, 2 stones) =====
-  // 높이: 1.0 → 2.0 → 3.0 → 4.0 (zone 0)
+  // ===== SPAWN -> ZONE 0 (gentle intro, 2 stones) =====
+  // 높이: 1.0 -> 2.0 -> 3.0 -> 4.0 (zone 0)
   { x: 1, z: -7.5, w: 3, d: 2.5, h: 2.0 },      // S1 — 첫 점프 (+1.0)
   { x: -0.5, z: -10, w: 2.5, d: 2, h: 3.0 },    // S2 — 두번째 (+1.0)
 
-  // ===== ZONE 0 → ZONE 1 (right diagonal, 5 stones) =====
-  // 높이: 4.0 → 5.0 → 6.0 → 7.0 → 7.8 → 8.5 → 9.0
+  // ===== ZONE 0 -> ZONE 1 (right diagonal, 5 stones) =====
+  // 높이: 4.0 -> 5.0 -> 6.0 -> 7.0 -> 7.8 -> 8.5 -> 9.0
   { x: 11, z: -23, w: 3.5, d: 3, h: 5.0 },      // R1 (+1.0)
   { x: 14, z: -27, w: 3, d: 3, h: 6.0 },         // R2 (+1.0) — first real jump
   { x: 17, z: -29, w: 3, d: 3, h: 7.0 },         // R3 (+1.0)
   { x: 19.5, z: -31, w: 3, d: 2.5, h: 7.8 },    // R4 (+0.8)
   { x: 22, z: -32, w: 2.5, d: 2, h: 8.5 },      // R5 (+0.7) — approach zone 1
 
-  // ===== ZONE 0 → ZONE 2 (left diagonal, 5 stones) =====
-  // 높이: 4.0 → 5.0 → 5.8 → 6.4 → 7.0 → 7.5 → 8.0
+  // ===== ZONE 0 -> ZONE 2 (left diagonal, 5 stones) =====
+  // 높이: 4.0 -> 5.0 -> 5.8 -> 6.4 -> 7.0 -> 7.5 -> 8.0
   { x: -11, z: -23, w: 3.5, d: 3, h: 5.0 },     // L1 (+1.0)
   { x: -14, z: -27, w: 3, d: 3, h: 5.8 },        // L2 (+0.8)
   { x: -17, z: -29, w: 3, d: 3, h: 6.4 },        // L3 (+0.6)
   { x: -19.5, z: -31, w: 3, d: 2.5, h: 7.0 },   // L4 (+0.6)
   { x: -22, z: -32, w: 2.5, d: 2, h: 7.5 },     // L5 (+0.5) — approach zone 2
 
-  // ===== ZONE 0 → ZONE 3 (center path, 6 stones — longest) =====
-  // 높이: 4.0 → 5.2 → 6.4 → 7.5 → 8.5 → 9.5 → 10.5 → 12.0
+  // ===== ZONE 0 -> ZONE 3 (center path, 6 stones — longest) =====
+  // 높이: 4.0 -> 5.2 -> 6.4 -> 7.5 -> 8.5 -> 9.5 -> 10.5 -> 12.0
   { x: 0, z: -27, w: 3.5, d: 3, h: 5.2 },        // C1 (+1.2)
   { x: -1.5, z: -31, w: 3, d: 2.5, h: 6.4 },    // C2 (+1.2)
   { x: 1, z: -35, w: 2.5, d: 2.5, h: 7.5 },     // C3 (+1.1) — big gap, requires jump
@@ -91,14 +91,14 @@ export const PLATFORMS: Platform[] = [
   { x: 0.5, z: -43, w: 3, d: 2.5, h: 9.5 },     // C5 (+1.0)
   { x: 0, z: -47, w: 3, d: 3, h: 10.5 },         // C6 (+1.0)
 
-  // ===== ZONE 1 → ZONE 3 (right shortcut, 3 stones) =====
-  // 높이: 9.0 → 10.0 → 10.8 → 11.4 → 12.0
+  // ===== ZONE 1 -> ZONE 3 (right shortcut, 3 stones) =====
+  // 높이: 9.0 -> 10.0 -> 10.8 -> 11.4 -> 12.0
   { x: 20, z: -48, w: 3, d: 2.5, h: 10.0 },     // TR1 (+1.0)
   { x: 14, z: -50, w: 3, d: 3, h: 10.8 },        // TR2 (+0.8)
   { x: 8, z: -52, w: 3.5, d: 2.5, h: 11.4 },    // TR3 (+0.6)
 
-  // ===== ZONE 2 → ZONE 3 (left shortcut, 3 stones) =====
-  // 높이: 8.0 → 9.0 → 10.0 → 11.0 → 12.0
+  // ===== ZONE 2 -> ZONE 3 (left shortcut, 3 stones) =====
+  // 높이: 8.0 -> 9.0 -> 10.0 -> 11.0 -> 12.0
   { x: -20, z: -48, w: 3, d: 2.5, h: 9.0 },     // TL1 (+1.0)
   { x: -14, z: -50, w: 3, d: 3, h: 10.0 },       // TL2 (+1.0)
   { x: -8, z: -52, w: 3.5, d: 2.5, h: 11.0 },   // TL3 (+1.0)

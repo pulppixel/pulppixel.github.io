@@ -1,22 +1,21 @@
-// NPC dialogue system
-// - Zone별 1체, 박스형 캐릭터
-// - 플레이어 접근 시 말풍선 표시 (DOM → 3D 프로젝션)
-// - 대사 자동 순환 (4초 간격)
-// - 플레이어 방향으로 부드럽게 회전
+// NPC dialogue system v2
+// - 4-state FSM: idle -> wander -> alert -> talk
+// - 다리 + walk animation
+// - 말풍선: JS 수동 보간 (CSS transition 제거 -> 떨림 방지)
+// - 3D -> screen projection with hysteresis
 import * as THREE from 'three';
-import { getGroundHeight } from '../core/data';
-import { stdMat, facePlane } from '../core/helpers';
+import {getGroundHeight} from '../core/data';
+import {facePlane, stdMat} from '../core/helpers';
 
-// =============================================
 // NPC Definitions
-// =============================================
 
 interface NPCDef {
     x: number; z: number;
-    color: number;        // zone accent color
-    bodyColor: number;    // body tint
+    color: number;
+    bodyColor: number;
     name: string;
     lines: string[];
+    wanderRadius?: number;
 }
 
 const NPC_DEFS: NPCDef[] = [
@@ -30,6 +29,7 @@ const NPC_DEFS: NPCDef[] = [
             '빛나는 큐브에 다가가면 프로젝트를 볼 수 있어.',
             '숨겨진 보석 ◆ 도 찾아봐!',
         ],
+        wanderRadius: 3,
     },
     {
         x: -4, z: -15,
@@ -77,65 +77,99 @@ const NPC_DEFS: NPCDef[] = [
     },
 ];
 
-// =============================================
-// NPC Character Builder (simple voxel)
-// =============================================
+// FSM Constants
 
-function buildNPCMesh(def: NPCDef, baseY: number): THREE.Group {
+const ALERT_DIST = 6.0;   // 플레이어 인지 -> alert
+const TALK_DIST = 4.0;    // 대화 시작 -> talk
+const RETURN_DIST = 8.0;  // 관심 해제
+const WANDER_SPD = 1.2;   // 걷기 속도
+const DEFAULT_WANDER_R = 2.5;
+
+type NPCState = 'idle' | 'wander' | 'alert' | 'talk';
+
+// NPC Character Mesh
+
+interface NPCParts {
+    group: THREE.Group;
+    body: THREE.Mesh;
+    head: THREE.Group; // head + hat + eyes 묶음
+    legL: THREE.Mesh;
+    legR: THREE.Mesh;
+    eyeL: THREE.Mesh;
+    eyeR: THREE.Mesh;
+}
+
+function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     const g = new THREE.Group();
+    g.position.set(def.x, baseY, def.z);
+
+    // Legs (pivot at top)
+    const legGeo = new THREE.BoxGeometry(0.12, 0.22, 0.12);
+    const legMat = stdMat(def.bodyColor);
+    const legL = new THREE.Mesh(legGeo, legMat);
+    legL.position.set(-0.08, 0.22, 0);
+    legL.geometry.translate(0, -0.11, 0); // pivot top
+    legL.castShadow = true;
+    g.add(legL);
+
+    const legR = new THREE.Mesh(legGeo, legMat);
+    legR.position.set(0.08, 0.22, 0);
+    legR.geometry.translate(0, -0.11, 0);
+    legR.castShadow = true;
+    g.add(legR);
 
     // Body
     const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.36, 0.44, 0.24),
+        new THREE.BoxGeometry(0.36, 0.34, 0.24),
         stdMat(def.bodyColor),
     );
-    body.position.y = 0.52;
+    body.position.y = 0.50;
     body.castShadow = true;
     g.add(body);
 
-    // Head
+    // Head group (머리 bob 시 eyes/hat 같이 움직이게)
+    const headGrp = new THREE.Group();
+    headGrp.position.y = 0.88;
+    g.add(headGrp);
+
     const head = new THREE.Mesh(
         new THREE.BoxGeometry(0.38, 0.36, 0.34),
         stdMat(def.bodyColor),
     );
-    head.position.y = 0.96;
     head.castShadow = true;
-    g.add(head);
+    headGrp.add(head);
 
-    // Hat / accent band (zone color)
+    // Hat
     const hat = new THREE.Mesh(
         new THREE.BoxGeometry(0.42, 0.10, 0.38),
         new THREE.MeshStandardMaterial({
-            color: def.color,
-            emissive: def.color,
-            emissiveIntensity: 0.15,
-            metalness: 0.1,
-            roughness: 0.7,
+            color: def.color, emissive: def.color,
+            emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.7,
         }),
     );
-    hat.position.y = 1.18;
-    g.add(hat);
+    hat.position.y = 0.23;
+    headGrp.add(hat);
 
     // Eyes
     const eyeL = facePlane(0.06, 0.07, 0x1a1520);
-    eyeL.position.set(-0.08, 0.96, 0.175);
-    g.add(eyeL);
+    eyeL.position.set(-0.08, 0.0, 0.175);
+    headGrp.add(eyeL);
     const eyeR = facePlane(0.06, 0.07, 0x1a1520);
-    eyeR.position.set(0.08, 0.96, 0.175);
-    g.add(eyeR);
+    eyeR.position.set(0.08, 0.0, 0.175);
+    headGrp.add(eyeR);
 
     // Highlights
     const hlL = facePlane(0.025, 0.025, 0xffffff);
-    hlL.position.set(-0.065, 0.98, 0.177);
-    g.add(hlL);
+    hlL.position.set(-0.065, 0.02, 0.177);
+    headGrp.add(hlL);
     const hlR = facePlane(0.025, 0.025, 0xffffff);
-    hlR.position.set(0.095, 0.98, 0.177);
-    g.add(hlR);
+    hlR.position.set(0.095, 0.02, 0.177);
+    headGrp.add(hlR);
 
     // Mouth
     const mouth = facePlane(0.06, 0.02, 0x2a2030);
-    mouth.position.set(0, 0.86, 0.175);
-    g.add(mouth);
+    mouth.position.set(0, -0.10, 0.175);
+    headGrp.add(mouth);
 
     // Shadow
     const shadow = new THREE.Mesh(
@@ -146,17 +180,13 @@ function buildNPCMesh(def: NPCDef, baseY: number): THREE.Group {
     shadow.position.y = 0.005;
     g.add(shadow);
 
-    g.position.set(def.x, baseY, def.z);
-    return g;
+    return { group: g, body, head: headGrp, legL, legR, eyeL, eyeR };
 }
 
-// =============================================
-// Speech Bubble (DOM-based, 3D→screen projection)
-// =============================================
+// Speech Bubble (DOM)
 
 function createBubble(): HTMLDivElement {
     const el = document.createElement('div');
-    el.className = 'npc-bubble';
     el.style.cssText = `
     position:absolute; pointer-events:none; z-index:14;
     background:rgba(10,10,11,0.88);
@@ -165,8 +195,9 @@ function createBubble(): HTMLDivElement {
     backdrop-filter:blur(8px);
     font-family:'JetBrains Mono',monospace;
     max-width:220px; text-align:center;
-    opacity:0; transition:opacity 0.3s;
-    transform:translateX(-50%);
+    opacity:0;
+    transform:translate(-50%,-100%);
+    will-change:transform,opacity;
   `;
 
     const nameEl = document.createElement('div');
@@ -193,35 +224,46 @@ function createBubble(): HTMLDivElement {
     return el;
 }
 
-// =============================================
-// NPC State & System
-// =============================================
+// NPC State
 
-const SHOW_DIST = 5.0;
-const HIDE_DIST = 7.0;
-const LINE_INTERVAL = 4.0; // 대사 순환 간격 (초)
-
-interface NPCState {
+interface NPCInstance {
     def: NPCDef;
-    group: THREE.Group;
+    parts: NPCParts;
     bubble: HTMLDivElement;
     nameEl: HTMLElement;
     textEl: HTMLElement;
-    active: boolean;
-    alpha: number;     // bubble fade
+
+    // FSM
+    state: NPCState;
+    stateTimer: number;
+
+    // Position
+    homeX: number; homeZ: number; baseY: number;
+    targetX: number; targetZ: number;
+    dir: number; // Y rotation (facing direction)
+
+    // Bubble smoothing
+    bubbleAlpha: number;
+    bubbleSX: number; bubbleSY: number; // smooth screen position
+    bubbleVisible: boolean; // hysteresis flag
+
+    // Animation
     lineIdx: number;
     lineTimer: number;
     blinkTimer: number;
-    eyeL: THREE.Mesh;
-    eyeR: THREE.Mesh;
+    walkPhase: number;
 }
+
+// System
 
 export interface NPCSystem {
     update(dt: number, t: number, playerPos: THREE.Vector3): void;
 }
 
+const LINE_INTERVAL = 4.0;
+
 export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera): NPCSystem {
-    const npcs: NPCState[] = [];
+    const npcs: NPCInstance[] = [];
     const _worldPos = new THREE.Vector3();
     const _screenPos = new THREE.Vector3();
 
@@ -229,71 +271,165 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
         const groundH = getGroundHeight(def.x, def.z);
         const baseY = groundH < 0 ? 0.5 : groundH;
 
-        const group = buildNPCMesh(def, baseY);
-        scene.add(group);
+        const parts = buildNPCMesh(def, baseY);
+        scene.add(parts.group);
 
         const bubble = createBubble();
         const nameEl = bubble.children[0] as HTMLElement;
         const textEl = bubble.children[1] as HTMLElement;
 
-        // Zone color 적용
-        const hex = '#' + def.color.toString(16).padStart(6, '0');
-        nameEl.style.color = hex;
+        nameEl.style.color = '#' + def.color.toString(16).padStart(6, '0');
         nameEl.textContent = `◆ ${def.name}`;
 
-        // Eye 참조 (blink 애니메이션용)
-        const eyeL = group.children[3] as THREE.Mesh; // facePlane 순서
-        const eyeR = group.children[4] as THREE.Mesh;
-
         npcs.push({
-            def, group, bubble, nameEl, textEl,
-            active: false, alpha: 0,
+            def, parts, bubble, nameEl, textEl,
+            state: 'idle',
+            stateTimer: 2 + Math.random() * 3,
+            homeX: def.x, homeZ: def.z, baseY,
+            targetX: def.x, targetZ: def.z,
+            dir: Math.random() * Math.PI * 2,
+            bubbleAlpha: 0,
+            bubbleSX: 0, bubbleSY: 0,
+            bubbleVisible: false,
             lineIdx: 0, lineTimer: 0,
             blinkTimer: 2 + Math.random() * 3,
-            eyeL, eyeR,
+            walkPhase: 0,
         });
+    }
+
+    // ── Wander target 선택 ──
+    function pickWanderTarget(npc: NPCInstance): void {
+        const r = npc.def.wanderRadius ?? DEFAULT_WANDER_R;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 1 + Math.random() * (r - 1);
+        const tx = npc.homeX + Math.cos(angle) * dist;
+        const tz = npc.homeZ + Math.sin(angle) * dist;
+        // 플랫폼 위인지 확인
+        if (getGroundHeight(tx, tz) >= 0) {
+            npc.targetX = tx;
+            npc.targetZ = tz;
+        } else {
+            npc.targetX = npc.homeX;
+            npc.targetZ = npc.homeZ;
+        }
     }
 
     return {
         update(dt, t, playerPos) {
             for (const npc of npcs) {
-                const dx = playerPos.x - npc.group.position.x;
-                const dz = playerPos.z - npc.group.position.z;
+                const g = npc.parts.group;
+                const dx = playerPos.x - g.position.x;
+                const dz = playerPos.z - g.position.z;
                 const dist = Math.sqrt(dx * dx + dz * dz);
 
-                // 활성화 판정
-                if (dist < SHOW_DIST) npc.active = true;
-                if (dist > HIDE_DIST) npc.active = false;
+                // FSM Transitions
 
-                // Bubble fade
-                const targetA = npc.active ? 1 : 0;
-                npc.alpha += (targetA - npc.alpha) * Math.min(1, 5 * dt);
+                npc.stateTimer -= dt;
 
-                // ── Idle 애니메이션 ──
+                switch (npc.state) {
+                    case 'idle':
+                        if (dist < ALERT_DIST) {
+                            npc.state = 'alert';
+                            npc.stateTimer = 0.5; // 잠시 멈칫
+                        } else if (npc.stateTimer <= 0) {
+                            npc.state = 'wander';
+                            npc.stateTimer = 2 + Math.random() * 3;
+                            pickWanderTarget(npc);
+                        }
+                        break;
 
-                // Bob
-                const bob = Math.sin(t * 1.8 + npc.def.x) * 0.04;
-                npc.group.children[1].position.y = 0.96 + bob; // head
-                npc.group.children[2].position.y = 1.18 + bob; // hat
+                    case 'wander': {
+                        const tdx = npc.targetX - g.position.x;
+                        const tdz = npc.targetZ - g.position.z;
+                        const tDist = Math.sqrt(tdx * tdx + tdz * tdz);
+
+                        if (dist < ALERT_DIST) {
+                            npc.state = 'alert';
+                            npc.stateTimer = 0.5;
+                        } else if (tDist < 0.3 || npc.stateTimer <= 0) {
+                            npc.state = 'idle';
+                            npc.stateTimer = 2 + Math.random() * 4;
+                        } else {
+                            // 이동
+                            const moveDir = Math.atan2(tdz, tdx);
+                            g.position.x += Math.cos(moveDir) * WANDER_SPD * dt;
+                            g.position.z += Math.sin(moveDir) * WANDER_SPD * dt;
+                            npc.dir = moveDir;
+                            npc.walkPhase += dt;
+                        }
+                        break;
+                    }
+
+                    case 'alert':
+                        if (dist < TALK_DIST) {
+                            npc.state = 'talk';
+                            npc.lineTimer = 0;
+                        } else if (dist > RETURN_DIST) {
+                            npc.state = 'idle';
+                            npc.stateTimer = 1 + Math.random() * 2;
+                        }
+                        // 플레이어 방향으로 회전 (alert에서 바로 시작)
+                        npc.dir = Math.atan2(dz, dx);
+                        break;
+
+                    case 'talk':
+                        if (dist > TALK_DIST && dist < RETURN_DIST) {
+                            npc.state = 'alert';
+                            npc.stateTimer = 1;
+                        } else if (dist > RETURN_DIST) {
+                            npc.state = 'idle';
+                            npc.stateTimer = 1 + Math.random() * 2;
+                        }
+                        // 플레이어 방향 추적
+                        npc.dir = Math.atan2(dz, dx);
+                        break;
+                }
+
+                // Rotation (smooth)
+
+                const targetRot = -npc.dir + Math.PI / 2;
+                let dRot = targetRot - g.rotation.y;
+                while (dRot > Math.PI) dRot -= Math.PI * 2;
+                while (dRot < -Math.PI) dRot += Math.PI * 2;
+                const rotSpeed = npc.state === 'alert' || npc.state === 'talk' ? 5 : 3;
+                g.rotation.y += dRot * rotSpeed * dt;
+
+                // Animation
+
+                const isWalking = npc.state === 'wander';
+
+                // Leg swing (걸을 때만)
+                const legSwing = isWalking ? Math.sin(npc.walkPhase * 8) * 0.5 : 0;
+                npc.parts.legL.rotation.x = legSwing;
+                npc.parts.legR.rotation.x = -legSwing;
+
+                // Body bob
+                const bob = isWalking
+                    ? Math.abs(Math.sin(npc.walkPhase * 8)) * 0.04
+                    : Math.sin(t * 1.8 + npc.def.x) * 0.025;
+                npc.parts.body.position.y = 0.50 + bob;
+                npc.parts.head.position.y = 0.88 + bob;
+
+                // alert 상태: 살짝 고개 기울임 (?)
+                if (npc.state === 'alert') {
+                    npc.parts.head.rotation.z = Math.sin(t * 4) * 0.08;
+                } else {
+                    npc.parts.head.rotation.z *= 0.9; // 부드럽게 복귀
+                }
 
                 // Blink
                 npc.blinkTimer -= dt;
                 if (npc.blinkTimer <= 0) npc.blinkTimer = 2.5 + Math.random() * 4;
                 const blink = npc.blinkTimer < 0.12;
-                npc.eyeL.scale.y = blink ? 0.1 : 1;
-                npc.eyeR.scale.y = blink ? 0.1 : 1;
+                npc.parts.eyeL.scale.y = blink ? 0.1 : 1;
+                npc.parts.eyeR.scale.y = blink ? 0.1 : 1;
 
-                // ── 플레이어 방향 회전 ──
-                if (dist < HIDE_DIST) {
-                    const targetRot = Math.atan2(dx, dz);
-                    let dRot = targetRot - npc.group.rotation.y;
-                    while (dRot > Math.PI) dRot -= Math.PI * 2;
-                    while (dRot < -Math.PI) dRot += Math.PI * 2;
-                    npc.group.rotation.y += dRot * 3 * dt;
-                }
+                // Walk phase reset when not walking
+                if (!isWalking) npc.walkPhase = 0;
 
-                // ── 대사 순환 ──
-                if (npc.active) {
+                // Dialogue (talk 상태에서만)
+
+                if (npc.state === 'talk') {
                     npc.lineTimer += dt;
                     if (npc.lineTimer >= LINE_INTERVAL) {
                         npc.lineTimer = 0;
@@ -302,27 +438,47 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                     npc.textEl.textContent = npc.def.lines[npc.lineIdx];
                 }
 
-                // ── Bubble 위치 (3D → screen projection) ──
-                if (npc.alpha > 0.01) {
-                    npc.bubble.style.opacity = String(Math.min(1, npc.alpha));
+                // Bubble positioning (JS 보간, CSS transition 없음)
 
-                    // NPC 머리 위 위치
-                    _worldPos.set(npc.group.position.x, npc.group.position.y + 1.6, npc.group.position.z);
+                const shouldShow = npc.state === 'talk';
+
+                // Alpha 보간 (CSS transition 대신)
+                const targetAlpha = shouldShow ? 1 : 0;
+                npc.bubbleAlpha += (targetAlpha - npc.bubbleAlpha) * Math.min(1, 6 * dt);
+
+                if (npc.bubbleAlpha > 0.01) {
+                    // 3D -> screen projection
+                    _worldPos.set(g.position.x, g.position.y + 1.55, g.position.z);
                     _screenPos.copy(_worldPos).project(camera);
 
-                    // 카메라 뒤에 있으면 숨김
+                    // Hysteresis: 카메라 뒤로 가도 즉시 숨기지 않음
                     if (_screenPos.z > 1) {
-                        npc.bubble.style.opacity = '0';
-                        continue;
+                        if (npc.bubbleVisible) {
+                            // 이미 보이고 있었으면 서서히 fade (즉시 X)
+                            npc.bubbleAlpha *= 0.85;
+                        }
+                    } else {
+                        npc.bubbleVisible = true;
+                        const sx = (_screenPos.x * 0.5 + 0.5) * window.innerWidth;
+                        const sy = (-_screenPos.y * 0.5 + 0.5) * window.innerHeight;
+
+                        // Position 보간 (부드러운 추적)
+                        npc.bubbleSX += (sx - npc.bubbleSX) * Math.min(1, 10 * dt);
+                        npc.bubbleSY += (sy - npc.bubbleSY) * Math.min(1, 10 * dt);
                     }
 
-                    const sx = (_screenPos.x * 0.5 + 0.5) * window.innerWidth;
-                    const sy = (-_screenPos.y * 0.5 + 0.5) * window.innerHeight;
+                    // 화면 밖 클램프
+                    npc.bubbleSX = Math.max(60, Math.min(window.innerWidth - 60, npc.bubbleSX));
+                    npc.bubbleSY = Math.max(40, Math.min(window.innerHeight - 40, npc.bubbleSY));
 
-                    npc.bubble.style.left = sx + 'px';
-                    npc.bubble.style.top = (sy - 20) + 'px';
+                    // DOM 적용 (transform으로 GPU compositing)
+                    npc.bubble.style.left = '0';
+                    npc.bubble.style.top = '0';
+                    npc.bubble.style.transform = `translate3d(${npc.bubbleSX}px, ${npc.bubbleSY - 20}px, 0) translate(-50%, -100%)`;
+                    npc.bubble.style.opacity = String(Math.min(1, npc.bubbleAlpha));
                 } else {
                     npc.bubble.style.opacity = '0';
+                    npc.bubbleVisible = false;
                 }
             }
         },

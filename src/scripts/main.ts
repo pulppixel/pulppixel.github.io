@@ -248,13 +248,13 @@ export function init(): void {
     setTimeout(() => {
       arcadeOverlay.style.opacity = '0';
       arcadeOverlay.style.pointerEvents = 'none';
-      if (!isMobile) renderer.domElement.requestPointerLock().then(_ => '');
+      if (!isMobile) renderer.domElement.requestPointerLock?.()?.then?.(() => {});
     }, 100);
   };
 
   // --- Minigame lazy loading ---
   const mgCache: Record<string, { start(): void; stop(): void }> = {};
-  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'circles']);
+  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'ninetosix']);
 
   async function loadMinigame(key: string): Promise<{ start(): void; stop(): void }> {
     if (mgCache[key]) return mgCache[key];

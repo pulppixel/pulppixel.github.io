@@ -8,13 +8,14 @@ interface Props {
   tags: string[];
   links?: { label: string; url: string }[];
   badge?: string;
+  ogImage?: string;
 }
 
 import BaseLayout from './BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 
-const { title, subtitle, period, role, team, tags, links, badge } = Astro.props;
+const { title, subtitle, period, role, team, tags, links, badge, ogImage } = Astro.props;
 
 // 프로젝트 순서 (index.astro와 동일)
 const projectOrder = [
@@ -37,7 +38,7 @@ const prev = currentIdx > 0 ? projectOrder[currentIdx - 1] : null;
 const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1] : null;
 ---
 
-<BaseLayout title={`${title} - Pulppixel`}>
+<BaseLayout title={`${title} - Pulppixel`} description={subtitle} ogImage={ogImage}>
   <Nav showBackLink={true} />
 
   <article class="project-detail">

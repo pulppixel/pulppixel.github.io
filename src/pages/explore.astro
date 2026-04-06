@@ -107,8 +107,7 @@ const title = 'pulppixel - 3D Explore';
     #mobile-jump:active { background: rgba(125,211,252,0.3); transform: scale(0.93); }
     #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #7dd3fc; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(125,211,252,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; z-index: 5; }
     .is-mobile #controls-hint { bottom: 16px; font-size: 10px; animation-delay: 1s; }
-    #fps { position: absolute; top: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; pointer-events: none; }
-    .is-mobile #fps { top: auto; bottom: 16px; right: 16px; }
+    #fps { position: absolute; bottom: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; pointer-events: none; }
     #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border: 1px solid rgba(125,211,252,0.3); border-radius: 50%; pointer-events: none; z-index: 5; display: none; }
     body:not(.is-mobile) #crosshair { display: block; }
     #zone-hint { position: absolute; left: 0; right: 0; top: 65%; height: 1px; background: linear-gradient(90deg, transparent 5%, rgba(125,211,252,0.1) 50%, transparent 95%); pointer-events: none; z-index: 3; opacity: 0; }
@@ -156,7 +155,8 @@ const title = 'pulppixel - 3D Explore';
 
     #tw-panel {
       position: absolute; bottom: 60px; left: 20px;
-      /* 나머지 기존 스타일 유지 */
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
       transition: opacity 0.2s, transform 0.2s;
     }
     #tw-panel.tw-closed {

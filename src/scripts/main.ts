@@ -573,7 +573,7 @@ export function init(): void {
     frameCount++;
     const now = performance.now();
     if (now - fpsLastTime >= 1000) {
-      fpsEl.textContent = frameCount + ' fps';
+      fpsEl.textContent = `${frameCount} fps · ${perf.tier}`;
       frameCount = 0;
       fpsLastTime = now;
     }

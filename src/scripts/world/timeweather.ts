@@ -51,11 +51,11 @@ const DAWN: P = {
   starOp: 0.05, exposure: 1.2, waterDeep: [0.12, 0.35, 0.40], waterShallow: [0.45, 0.55, 0.50],
 };
 const DAY: P = {
-  skyTop: [0.25, 0.56, 0.88], skyMid: [0.44, 0.72, 0.94], skyBot: [0.78, 0.91, 0.98], bg: [0.78, 0.91, 0.98],
-  sunCol: [1.0, 0.96, 0.88], sunI: 1.8, sunPos: [15, 25, 10],
-  ambCol: [0.53, 0.60, 0.73], ambI: 1.2, hemiSky: [0.53, 0.73, 1.0], hemiGnd: [0.27, 0.40, 0.20], hemiI: 0.7,
+  skyTop: [0.22, 0.50, 0.82], skyMid: [0.40, 0.66, 0.88], skyBot: [0.68, 0.82, 0.92], bg: [0.68, 0.82, 0.92],
+  sunCol: [1.0, 0.96, 0.88], sunI: 1.5, sunPos: [15, 25, 10],
+  ambCol: [0.48, 0.55, 0.68], ambI: 1.0, hemiSky: [0.53, 0.73, 1.0], hemiGnd: [0.27, 0.40, 0.20], hemiI: 0.7,
   fillCol: [0.60, 0.67, 0.80], fillI: 0.4, fogCol: [0.72, 0.85, 0.94], fogD: 0.008,
-  starOp: 0.0, exposure: 1.4, waterDeep: [0.10, 0.47, 0.53], waterShallow: [0.35, 0.85, 0.91],
+  starOp: 0.0, exposure: 1.25, waterDeep: [0.10, 0.47, 0.53], waterShallow: [0.35, 0.85, 0.91],
 };
 const SUNSET: P = {
   skyTop: [0.10, 0.06, 0.25], skyMid: [0.75, 0.30, 0.18], skyBot: [0.95, 0.62, 0.30], bg: [0.90, 0.55, 0.28],
@@ -65,11 +65,12 @@ const SUNSET: P = {
   starOp: 0.08, exposure: 1.3, waterDeep: [0.15, 0.20, 0.35], waterShallow: [0.55, 0.40, 0.35],
 };
 const NIGHT: P = {
-  skyTop: [0.04, 0.04, 0.12], skyMid: [0.08, 0.08, 0.18], skyBot: [0.12, 0.12, 0.24], bg: [0.08, 0.08, 0.15],
-  sunCol: [0.45, 0.50, 0.70], sunI: 0.5, sunPos: [-10, 20, -15],
-  ambCol: [0.18, 0.20, 0.35], ambI: 0.55, hemiSky: [0.15, 0.18, 0.35], hemiGnd: [0.08, 0.08, 0.12], hemiI: 0.35,
-  fillCol: [0.20, 0.22, 0.38], fillI: 0.25, fogCol: [0.10, 0.10, 0.18], fogD: 0.012,
-  starOp: 0.6, exposure: 1.0, waterDeep: [0.06, 0.10, 0.22], waterShallow: [0.14, 0.24, 0.35],
+  skyTop: [0.06, 0.06, 0.16], skyMid: [0.10, 0.10, 0.22], skyBot: [0.15, 0.15, 0.28], bg: [0.10, 0.10, 0.18],
+  sunCol: [0.50, 0.55, 0.75], sunI: 0.7, sunPos: [-10, 20, -15],
+  ambCol: [0.24, 0.26, 0.42], ambI: 0.7,
+  hemiSky: [0.20, 0.24, 0.42], hemiGnd: [0.12, 0.12, 0.18], hemiI: 0.45,
+  fillCol: [0.25, 0.28, 0.44], fillI: 0.35, fogCol: [0.10, 0.10, 0.18], fogD: 0.012,
+  starOp: 0.6, exposure: 1.1, waterDeep: [0.06, 0.10, 0.22], waterShallow: [0.14, 0.24, 0.35],
 };
 
 const PRESET_MAP: Record<string, P> = { dawn: DAWN, day: DAY, sunset: SUNSET, night: NIGHT };

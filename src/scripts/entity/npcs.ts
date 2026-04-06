@@ -20,7 +20,7 @@ interface NPCDef {
 
 const NPC_DEFS: NPCDef[] = [
     {
-        x: 2, z: 3,
+        x: 1, z: -3,
         color: 0x6ee7b7, bodyColor: 0xd8d0c0,
         name: '안내자',
         lines: [

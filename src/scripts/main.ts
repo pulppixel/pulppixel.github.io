@@ -17,6 +17,7 @@ import { createParticleEffects } from './world/particles';
 import { createCollectibles } from './system/collectibles';
 import { createNPCs } from './entity/npcs';
 import { createZoneParticles } from './world/zoneparticles';
+import { createEnvironmentEffects } from './world/environment';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -44,7 +45,6 @@ twToggle.addEventListener('click', () => {
 });
 
 // --- Skin palette tint helper ---
-new THREE.Color();
 function applySkinPalette(
     palette: SkinPalette,
     particles: { geo: THREE.BufferGeometry; count: number },
@@ -134,6 +134,7 @@ export function init(): void {
 
   const wind = createWindSystem(scene, isMobile);
   const particleFx = createParticleEffects(scene, isMobile);
+  const envFx = createEnvironmentEffects(scene, isMobile);
   const zoneParticles = createZoneParticles(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
@@ -551,6 +552,7 @@ export function init(): void {
 
     updateEnvironment(t, particles, stars, clouds, water);
     wind.update(t);
+    envFx.update(dt, t);
     audio.update(dt);
     tw.update(dt);
     audio.setBGMMood(tw.getTimeLabel());

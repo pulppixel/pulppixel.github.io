@@ -16,6 +16,7 @@ interface ZoneAnim {
   mesh: THREE.Object3D; zone: number; type: string;
   baseY?: number; range?: number; speed?: number; phase?: number;
   axis?: string; float?: number; baseOp?: number; baseEi?: number;
+  alwaysOn?: boolean;
 }
 
 export interface ZonesContext {
@@ -82,11 +83,13 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     // Ground rune ring (8 stones)
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
-      const rs = stdBox(0.5, 0.04, 0.5, co.color);
+      const rs = stdBox(0.25, 0.02, 0.25, co.color);
       (rs.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(co.color);
-      (rs.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.08;
-      rs.position.set(cx + Math.cos(a) * 2.8, ph + 0.03, cz + Math.sin(a) * 2.8);
-      rs.rotation.y = a;
+      (rs.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.25;
+      (rs.material as THREE.MeshStandardMaterial).transparent = true;
+      (rs.material as THREE.MeshStandardMaterial).opacity = 0.6;
+      rs.position.set(cx + Math.cos(a) * 2.8, ph + 0.02, cz + Math.sin(a) * 2.8);
+      rs.rotation.y = a + Math.PI / 4;
       scene.add(rs);
     }
 
@@ -118,8 +121,12 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     scene.add(fl);
 
     const burstRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.5, 0.7, 4),
-      new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0, side: THREE.DoubleSide }),
+        new THREE.RingGeometry(0.5, 0.7, 4),
+        new THREE.MeshBasicMaterial({
+          color: co.color, transparent: true, opacity: 0,
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,  // ★ 밝은 배경에서도 가시적
+        }),
     );
     burstRing.rotation.x = -Math.PI / 2;
     burstRing.position.set(cx, ph + 0.12, cz);
@@ -225,7 +232,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const log2 = stdBox(0.7, 0.15, 0.15, WOOD); log2.rotation.y = -0.4; log2.position.set(cx, ph + 0.2, cz - 2); scene.add(log2);
     const fire = glowBox(0.3, 0.5, 0.3, 0xf08030, 0.9);
     fire.position.set(cx, ph + 0.5, cz - 2); scene.add(fire);
-    za({ mesh: fire, type: 'pulse', baseEi: 0.9, range: 0.5 });
+    za({ mesh: fire, type: 'pulse', baseEi: 0.9, range: 0.5, alwaysOn: true });
 
     const fireLight = new THREE.PointLight(0xf5a040, 0.8, 6);
     fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
@@ -290,7 +297,9 @@ export function createZones(scene: THREE.Scene): ZonesContext {
 
     const portalFill = glowBox(3.2, 3.0, 0.08, COL, 0.4);
     (portalFill.material as THREE.MeshStandardMaterial).transparent = true;
-    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.15;
+    (portalFill.material as THREE.MeshStandardMaterial).opacity = 0.06;
+    (portalFill.material as THREE.MeshStandardMaterial).blending = THREE.AdditiveBlending;
+    (portalFill.material as THREE.MeshStandardMaterial).depthWrite = false;
     portalFill.position.set(cx, ph + 2.0, cz - 5); scene.add(portalFill);
     za({ mesh: portalFill, type: 'pulse', baseOp: 0.15, range: 0.08 });
 
@@ -393,9 +402,9 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       }
       if (z.active) {
         const age = t - z.activationTime;
-        const bp = Math.min(age * 1.8, 1);
+        const bp = Math.min(age * 1.2, 1);
         z.burstRing.scale.setScalar(1 + bp * 7);
-        (z.burstRing.material as THREE.MeshBasicMaterial).opacity = 0.5 * (1 - bp);
+        (z.burstRing.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - bp);
         if (bp >= 1) {
           z.burstRing.scale.setScalar(0);
           (z.burstRing.material as THREE.MeshBasicMaterial).opacity = 0;
@@ -408,12 +417,15 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     for (const a of zoneAnims) {
       const m = a.mesh;
       const p = zones[a.zone].proximity;
-      if (m.scale) m.scale.setScalar(m.scale.x + (p * p - m.scale.x) * 3 * dt);
+      const minS = a.alwaysOn ? 0.8 : 0;
+      const tgtS = minS + (1 - minS) * p * p;
+      if (m.scale) m.scale.setScalar(m.scale.x + (tgtS - m.scale.x) * 3 * dt);
 
       if ((m as THREE.Mesh).material) {
         const mat = (m as THREE.Mesh).material as THREE.MeshStandardMaterial;
         if (a.baseEi !== undefined && a.type !== 'pulse') {
-          mat.emissiveIntensity = a.baseEi * (0.2 + p * 0.8);
+          const minEi = a.alwaysOn ? 0.5 : 0.2;
+          mat.emissiveIntensity = a.baseEi * (minEi + (1 - minEi) * p);
         }
       }
 

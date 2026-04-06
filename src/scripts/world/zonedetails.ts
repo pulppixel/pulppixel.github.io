@@ -191,11 +191,6 @@ function buildNetherDecor(scene: THREE.Scene): void {
         scene.add(crystal);
     }
 
-    // Raised stone platform (subtle, 0.15 height)
-    const altar = stdBox(3.0, 0.15, 3.0, PURPLE_LT);
-    altar.position.set(cx, h + 0.075, cz + 1);
-    scene.add(altar);
-
     // ===== Phase 2: Ruined Obelisk Tower =====
     // 비대칭 탑 — 한쪽이 부서진 형태로 멀리서 실루엣 인식 가능
     const OB = 0x887880, OB_ACC = 0x9a7888;
@@ -620,6 +615,83 @@ function buildOverworldDecor(scene: THREE.Scene): void {
     const gravelGeo = new THREE.BoxGeometry(8.0, 0.015, 0.08);
     for (let gi = -3; gi <= 3; gi++) {
         scene.add(setPos(new THREE.Mesh(gravelGeo, gravelMat), cx - 2, h + 0.01, cz + gi * 0.8));
+    }
+
+    // ===== Waterfall Cliff Face =====
+    // environment.ts 폭포 위치(x=-9, z=-58)에 맞춰 절벽면 + 바위 풀 + 이끼 배치
+    const CL = 0x706858, CL_DK = 0x605848, CL_LT = 0x808068;
+    const WS = 0x5a6858;  // wet stone
+    const MS = 0x4a8a4a, MS_DK = 0x3a7a3a;
+    const fX = cx - 9, fZ = cz; // 폭포 중심 = 플랫폼 왼쪽 가장자리
+
+    // --- 절벽면 (플랫폼 측면에 돌출된 바위 벽) ---
+    // 하단 기반 (넓고 두꺼움 — 물속에서 올라오는 느낌)
+    const cl1 = stdBox(1.4, 1.8, 3.4, CL_DK); cl1.position.set(fX - 0.8, 0.9, fZ); cl1.castShadow = true; scene.add(cl1);
+    // 좌우 버트레스 (폭포 폭을 프레이밍)
+    const cl2 = stdBox(1.0, 2.8, 1.0, CL); cl2.position.set(fX - 0.6, 1.4, fZ - 1.8); cl2.castShadow = true; scene.add(cl2);
+    const cl3 = stdBox(1.0, 2.5, 1.0, CL); cl3.position.set(fX - 0.6, 1.25, fZ + 1.8); cl3.castShadow = true; scene.add(cl3);
+    // 중단 벽체
+    const cl4 = stdBox(1.0, 1.4, 3.0, CL); cl4.position.set(fX - 0.6, 2.3, fZ); cl4.castShadow = true; scene.add(cl4);
+    // 상단 (플랫폼 높이 근처 — grass 아래 돌 노출)
+    const cl5 = stdBox(0.8, 0.6, 3.2, CL_DK); cl5.position.set(fX - 0.5, 3.0, fZ); cl5.castShadow = true; scene.add(cl5);
+
+    // --- 오버행 선반 (물이 쏟아지는 턱) ---
+    const overhang = stdBox(0.5, 0.12, 2.6, CL_LT);
+    overhang.position.set(fX - 0.15, h + 0.06, fZ); scene.add(overhang);
+    // 선반 위 작은 돌
+    scene.add(setPos(stdBox(0.35, 0.15, 0.4, CL_LT), fX + 0.1, h + 0.08, fZ - 1.4));
+    scene.add(setPos(stdBox(0.3, 0.12, 0.35, CL), fX + 0.1, h + 0.06, fZ + 1.5));
+
+    // --- 바닥 바위 풀 (물이 떨어지는 곳, 수면 근처) ---
+    const poolRocks: [number, number, number, number][] = [
+        [fX - 1.8, fZ - 1.0, 0.7, 0.5], [fX - 2.2, fZ + 0.6, 0.6, 0.4],
+        [fX - 1.4, fZ + 1.4, 0.55, 0.35], [fX - 2.0, fZ - 1.6, 0.5, 0.38],
+        [fX - 2.8, fZ - 0.2, 0.5, 0.3], [fX - 1.2, fZ - 0.3, 0.45, 0.28],
+        [fX - 2.5, fZ + 1.2, 0.4, 0.25],
+    ];
+    for (const [rx, rz, rs, rh] of poolRocks) {
+        const rock = stdBox(rs, rh, rs * 0.85, CL);
+        rock.position.set(rx, rh / 2 - 0.05, rz);
+        rock.rotation.y = rx * 2.3 + rz;
+        rock.castShadow = true;
+        scene.add(rock);
+    }
+
+    // --- 스플래시 풀 (반투명 물 표면) ---
+    const poolSurface = new THREE.Mesh(
+        new THREE.BoxGeometry(3.0, 0.04, 3.5),
+        new THREE.MeshStandardMaterial({
+            color: 0x4898c0, emissive: 0x4898c0, emissiveIntensity: 0.08,
+            metalness: 0.3, roughness: 0.3, transparent: true, opacity: 0.35,
+        }),
+    );
+    poolSurface.position.set(fX - 1.8, 0.02, fZ); scene.add(poolSurface);
+
+    // --- 이끼 패치 (절벽면에 붙은 녹색 — 습한 환경 표현) ---
+    const mossMat = stdMat(MS);
+    const mossDkMat = stdMat(MS_DK);
+    const mossPatches: [number, number, number, number, number, number][] = [
+        [fX - 0.02, 1.6, fZ - 0.8, 0.08, 0.6, 0.9],
+        [fX - 0.02, 2.6, fZ + 0.7, 0.08, 0.5, 0.7],
+        [fX - 0.02, 0.9, fZ + 1.4, 0.08, 0.5, 0.6],
+        [fX - 0.02, 2.9, fZ - 0.4, 0.08, 0.35, 0.8],
+        [fX - 0.02, 1.2, fZ - 1.6, 0.08, 0.4, 0.5],
+    ];
+    for (let mi = 0; mi < mossPatches.length; mi++) {
+        const [mx, my, mz, mw, mh, md] = mossPatches[mi];
+        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(mw, mh, md), mi % 2 === 0 ? mossMat : mossDkMat), mx, my, mz));
+    }
+
+    // --- 젖은 돌 프레임 (폭포 좌우 — 물줄기 경계 표시) ---
+    const wetMat = stdMat(WS);
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.25, 3.0, 0.35), wetMat), fX - 0.15, 1.6, fZ - 1.35));
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.25, 3.0, 0.35), wetMat), fX - 0.15, 1.6, fZ + 1.35));
+
+    // --- 절벽 위 가장자리 덤불 (플랫폼→절벽 자연스러운 전환) ---
+    const edgeBushGeo = new THREE.BoxGeometry(0.55, 0.35, 0.55);
+    for (const [bx, bz] of [[fX + 0.3, fZ - 2.0], [fX + 0.3, fZ + 2.0], [fX + 0.4, fZ - 0.3], [fX + 0.2, fZ + 1.0]] as [number, number][]) {
+        const bush = new THREE.Mesh(edgeBushGeo, mossMat);
+        bush.position.set(bx, h + 0.18, bz); bush.castShadow = true; scene.add(bush);
     }
 }
 

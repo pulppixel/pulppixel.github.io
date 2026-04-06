@@ -195,6 +195,35 @@ function buildNetherDecor(scene: THREE.Scene): void {
     const altar = stdBox(3.0, 0.15, 3.0, PURPLE_LT);
     altar.position.set(cx, h + 0.075, cz + 1);
     scene.add(altar);
+
+    // ===== Phase 2: Ruined Obelisk Tower =====
+    // 비대칭 탑 — 한쪽이 부서진 형태로 멀리서 실루엣 인식 가능
+    const OB = 0x887880, OB_ACC = 0x9a7888;
+
+    // Main obelisk (tapered 3-segment, ~6 units tall)
+    scene.add(setPos(stdBox(1.2, 0.3, 1.2, 0x7a7068), cx - 3, h + 0.15, cz + 3.5));
+    const ob1 = stdBox(1.0, 2.5, 1.0, OB); ob1.position.set(cx - 3, h + 1.55, cz + 3.5); ob1.castShadow = true; scene.add(ob1);
+    const ob2 = stdBox(0.8, 2.0, 0.8, OB_ACC); ob2.position.set(cx - 3, h + 3.8, cz + 3.5); ob2.castShadow = true; scene.add(ob2);
+    const ob3 = stdBox(0.6, 1.2, 0.6, OB); ob3.position.set(cx - 3, h + 5.4, cz + 3.5); ob3.castShadow = true; scene.add(ob3);
+    // Pink crystal cap
+    const obGem = glowBox(0.45, 0.6, 0.45, 0xff6b9d, 0.45);
+    obGem.position.set(cx - 3, h + 6.3, cz + 3.5); obGem.rotation.y = Math.PI / 4; scene.add(obGem);
+    scene.add(setPos(new THREE.PointLight(0xff6b9d, 0.6, 12), cx - 3, h + 6.8, cz + 3.5));
+
+    // Broken obelisk (shorter, tilted top — 부서진 짝)
+    const obB1 = stdBox(0.9, 3.0, 0.9, OB); obB1.position.set(cx + 4, h + 1.5, cz + 3); obB1.castShadow = true; scene.add(obB1);
+    const obB2 = stdBox(0.6, 0.8, 0.6, OB_ACC); obB2.position.set(cx + 4, h + 3.4, cz + 3); obB2.rotation.z = 0.15; scene.add(obB2);
+
+    // Fallen column fragment on ground
+    const fallen = stdBox(2.0, 0.45, 0.45, OB);
+    fallen.position.set(cx + 6, h + 0.22, cz + 1); fallen.rotation.y = 0.3; scene.add(fallen);
+    const fallenEnd = stdBox(0.5, 0.5, 0.5, OB_ACC);
+    fallenEnd.position.set(cx + 7.1, h + 0.25, cz + 1.2); fallenEnd.rotation.y = 0.6; scene.add(fallenEnd);
+
+    // Accent vine strips on main obelisk
+    const vineMat = stdMat(0x4a8a4a);
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.5, 1.02), vineMat), cx - 3.52, h + 2.5, cz + 3.5));
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.8, 0.08), vineMat), cx - 3, h + 1.4, cz + 4.02));
 }
 
 // --- Treasure Isle (28, -40, h=2.5) - Tropical dock ---
@@ -257,6 +286,50 @@ function buildTreasureDecor(scene: THREE.Scene): void {
     const anchorBar = stdBox(0.5, 0.08, 0.08, 0x505058);
     anchorBar.position.set(cx + 3, h + 0.75, cz + 5.5);
     scene.add(anchorBar);
+
+    // ===== Phase 2: Lighthouse Tower =====
+    // ~8 units tall — 멀리서도 바로 보이는 실루엣
+    const LH_S = 0x9a8a78, LH_W = 0x8a6540;
+
+    // Foundation
+    scene.add(setPos(stdBox(1.8, 0.4, 1.8, LH_S), cx + 6, h + 0.2, cz - 4));
+    // Tower body — 3 tapered segments
+    const t1 = stdBox(1.4, 2.5, 1.4, LH_S); t1.position.set(cx + 6, h + 1.65, cz - 4); t1.castShadow = true; scene.add(t1);
+    // Window slits
+    const slitMat = new THREE.MeshStandardMaterial({ color: 0x6ee7b7, emissive: 0x6ee7b7, emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.6, transparent: true, opacity: 0.4 });
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.5, 1.42), slitMat), cx + 6, h + 2.0, cz - 4));
+    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.5, 0.12), slitMat), cx + 6, h + 2.0, cz - 4));
+    // Middle segment
+    const t2 = stdBox(1.1, 2.0, 1.1, LH_S); t2.position.set(cx + 6, h + 3.9, cz - 4); t2.castShadow = true; scene.add(t2);
+    // Balcony rail
+    scene.add(setPos(stdBox(1.5, 0.08, 1.5, LH_W), cx + 6, h + 4.94, cz - 4));
+    // 4 rail posts
+    for (const [rx, rz] of [[0.65, 0.65], [-0.65, 0.65], [0.65, -0.65], [-0.65, -0.65]] as [number, number][]) {
+        scene.add(setPos(stdBox(0.08, 0.4, 0.08, LH_W), cx + 6 + rx, h + 5.14, cz - 4 + rz));
+    }
+    // Top cabin
+    const t3 = stdBox(0.8, 1.2, 0.8, LH_W); t3.position.set(cx + 6, h + 5.94, cz - 4); t3.castShadow = true; scene.add(t3);
+    // Lantern room (glowing)
+    const lhLantern = glowBox(0.6, 0.7, 0.6, 0x6ee7b7, 0.5);
+    lhLantern.position.set(cx + 6, h + 6.9, cz - 4); scene.add(lhLantern);
+    // Roof + spire
+    scene.add(setPos(stdBox(1.0, 0.12, 1.0, LH_W), cx + 6, h + 7.31, cz - 4));
+    const spire = stdBox(0.12, 0.7, 0.12, LH_W); spire.position.set(cx + 6, h + 7.72, cz - 4); spire.castShadow = true; scene.add(spire);
+    // Beacon light
+    scene.add(setPos(new THREE.PointLight(0x6ee7b7, 0.8, 16), cx + 6, h + 7.5, cz - 4));
+
+    // Scattered gold coins on ground (treasure feel)
+    const coinMat = new THREE.MeshStandardMaterial({ color: 0xf5c870, emissive: 0xf5c870, emissiveIntensity: 0.12, metalness: 0.4, roughness: 0.5 });
+    const coinGeo = new THREE.BoxGeometry(0.22, 0.04, 0.22);
+    for (const [gx, gz] of [[-3, -2], [4, 1], [-5, -5], [2, -3], [6, 2], [-2, 3]] as [number, number][]) {
+        scene.add(setPos(new THREE.Mesh(coinGeo, coinMat), cx + gx, h + 0.02, cz + gz));
+    }
+
+    // Rope-wrapped bollard
+    const bollard = stdBox(0.2, 0.7, 0.2, LH_W);
+    bollard.position.set(cx - 6, h + 0.35, cz + 5); bollard.castShadow = true; scene.add(bollard);
+    scene.add(setPos(stdBox(0.28, 0.06, 0.28, 0xa09060), cx - 6, h + 0.55, cz + 5));
+    scene.add(setPos(stdBox(0.28, 0.06, 0.28, 0xa09060), cx - 6, h + 0.42, cz + 5));
 }
 
 // --- Beacon Peak (-28, -40, h=2.0) - Highland lookout ---
@@ -325,6 +398,81 @@ function buildBeaconDecor(scene: THREE.Scene): void {
         rock.rotation.y = rx * 0.5;
         scene.add(rock);
     }
+
+    // ===== Phase 2: Crystal Spire =====
+    // ~7.5 units tall — 보라빛 크리스탈 타워 + 부유 파편
+    const OBSIDIAN = 0x2a2838, CRYS = 0xa78bfa;
+
+    // Dark stone base
+    scene.add(setPos(stdBox(1.6, 0.5, 1.6, OBSIDIAN), cx + 5, h + 0.25, cz - 4));
+    scene.add(setPos(stdBox(1.3, 0.2, 1.3, 0x3a3048), cx + 5, h + 0.6, cz - 4));
+    // Spire body — dark stone fading to crystal
+    const sp1 = stdBox(1.0, 3.0, 1.0, 0x3a3048); sp1.position.set(cx + 5, h + 2.1, cz - 4); sp1.castShadow = true; scene.add(sp1);
+    // Crystal mid-section
+    const sp2 = glowBox(0.75, 2.5, 0.75, 0x7858c8, 0.2);
+    sp2.position.set(cx + 5, h + 4.85, cz - 4); sp2.castShadow = true; scene.add(sp2);
+    // Crystal tip
+    const sp3 = glowBox(0.45, 1.5, 0.45, CRYS, 0.45);
+    sp3.position.set(cx + 5, h + 6.85, cz - 4); sp3.rotation.y = Math.PI / 4; scene.add(sp3);
+    // Peak gem
+    const spGem = glowBox(0.3, 0.4, 0.3, CRYS, 0.7);
+    spGem.position.set(cx + 5, h + 7.8, cz - 4); spGem.rotation.y = Math.PI / 4; scene.add(spGem);
+    // Spire light (bright, long range — 멀리서도 보라빛 확인)
+    scene.add(setPos(new THREE.PointLight(CRYS, 0.8, 16), cx + 5, h + 8.2, cz - 4));
+
+    // Floating crystal fragments (서로 다른 높이에 부유)
+    const fragMat = new THREE.MeshStandardMaterial({
+        color: CRYS, emissive: CRYS, emissiveIntensity: 0.35,
+        metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.8,
+    });
+    const fragGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
+    const fragLgGeo = new THREE.BoxGeometry(0.4, 0.7, 0.4);
+    const frags: [number, number, number, boolean][] = [
+        [cx + 3.5, h + 4.5, cz - 3, false],
+        [cx + 6.5, h + 3.8, cz - 5, false],
+        [cx + 4.2, h + 5.8, cz - 5.5, true],
+        [cx + 6.0, h + 6.2, cz - 3.2, false],
+        [cx + 5.5, h + 7.0, cz - 2.5, true],
+    ];
+    for (const [fx, fy, fz, large] of frags) {
+        const f = new THREE.Mesh(large ? fragLgGeo : fragGeo, fragMat);
+        f.position.set(fx, fy, fz);
+        f.rotation.set(fx * 0.7, fy * 0.3, fz * 0.5);
+        scene.add(f);
+    }
+
+    // Dark floor tiles (obsidian feel — 존 바닥 차별화)
+    const darkTileMat = new THREE.MeshStandardMaterial({
+        color: CRYS, emissive: CRYS, emissiveIntensity: 0.04,
+        metalness: 0.2, roughness: 0.7, transparent: true, opacity: 0.1,
+    });
+    const darkTileGeo = new THREE.BoxGeometry(2.0, 0.02, 2.0);
+    for (const [tx, tz] of [[-4, -2], [4, 2], [-5, 3], [3, -5], [0, 4]] as [number, number][]) {
+        scene.add(setPos(new THREE.Mesh(darkTileGeo, darkTileMat), cx + tx, h + 0.012, cz + tz));
+    }
+
+    // Rune circle on ground (around spire base)
+    const runeCircleMat = new THREE.MeshStandardMaterial({
+        color: CRYS, emissive: CRYS, emissiveIntensity: 0.15,
+        metalness: 0.1, roughness: 0.8, transparent: true, opacity: 0.3,
+    });
+    const runeRing = new THREE.Mesh(
+        new THREE.RingGeometry(2.2, 2.4, 6),
+        new THREE.MeshBasicMaterial({ color: CRYS, transparent: true, opacity: 0.15, side: THREE.DoubleSide }),
+    );
+    runeRing.rotation.x = -Math.PI / 2;
+    runeRing.position.set(cx + 5, h + 0.02, cz - 4);
+    scene.add(runeRing);
+
+    // Pointed arch fragments (ominous entrance feel)
+    const archMat = stdMat(0x3a3048);
+    const archL = stdBox(0.3, 2.5, 0.3, 0x3a3048);
+    archL.position.set(cx + 3, h + 1.25, cz - 1); archL.castShadow = true; scene.add(archL);
+    const archR = stdBox(0.3, 2.0, 0.3, 0x3a3048);
+    archR.position.set(cx + 7, h + 1.0, cz - 1); archR.castShadow = true; scene.add(archR);
+    // Tilted crossbar (broken arch)
+    const archBar = stdBox(4.2, 0.2, 0.25, 0x3a3048);
+    archBar.position.set(cx + 5, h + 2.6, cz - 1); archBar.rotation.z = -0.08; scene.add(archBar);
 }
 
 // --- Overworld (0, -58, h=3.2) - Sacred garden ---
@@ -402,6 +550,77 @@ function buildOverworldDecor(scene: THREE.Scene): void {
     // Low stone wall (partial, at the back)
     stoneWall(scene, cx - 5, h, cz - 5.5, 4.0, 0.6, 0.35, GARDEN_STONE);
     stoneWall(scene, cx + 5, h, cz - 5.5, 4.0, 0.6, 0.35, GARDEN_STONE);
+
+    // ===== Phase 2: Grand Lantern Stands + Zen Elements =====
+    const LW = 0x7a5a38, GLOW = 0xfbbf24;
+
+    // Grand lantern post (right side, tall)
+    const lp1 = stdBox(0.2, 5.0, 0.2, LW); lp1.position.set(cx + 5, h + 2.5, cz - 2); lp1.castShadow = true; scene.add(lp1);
+    scene.add(setPos(stdBox(1.5, 0.12, 0.12, LW), cx + 5.5, h + 5.2, cz - 2));
+    scene.add(setPos(stdBox(0.06, 0.5, 0.06, 0x606060), cx + 6.2, h + 4.95, cz - 2));
+    const lan1 = glowBox(0.38, 0.48, 0.38, GLOW, 0.5);
+    lan1.position.set(cx + 6.2, h + 4.5, cz - 2); scene.add(lan1);
+    scene.add(setPos(new THREE.PointLight(GLOW, 0.5, 8), cx + 6.2, h + 4.7, cz - 2));
+
+    // Second lantern post (left side, slightly shorter)
+    const lp2 = stdBox(0.18, 4.0, 0.18, LW); lp2.position.set(cx - 5, h + 2.0, cz - 4); lp2.castShadow = true; scene.add(lp2);
+    scene.add(setPos(stdBox(1.3, 0.1, 0.1, LW), cx - 5.4, h + 4.15, cz - 4));
+    scene.add(setPos(stdBox(0.05, 0.45, 0.05, 0x606060), cx - 6.0, h + 3.9, cz - 4));
+    const lan2 = glowBox(0.32, 0.42, 0.32, GLOW, 0.45);
+    lan2.position.set(cx - 6.0, h + 3.5, cz - 4); scene.add(lan2);
+    scene.add(setPos(new THREE.PointLight(GLOW, 0.4, 6), cx - 6.0, h + 3.7, cz - 4));
+
+    // Third lantern (center-back, near the sacred tree)
+    const lp3 = stdBox(0.16, 3.5, 0.16, LW); lp3.position.set(cx + 2, h + 1.75, cz - 6); lp3.castShadow = true; scene.add(lp3);
+    scene.add(setPos(stdBox(0.9, 0.08, 0.08, LW), cx + 2.3, h + 3.6, cz - 6));
+    scene.add(setPos(stdBox(0.05, 0.35, 0.05, 0x606060), cx + 2.7, h + 3.35, cz - 6));
+    const lan3 = glowBox(0.28, 0.35, 0.28, GLOW, 0.4);
+    lan3.position.set(cx + 2.7, h + 3.0, cz - 6); scene.add(lan3);
+    scene.add(setPos(new THREE.PointLight(GLOW, 0.35, 5), cx + 2.7, h + 3.2, cz - 6));
+
+    // Stone water basin (tsukubai — 젠 가든 핵심 요소)
+    const basin = stdBox(0.8, 0.45, 0.8, GARDEN_STONE);
+    basin.position.set(cx - 6, h + 0.22, cz + 1); scene.add(basin);
+    // Hollowed water surface
+    const basinWater = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.04, 0.5),
+        new THREE.MeshStandardMaterial({
+            color: 0x4090c0, emissive: 0x4090c0, emissiveIntensity: 0.1,
+            metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.6,
+        }),
+    );
+    basinWater.position.set(cx - 6, h + 0.46, cz + 1); scene.add(basinWater);
+    // Bamboo spout
+    scene.add(setPos(stdBox(0.06, 0.5, 0.06, 0x6a8a4a), cx - 6.5, h + 0.55, cz + 1));
+    scene.add(setPos(stdBox(0.5, 0.06, 0.06, 0x6a8a4a), cx - 6.3, h + 0.8, cz + 1));
+
+    // High cherry blossom clusters (sacred tree 캐노피 확장)
+    const blossomMat = stdMat(0xf5a8c0);
+    const blossomDkMat = stdMat(0xe888a0);
+    const blossomGeo = new THREE.BoxGeometry(0.9, 0.65, 0.9);
+    const blossomSmGeo = new THREE.BoxGeometry(0.6, 0.5, 0.6);
+    const blossomSpots: [number, number, number, boolean][] = [
+        [cx - 2.5, h + 5.8, cz - 3.0, true],
+        [cx + 2.0, h + 6.0, cz - 5.0, false],
+        [cx - 1.0, h + 6.5, cz - 5.8, true],
+        [cx + 2.5, h + 5.2, cz - 3.5, false],
+        [cx - 3.0, h + 5.0, cz - 5.0, false],
+        [cx + 1.0, h + 6.8, cz - 4.5, true],
+    ];
+    for (const [bx, by, bz, large] of blossomSpots) {
+        const b = new THREE.Mesh(large ? blossomGeo : blossomSmGeo, large ? blossomMat : blossomDkMat);
+        b.position.set(bx, by, bz); b.castShadow = true; scene.add(b);
+    }
+
+    // Zen raked gravel lines (parallel grooves — 존 바닥 차별화)
+    const gravelMat = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.03,
+        metalness: 0.05, roughness: 0.9, transparent: true, opacity: 0.08,
+    });
+    const gravelGeo = new THREE.BoxGeometry(8.0, 0.015, 0.08);
+    for (let gi = -3; gi <= 3; gi++) {
+        scene.add(setPos(new THREE.Mesh(gravelGeo, gravelMat), cx - 2, h + 0.01, cz + gi * 0.8));
+    }
 }
 
 // =============================================

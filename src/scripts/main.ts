@@ -16,6 +16,7 @@ import { createWindSystem } from './world/wind';
 import { createParticleEffects } from './world/particles';
 import { createCollectibles } from './system/collectibles';
 import { createNPCs } from './entity/npcs';
+import { createZoneParticles } from './world/zoneparticles';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -25,7 +26,7 @@ const Y_AXIS = new THREE.Vector3(0, 1, 0);
 
 const SP = 4.8;
 const SPRINT_MULT = 1.7;
-const WALK_MULT = 0.45;  // 산책 모드 속도
+const WALK_MULT = 0.45;
 const BOUND_X = 50;
 const BOUND_Z_MIN = -68;
 const BOUND_Z_MAX = 10;
@@ -45,14 +46,12 @@ twToggle.addEventListener('click', () => {
 // --- Skin palette tint helper ---
 new THREE.Color();
 function applySkinPalette(
-  palette: SkinPalette,
-  particles: { geo: THREE.BufferGeometry; count: number },
-  dustMat: THREE.PointsMaterial,
+    palette: SkinPalette,
+    particles: { geo: THREE.BufferGeometry; count: number },
+    dustMat: THREE.PointsMaterial,
 ): void {
-  // Tint pollen particles
   const pMat = (particles.geo.userData?.pointsMaterial as THREE.PointsMaterial | undefined);
   if (pMat) pMat.color.set(palette.particle);
-  // Tint dust particles
   dustMat.color.set(palette.particle);
 }
 
@@ -74,7 +73,7 @@ export function init(): void {
   const audio = createAudio();
   const initAudio = () => {
     audio.init();
-    audio.startAmbient(); // ambient + BGM 함께 시작
+    audio.startAmbient();
     document.removeEventListener('keydown', initAudio);
     document.removeEventListener('click', initAudio);
     document.removeEventListener('touchstart', initAudio);
@@ -86,12 +85,12 @@ export function init(): void {
   const soundBtn = document.getElementById('sound-toggle');
   if (soundBtn) {
     soundBtn.onclick = () => {
-      const m = audio.toggleMute(); // BGM도 함께 토글됨
+      const m = audio.toggleMute();
       soundBtn.textContent = m ? '\u266A\u0338' : '\u266A';
     };
   }
 
-  // --- Dust particles (with skin-tintable material) ---
+  // --- Dust particles ---
   const DUST_MAX = 80;
   const dustGeo = new THREE.BufferGeometry();
   const dustPos = new Float32Array(DUST_MAX * 3);
@@ -115,11 +114,9 @@ export function init(): void {
     character = createCharacter(scene, index);
     character.group.position.copy(pos);
     character.group.rotation.y = rot;
-    // Apply palette to scene elements
     applySkinPalette(character.palette, particles, dustMat);
   }
 
-  // Apply initial palette
   applySkinPalette(character.palette, particles, dustMat);
 
   const { zones, projectMeshes, update: updateZones } = createZones(scene);
@@ -137,6 +134,7 @@ export function init(): void {
 
   const wind = createWindSystem(scene, isMobile);
   const particleFx = createParticleEffects(scene, isMobile);
+  const zoneParticles = createZoneParticles(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
 
@@ -196,12 +194,10 @@ export function init(): void {
       warpOverlay.style.opacity = '0';
     }, 120);
 
-    // 텔레포트
     character.group.position.set(x, h + 0.5, z + 4);
     velocityY = 0;
     isGrounded = false;
 
-    // 사운드 (기존 zoneChime 활용)
     audio.zoneChime(0x6ee7b7);
   });
 
@@ -221,8 +217,8 @@ export function init(): void {
   // --- Arcade transition overlay ---
   const arcadeOverlay = document.createElement('div');
   arcadeOverlay.style.cssText =
-    'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
-    'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
+      'position:fixed;inset:0;background:#0a0a0b;opacity:0;' +
+      'pointer-events:none;transition:opacity 0.45s ease;z-index:24;';
   document.body.appendChild(arcadeOverlay);
 
   // --- warp transition overlay ---
@@ -232,6 +228,12 @@ export function init(): void {
       'opacity:0;transition:opacity 0.12s ease-in, opacity 0.4s ease-out;' +
       'background:radial-gradient(circle,rgba(110,231,183,0.15) 0%,rgba(110,231,183,0.05) 50%,transparent 70%);';
   document.body.appendChild(warpOverlay);
+
+  // --- Zone atmosphere vignette overlay ---
+  const atmoOverlay = document.createElement('div');
+  atmoOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:4;';
+  document.body.appendChild(atmoOverlay);
+  let atmoLastColor = 0, atmoLastAlpha = 0;
 
   // --- Minigames (with audio) ---
   const mgContainer = document.getElementById('minigame-container')!;
@@ -250,7 +252,7 @@ export function init(): void {
     }, 100);
   };
 
-  // --- Minigame lazy loading (dynamic import) ---
+  // --- Minigame lazy loading ---
   const mgCache: Record<string, { start(): void; stop(): void }> = {};
   const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'circles']);
 
@@ -315,7 +317,7 @@ export function init(): void {
   let isGrounded = true;
   let wasGrounded = true;
   let isSprinting = false;
-  let isWalking = false; // 산책 모드 (V키 토글)
+  let isWalking = false;
   let smoothGroundY = 0;
   let lastSafePos = { x: SPAWN.x, y: SPAWN.y, z: SPAWN.z };
 
@@ -348,7 +350,6 @@ export function init(): void {
     if (input.keys['KeyD'] || input.keys['ArrowRight']) _mv.x += 1;
     if (input.moveTid !== null) { _mv.x += input.jIn.x; _mv.z += input.jIn.y; }
 
-    // Walk mode toggle (V key)
     if (input.keys['KeyV']) { isWalking = !isWalking; input.keys['KeyV'] = false; }
 
     const wantSprint = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
@@ -370,13 +371,9 @@ export function init(): void {
         character.group.position.z = nz;
       } else {
         const ghX = getGroundHeight(nx, character.group.position.z);
-        if (ghX <= curY + STEP_H) {
-          character.group.position.x = nx;
-        }
+        if (ghX <= curY + STEP_H) character.group.position.x = nx;
         const ghZ = getGroundHeight(character.group.position.x, nz);
-        if (ghZ <= curY + STEP_H) {
-          character.group.position.z = nz;
-        }
+        if (ghZ <= curY + STEP_H) character.group.position.z = nz;
       }
 
       const tr = Math.atan2(_mv.x, _mv.z);
@@ -500,6 +497,7 @@ export function init(): void {
     updateZones(t, dt, character.group.position, nearestProject);
     animals.update(dt, t, character.group.position);
     animalInteraction.update(dt, t, character.group.position);
+    zoneParticles.update(dt, t, character.group.position);
 
     collectibles.update(dt, t, character.group.position);
     npcs.update(dt, t, character.group.position);
@@ -512,7 +510,25 @@ export function init(): void {
       if (inZone) activeZoneSet.add(zi); else activeZoneSet.delete(zi);
     }
 
-    // Camera (산책 모드: 가까움, 낮은 FOV, 부드러운 추적)
+    // Zone atmosphere vignette
+    let bestProx = 0, bestColor = 0;
+    for (let zi = 0; zi < zones.length; zi++) {
+      if (zones[zi].proximity > bestProx) { bestProx = zones[zi].proximity; bestColor = zones[zi].color; }
+    }
+    const atmoAlpha = bestProx > 0.3 ? Math.min(0.12, (bestProx - 0.3) * 0.17) : 0;
+    if (Math.abs(atmoAlpha - atmoLastAlpha) > 0.003 || (atmoAlpha > 0.003 && bestColor !== atmoLastColor)) {
+      if (atmoAlpha < 0.003) {
+        atmoOverlay.style.background = 'transparent';
+      } else {
+        const r = (bestColor >> 16) & 0xff, g = (bestColor >> 8) & 0xff, b = bestColor & 0xff;
+        atmoOverlay.style.background =
+            `radial-gradient(ellipse at center, transparent 35%, rgba(${r},${g},${b},${atmoAlpha}) 100%)`;
+      }
+      atmoLastAlpha = atmoAlpha;
+      atmoLastColor = bestColor;
+    }
+
+    // Camera
     const walkCamDist = isWalking ? Math.min(input.camDist, 3.5) : input.camDist;
     const camH = walkCamDist * 0.55 + input.pitch * walkCamDist * 0.8;
     const camZ = walkCamDist * Math.cos(input.pitch * 0.5);

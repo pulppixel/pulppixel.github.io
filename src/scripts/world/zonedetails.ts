@@ -478,51 +478,23 @@ function buildOverworldDecor(scene: THREE.Scene): void {
         scene.add(setPos(new THREE.Mesh(gravelGeo, gravelMat), cx - 2, h + 0.01, cz + gi * 0.8));
     }
 
-    // Waterfall Cliff Face
-    const CL = 0x706858, CL_DK = 0x605848, CL_LT = 0x808068;
-    const MS = 0x4a8a4a, MS_DK = 0x3a7a3a;
+    // Waterfall — 반투명 물 커튼
     const fX = cx - 9, fZ = cz;
-
-    const rkL1 = stdBox(0.6, 10.0, 0.7, CL_DK); rkL1.position.set(fX - 0.4, 5.0, fZ - 1.6); rkL1.castShadow = true; scene.add(rkL1);
-    const rkL2 = stdBox(0.4, 8.0, 0.5, CL); rkL2.position.set(fX - 0.3, 4.0, fZ - 2.2); rkL2.castShadow = true; scene.add(rkL2);
-    const rkR1 = stdBox(0.6, 9.5, 0.7, CL_DK); rkR1.position.set(fX - 0.4, 4.75, fZ + 1.6); rkR1.castShadow = true; scene.add(rkR1);
-    const rkR2 = stdBox(0.4, 8.0, 0.5, CL); rkR2.position.set(fX - 0.3, 4.0, fZ + 2.2); rkR2.castShadow = true; scene.add(rkR2);
-
-    const backWall = stdBox(0.25, 11.0, 2.2, CL); backWall.position.set(fX - 0.6, 5.5, fZ); scene.add(backWall);
-
-    scene.add(setPos(stdBox(0.35, 0.1, 2.4, CL_LT), fX - 0.1, h + 0.06, fZ));
-    scene.add(setPos(stdBox(0.25, 0.12, 0.35, CL_LT), fX + 0.1, h + 0.07, fZ - 1.3));
-    scene.add(setPos(stdBox(0.2, 0.1, 0.3, CL), fX + 0.1, h + 0.05, fZ + 1.4));
-
-    for (const [rx, rz, rs] of [
-        [fX - 1.5, fZ - 0.8, 0.4], [fX - 1.8, fZ + 0.5, 0.35],
-        [fX - 1.2, fZ + 1.0, 0.3], [fX - 2.0, fZ - 1.2, 0.35],
-        [fX - 1.0, fZ - 0.2, 0.25],
-    ] as [number, number, number][]) {
-        const rock = stdBox(rs, rs * 0.6, rs * 0.8, CL);
-        rock.position.set(rx, rs * 0.3 - 0.05, rz); rock.rotation.y = rx * 2; scene.add(rock);
-    }
-
-    scene.add(setPos(new THREE.Mesh(
-        new THREE.BoxGeometry(2.2, 0.04, 2.8),
-        new THREE.MeshStandardMaterial({ color: 0x4898c0, emissive: 0x4898c0, emissiveIntensity: 0.08, metalness: 0.3, roughness: 0.3, transparent: true, opacity: 0.3 }),
-    ), fX - 1.5, 0.02, fZ));
-
-    const mossMat = stdMat(MS);
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.4), mossMat), fX - 0.08, 1.8, fZ - 1.5));
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.35), stdMat(MS_DK)), fX - 0.08, 1.0, fZ + 1.7));
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.5), mossMat), fX - 0.08, 2.5, fZ + 0.8));
-
-    const edgeBushGeo = new THREE.BoxGeometry(0.45, 0.3, 0.45);
-    for (const [bx, bz] of [[fX + 0.3, fZ - 1.8], [fX + 0.3, fZ + 1.9]] as [number, number][]) {
-        scene.add(setPos(new THREE.Mesh(edgeBushGeo, mossMat), bx, h + 0.15, bz));
-    }
+    const waterCurtain = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.5, h),
+        new THREE.MeshStandardMaterial({
+            color: 0x4898c0, emissive: 0x2a6080, emissiveIntensity: 0.08,
+            transparent: true, opacity: 0.18, side: THREE.DoubleSide,
+            depthWrite: false, metalness: 0.1, roughness: 0.3,
+        }),
+    );
+    waterCurtain.position.set(fX - 0.2, h / 2, fZ);
+    waterCurtain.rotation.y = Math.PI / 2;
+    scene.add(waterCurtain);
 }
 
 // =============================================
 // ZONE BOUNDARY SYSTEM
-// 코너 비콘 + 센터 메달리온
-// v2: 모바일에서 PointLight 제거 (emissive mesh만 유지)
 // =============================================
 
 export function buildZoneBoundaries(scene: THREE.Scene): void {

@@ -515,10 +515,14 @@ export function buildZonePatches(scene: THREE.Scene): void {
       if (Math.abs(p.x - co.position.x) < 1 && Math.abs(p.z - co.position.z) < 1) {
         const ring = new THREE.Mesh(
             new THREE.RingGeometry(3.5, 3.7, 32),
-            new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.12, side: THREE.DoubleSide }),
+            new THREE.MeshBasicMaterial({
+              color: co.color, transparent: true, opacity: 0.12, side: THREE.DoubleSide,
+              depthWrite: false,
+              polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+            }),
         );
         ring.rotation.x = -Math.PI / 2;
-        ring.position.set(co.position.x, p.h + 0.01, co.position.z);
+        ring.position.set(co.position.x, p.h + 0.04, co.position.z);
         scene.add(ring);
         break;
       }

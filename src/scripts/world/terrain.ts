@@ -55,7 +55,7 @@ interface ZonePalette {
 }
 
 const PALETTES: Record<string, ZonePalette> = {
-  spawn:     { grass: 0x80d880, grassEdge: 0x68c068, stone: 0x8a8598, stoneDark: 0x6a6578, dirt: 0xa08860, rockAccent: 0x9a9088 },
+  spawn:     { grass: 0xa89060, grassEdge: 0x887048, stone: 0x8a8598, stoneDark: 0x6a6578, dirt: 0xa08860, rockAccent: 0x9a9088 },
   nether:    { grass: 0x5a8870, grassEdge: 0x487860, stone: 0x706080, stoneDark: 0x504068, dirt: 0x686058, rockAccent: 0x7a6890 },
   treasure:  { grass: 0x78d868, grassEdge: 0x60c050, stone: 0xb8a880, stoneDark: 0x988868, dirt: 0xc8b070, rockAccent: 0xd0c090 },
   beacon:    { grass: 0xa8b850, grassEdge: 0x90a040, stone: 0x988868, stoneDark: 0x787050, dirt: 0xa89058, rockAccent: 0xb8a060 },

@@ -2,14 +2,51 @@
   <div class="container">
     <div class="footer-inner">
       <p class="footer-brand">pulppixel<span>.</span></p>
-      <p class="footer-copy">Designed & built from scratch / Powered by Astro / © 2026</p>
+      <p class="footer-copy">© 2026 <span>•</span> Built with Astro</p>
     </div>
   </div>
 </footer>
+
 <style>
-  footer { padding: 2.5rem 0; border-top: 1px solid var(--border); text-align: center; }
-  .footer-inner { display: flex; flex-direction: column; gap: 0.4rem; align-items: center; }
-  .footer-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); letter-spacing: -0.02em; }
-  .footer-brand span { color: var(--accent); }
-  .footer-copy { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-tertiary); letter-spacing: 0.02em; }
+  footer {
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: -0.02em;
+  }
+
+  .footer-brand span {
+    color: var(--accent);
+  }
+
+  .footer-copy {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+  }
+
+  .footer-copy span {
+    margin: 0 0.4rem;
+    color: var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .footer-inner {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
 </style>

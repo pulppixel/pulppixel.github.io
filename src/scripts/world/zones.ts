@@ -7,7 +7,7 @@ import { stdBox, glowBox, textSprite } from '../core/helpers';
 
 export interface ZoneState {
   cx: number; cz: number; color: number;
-  platform: THREE.Mesh; ring: THREE.Mesh; fill: THREE.Mesh;
+  ring: THREE.Mesh; fill: THREE.Mesh;
   pillarLight: THREE.PointLight; pillar: THREE.Mesh; burstRing: THREE.Mesh;
   active: boolean; wasActive: boolean; activationTime: number; proximity: number;
 }
@@ -67,19 +67,6 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
     const cx = co.position.x, cz = co.position.z;
     const ph = zoneHeight(cx, cz);
 
-    // Zone ground accent
-    const pf = new THREE.Mesh(
-        new THREE.BoxGeometry(7.6, 0.06, 7.6),
-        new THREE.MeshStandardMaterial({
-          color: co.color, metalness: 0.15, roughness: 0.7,
-          emissive: new THREE.Color(co.color), emissiveIntensity: 0.03,
-          transparent: true, opacity: 0.2,
-        }),
-    );
-    pf.position.set(cx, ph + 0.04, cz);
-    pf.receiveShadow = true;
-    scene.add(pf);
-
     // Ground rune ring (8 stones)
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
@@ -95,7 +82,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
 
     // Zone ring
     const rn = new THREE.Mesh(
-        new THREE.RingGeometry(3.7, 3.85, 4),
+        new THREE.RingGeometry(3.7, 3.85, 32),
         new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide }),
     );
     rn.rotation.x = -Math.PI / 2;
@@ -118,7 +105,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
 
     // Fill + burst ring
     const fl = new THREE.Mesh(
-        new THREE.CircleGeometry(3.7, 4),
+        new THREE.CircleGeometry(3.7, 32),
         new THREE.MeshBasicMaterial({ color: co.color, transparent: true, opacity: 0.02, side: THREE.DoubleSide }),
     );
     fl.rotation.x = -Math.PI / 2;
@@ -139,7 +126,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
     scene.add(burstRing);
 
     zones.push({
-      cx, cz, color: co.color, platform: pf, ring: rn, fill: fl,
+      cx, cz, color: co.color, ring: rn, fill: fl,
       pillarLight: pL, pillar: pl, burstRing,
       active: false, wasActive: false, activationTime: 0, proximity: 0,
     });

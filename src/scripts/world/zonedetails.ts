@@ -157,10 +157,6 @@ function buildNetherDecor(scene: THREE.Scene, isMobile: boolean): void {
         scene.add(crystal);
     }
 
-    const altar = stdBox(3.0, 0.15, 3.0, PURPLE_LT);
-    altar.position.set(cx, h + 0.075, cz + 1);
-    scene.add(altar);
-
     // ===== Phase 2: Ruined Obelisk Tower (데스크톱 전용) =====
     if (isMobile) return;
 
@@ -302,9 +298,6 @@ function buildBeaconDecor(scene: THREE.Scene, isMobile: boolean): void {
         flame.position.set(tx, h + 1.55, tz + 0.15); scene.add(flame);
     }
 
-    const base = stdBox(2.5, 0.1, 2.5, AMBER);
-    base.position.set(cx, h + 0.05, cz - 2); scene.add(base);
-
     const rockSpots: [number, number, number][] = [
         [cx - 8, cz - 6, 0.7], [cx + 8, cz - 6, 0.5], [cx - 8, cz + 3, 0.4],
     ];
@@ -393,8 +386,6 @@ function buildOverworldDecor(scene: THREE.Scene, isMobile: boolean): void {
         rock.position.set(gardenCenter[0] + Math.cos(a) * gardenR, h + s * 0.3, gardenCenter[1] + Math.sin(a) * gardenR);
         rock.rotation.y = a; scene.add(rock);
     }
-    const gardenSand = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.02, 3.5), stdMat(0xd0c8b8));
-    gardenSand.position.set(gardenCenter[0], h + 0.01, gardenCenter[1]); scene.add(gardenSand);
 
     const benchX = cx - 5, benchZ = cz + 3;
     woodBeam(scene, benchX, h + 0.25, benchZ, 1.4, 0.08, 0.4);

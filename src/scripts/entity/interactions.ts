@@ -24,29 +24,29 @@ function getEmojiTexture(emoji: string): THREE.Texture {
   if (EMOJI_CACHE.has(emoji)) return EMOJI_CACHE.get(emoji)!;
 
   const canvas = document.createElement('canvas');
-  canvas.width = 64; canvas.height = 64;
+  canvas.width = 128; canvas.height = 128;
   const ctx = canvas.getContext('2d')!;
 
   // 작은 말풍선
   ctx.fillStyle = 'rgba(10,10,11,0.8)';
   ctx.beginPath();
-  ctx.roundRect(6, 4, 52, 44, 10);
+  ctx.roundRect(12, 8, 104, 88, 20);
   ctx.fill();
   ctx.strokeStyle = 'rgba(110,231,183,0.3)';
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.stroke();
 
   // 꼬리
   ctx.fillStyle = 'rgba(10,10,11,0.8)';
   ctx.beginPath();
-  ctx.moveTo(26, 48); ctx.lineTo(32, 58); ctx.lineTo(38, 48);
+  ctx.moveTo(52, 96); ctx.lineTo(64, 116); ctx.lineTo(76, 96);
   ctx.fill();
 
   // 이모지
-  ctx.font = '26px serif';
+  ctx.font = '52px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(emoji, 32, 27);
+  ctx.fillText(emoji, 64, 54);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.minFilter = THREE.LinearFilter;

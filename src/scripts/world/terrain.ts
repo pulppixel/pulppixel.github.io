@@ -180,11 +180,16 @@ function addTree(scene: THREE.Scene, tx: number, tz: number, h: number, type: Le
 
 export function buildTrees(scene: THREE.Scene): void {
   const trees: [number, number, number, LeafType][] = [
-    [-4, 4, 3.5, 'green'], [5, 3, 3, 'green'],
-    [-7, -14, 5, 'green'], [7, -15, 4, 'green'], [-5, -23, 4, 'green'], [6, -22, 3.5, 'green'],
-    [24, -36, 4.5, 'green'], [33, -38, 4, 'green'], [30, -44, 3.5, 'green'], [22, -42, 3, 'green'],
-    [-33, -36, 5, 'orange'], [-24, -38, 4, 'orange'], [-30, -44, 3.5, 'orange'], [-22, -42, 3, 'orange'],
-    [-6, -55, 5, 'pink'], [5, -56, 4, 'pink'], [-4, -63, 4.5, 'pink'], [7, -62, 5, 'pink'], [-2, -59, 3.5, 'pink'],
+    // Spawn: 1 작은 나무 (탁 트인 초원)
+    [5, 3, 2.5, 'green'],
+    // Hub: 밀도 높은 숲 (갈림길 분위기)
+    [-7, -14, 5, 'green'], [7, -15, 4.5, 'green'], [-5, -23, 4, 'green'], [6, -22, 3.5, 'green'],
+    // Treasure: 2그루만 (해안 절벽, 탁 트인 뷰)
+    [24, -36, 3.5, 'green'], [33, -43, 3, 'green'],
+    // Nether: 주황/붉은 나무 (어둡고 신비)
+    [-33, -36, 5, 'orange'], [-24, -38, 4.5, 'orange'], [-30, -44, 4, 'orange'],
+    // Peak: 벚꽃 3그루 (정원, 정돈된 배치)
+    [-5, -55, 5, 'pink'], [5, -61, 4.5, 'pink'], [-3, -63, 4, 'pink'],
   ];
   for (const [x, z, h, type] of trees) addTree(scene, x, z, h, type);
 }
@@ -197,11 +202,16 @@ export function buildTrees(scene: THREE.Scene): void {
 
 export function buildFlowers(scene: THREE.Scene): void {
   const spots: [number, number][] = [
-    [-3, 2], [4, -1], [-2, -3], [3, 3],
+    // Spawn: 2곳만 (깔끔한 초원)
+    [-3, 2], [4, -1],
+    // Hub: 풍성 (숲속 분위기)
     [-4, -14], [3, -16], [-6, -21], [5, -20], [0, -17],
-    [25, -37], [31, -39], [27, -43], [34, -36], [23, -41],
-    [-32, -37], [-25, -39], [-29, -43], [-23, -36], [-34, -41],
-    [-5, -54], [4, -56], [-3, -61], [6, -59], [0, -57],
+    // Treasure: 3곳 (해안가 야생화)
+    [25, -37], [31, -39], [23, -41],
+    // Nether: 2곳만 (어둡고 척박)
+    [-32, -37], [-25, -43],
+    // Peak: 4곳 (정원 꽃, 정돈된 배치)
+    [-5, -54], [4, -56], [-3, -61], [6, -59],
   ];
 
   // 공유 geometry (인스턴싱용)
@@ -249,9 +259,12 @@ export function buildFlowers(scene: THREE.Scene): void {
 // Mushrooms
 
 export function buildMushrooms(scene: THREE.Scene): void {
+  // Hub + Nether에만 배치 (숲/신비 분위기)
   const spots: [number, number, number][] = [
-    [3, -1, FL_PK], [-6, -20, LEAF_OR], [32, -40, FL_PK], [-31, -40, LEAF_OR],
-    [-3, -60, FL_PK], [5, -57, LEAF_OR], [0, -29, FL_PK], [-1, -43, LEAF_OR],
+    // Hub
+    [-6, -20, LEAF_OR], [3, -14, FL_PK],
+    // Nether
+    [-31, -40, LEAF_OR], [-25, -36, LEAF_OR], [-29, -43, FL_PK],
   ];
 
   const stemGeo = new THREE.BoxGeometry(0.15, 0.35, 0.15);
@@ -280,7 +293,14 @@ export function buildRocks(scene: THREE.Scene): void {
     if (p.h <= 0 || p.w < 10) continue;
     const pal = getZonePalette(p.x, p.z);
     const isMain = p.w >= 14;
-    const count = isMain ? 6 : 2;
+
+    // 존별 밀도 조절
+    let count: number;
+    if (!isMain) { count = 1; }
+    else if (pal === PALETTES.spawn) { count = 2; }       // 초원: 적게
+    else if (pal === PALETTES.beacon) { count = 8; }      // Nether: 많이 (척박)
+    else if (pal === PALETTES.overworld) { count = 3; }   // Peak: 정돈된 돌
+    else { count = 5; }                                    // Hub, Treasure: 보통
     const margin = isMain ? 2.0 : 1.0;
 
     for (let i = 0; i < count; i++) {
@@ -339,6 +359,10 @@ export function buildFences(scene: THREE.Scene): void {
     if (p.h <= 0 || p.w < 10) continue;
     const hw = p.w / 2, hd = p.d / 2;
     const isMain = p.w >= 14;
+    const zk = getZonePalette(p.x, p.z);
+
+    // Spawn: 펜스 없음 (탁 트인 초원)
+    if (isMain && zk === PALETTES.spawn) continue;
 
     const edges: { axis: 'x' | 'z'; dir: number; from: number; to: number }[] = [
       { axis: 'x', dir: 1, from: p.z - hd + 0.4, to: p.z + hd - 0.4 },
@@ -372,24 +396,31 @@ export function buildFences(scene: THREE.Scene): void {
         const ry = runsZ ? Math.PI / 2 : 0;
 
         if (isMain) {
-          // Wall → BATCHED
-          ib(h > 0.5 ? 'fw' : 'fwl', wallGeo, h > 0.5 ? wallMat : wallLtMat, fx, p.h + 0.15, fz, ry);
-
-          // Hedge → 개별 (wind 대상)
-          if (h > 0.30) {
-            const hedge = new THREE.Mesh(hedgeGeo, h > 0.7 ? hedgeDkMat : h > 0.5 ? hedgeMat : hedgeLtMat);
-            hedge.position.set(fx, p.h + 0.49, fz);
-            if (runsZ) hedge.rotation.y = Math.PI / 2;
-            hedge.castShadow = true;
-            scene.add(hedge);
-          }
-
-          // Hedge flower → 개별 (wind 대상, 소량)
-          if (h > 0.88) {
-            const fl = new THREE.Mesh(flowerGeo, flowerMats[Math.floor(h * 40) % flowerMats.length]);
-            fl.position.set(fx, p.h + 0.76, fz);
-            fl.rotation.y = Math.PI / 4;
-            scene.add(fl);
+          if (zk === PALETTES.treasure) {
+            // Treasure: 나무 기둥만 (해안/부두 느낌)
+            if (i % 2 === 0) ib('fp', postGeo, postMat, fx, p.h + 0.35, fz);
+          } else if (zk === PALETTES.beacon) {
+            // Nether: 돌벽만 (어둡고 무거움), hedge 없음
+            ib(h > 0.5 ? 'fw' : 'fwl', wallGeo, h > 0.5 ? wallMat : wallLtMat, fx, p.h + 0.15, fz, ry);
+          } else if (zk === PALETTES.overworld) {
+            // Peak: 낮은 돌 보더 듬성듬성 (젠 가든, 미니멀)
+            if (i % 3 === 0) ib('fwl', wallGeo, wallLtMat, fx, p.h + 0.15, fz, ry);
+          } else {
+            // Hub: 돌벽 + hedge (기존 스타일 유지)
+            ib(h > 0.5 ? 'fw' : 'fwl', wallGeo, h > 0.5 ? wallMat : wallLtMat, fx, p.h + 0.15, fz, ry);
+            if (h > 0.30) {
+              const hedge = new THREE.Mesh(hedgeGeo, h > 0.7 ? hedgeDkMat : h > 0.5 ? hedgeMat : hedgeLtMat);
+              hedge.position.set(fx, p.h + 0.49, fz);
+              if (runsZ) hedge.rotation.y = Math.PI / 2;
+              hedge.castShadow = true;
+              scene.add(hedge);
+            }
+            if (h > 0.88) {
+              const fl = new THREE.Mesh(flowerGeo, flowerMats[Math.floor(h * 40) % flowerMats.length]);
+              fl.position.set(fx, p.h + 0.76, fz);
+              fl.rotation.y = Math.PI / 4;
+              scene.add(fl);
+            }
           }
         } else if (i % 2 === 0) {
           // Small platform post → BATCHED
@@ -431,14 +462,23 @@ export function buildFences(scene: THREE.Scene): void {
       if (connX && connZ) continue;
 
       if (isMain) {
-        // Corner stone → BATCHED
-        ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
-
-        // Corner hedge ball → 개별 (wind 대상 — hedgeMat 색상이 HEDGE_HEX)
-        const ball = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.30, 0.32), hedgeMat);
-        ball.position.set(cx, p.h + 0.57, cz);
-        ball.castShadow = true;
-        scene.add(ball);
+        if (zk === PALETTES.treasure) {
+          // Treasure: 나무 기둥
+          ib('fp', postGeo, postMat, cx, p.h + 0.35, cz);
+        } else if (zk === PALETTES.beacon) {
+          // Nether: 코너 돌만
+          ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
+        } else if (zk === PALETTES.overworld) {
+          // Peak: 코너 돌만 (미니멀)
+          ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
+        } else {
+          // Hub: 코너 돌 + hedge ball
+          ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
+          const ball = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.30, 0.32), hedgeMat);
+          ball.position.set(cx, p.h + 0.57, cz);
+          ball.castShadow = true;
+          scene.add(ball);
+        }
       } else {
         // Small platform corner post → BATCHED
         ib('fp', postGeo, postMat, cx, p.h + 0.35, cz);
@@ -450,11 +490,11 @@ export function buildFences(scene: THREE.Scene): void {
 // Lanterns
 
 export function buildLanterns(scene: THREE.Scene): void {
+  // 주요 갈림길에만 배치 (디딤돌 위 과밀 방지)
   const spots: [number, number][] = [
-    [0, -4], [0, -14],
-    [10, -24], [17, -28], [22, -33],
-    [-10, -24], [-17, -28], [-22, -33],
-    [1, -30], [-1, -42], [0, -48],
+    [0, -4],                           // Spawn→Hub 입구
+    [10, -24], [-10, -24], [1, -30],   // Hub 출구 갈림길 3개
+    [0, -48],                           // 센터루트 후반
   ];
 
   const postGeo = new THREE.BoxGeometry(0.12, 1.5, 0.12);

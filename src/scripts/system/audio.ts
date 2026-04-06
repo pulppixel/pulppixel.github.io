@@ -6,6 +6,7 @@ export interface GameAudio {
   footstep(surface: 'grass' | 'stone' | 'wood', sprint: boolean): void;
   jump(): void;
   land(impact: number): void;
+  mgGem(count: number): void;
   splash(): void;
   zoneChime(colorHex: number): void;
   cubeTick(): void;
@@ -224,6 +225,19 @@ export function createAudio(): GameAudio {
       const vol = Math.min(0.25, 0.06 + impact * 0.03);
       tone(70 + impact * 12, 0.12, vol, 'sine', 0.002, 0.08);
       noiseBurst(350, 1.5, 0.07, vol * 0.5, 'lowpass');
+    },
+
+    mgGem(count: number) {
+      if (!ensure()) return;
+      const base = 660 + Math.min(count, 12) * 40;
+      const penta = [1, 1.25, 1.5, 1.875, 2.0];
+      for (let i = 0; i < 4; i++) {
+        toneAt(base * penta[i % 5], 0.3, 0.07, i * 0.06, 'sine');
+        toneAt(base * penta[i % 5] * 0.5, 0.35, 0.025, i * 0.06, 'triangle');
+      }
+      // shimmer tail
+      toneAt(base * 2.5, 0.5, 0.03, 0.25, 'sine');
+      noiseBurst(4000, 0.8, 0.08, 0.02, 'highpass');
     },
 
     splash() {

@@ -462,6 +462,12 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                         const sx = (_screenPos.x * 0.5 + 0.5) * window.innerWidth;
                         const sy = (-_screenPos.y * 0.5 + 0.5) * window.innerHeight;
 
+                        if (!npc.bubbleVisible) {
+                            npc.bubbleSX = sx;
+                            npc.bubbleSY = sy;
+                        }
+                        npc.bubbleVisible = true;
+
                         // Position 보간 (부드러운 추적)
                         npc.bubbleSX += (sx - npc.bubbleSX) * Math.min(1, 10 * dt);
                         npc.bubbleSY += (sy - npc.bubbleSY) * Math.min(1, 10 * dt);

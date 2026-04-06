@@ -273,7 +273,7 @@ export function createCollectibles(
                     updateHUD();
 
                     // Sound
-                    audio?.mgCoin(collectedSet.size);
+                    audio?.mgGem(collectedSet.size);
 
                     // Float text
                     const hex = '#' + GEMS[i].color.toString(16).padStart(6, '0');

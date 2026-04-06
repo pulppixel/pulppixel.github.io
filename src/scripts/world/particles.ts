@@ -3,6 +3,7 @@
 // draw calls: 3 (fireflies + smoke + seasonal)
 import * as THREE from 'three';
 import type { SeasonName } from './seasons';
+import { perf } from '../core/performance';
 
 // =============================================
 // Shared particle shader
@@ -447,10 +448,10 @@ export interface ParticleEffects {
     update(dt: number, t: number, timeLabel: string, season: SeasonName): void;
 }
 
-export function createParticleEffects(scene: THREE.Scene, isMobile: boolean): ParticleEffects {
-    const fireflyCount = isMobile ? 15 : 35;
-    const smokeCount = isMobile ? 10 : 20;
-    const seasonCount = isMobile ? 12 : 25;
+export function createParticleEffects(scene: THREE.Scene): ParticleEffects {
+    const fireflyCount = Math.round(35 * perf.particleMul);
+    const smokeCount = Math.round(20 * perf.particleMul);
+    const seasonCount = Math.round(25 * perf.particleMul);
 
     const fireflies = createFireflies(scene, fireflyCount);
     const smoke = createSmoke(scene, smokeCount);

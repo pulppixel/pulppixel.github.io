@@ -1,6 +1,7 @@
 // Entry point + game loop
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
+import { initPerf, perf, startFpsMonitor } from './core/performance';
 import { createScene, updateEnvironment } from './world/scene';
 import { createCharacter, type SkinPalette } from './entity/character';
 import { createZones } from './world/zones';
@@ -56,13 +57,20 @@ function applySkinPalette(
 }
 
 export function init(): void {
+  // --- 모바일 UI 판정 ---
   const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
   if (isMobile) document.body.classList.add('is-mobile');
 
+  // --- 성능 티어 초기화 (createScene보다 먼저! 임시 canvas로 GPU 감지) ---
+  const _tmpCanvas = document.createElement('canvas');
+  const _tmpGl = _tmpCanvas.getContext('webgl') || _tmpCanvas.getContext('experimental-webgl');
+  if (_tmpGl) initPerf(_tmpGl as WebGLRenderingContext);
+
+  // --- Scene + Renderer 생성 (perf 값이 이미 확정된 상태) ---
   const {
     scene, camera, renderer, particles, stars, clouds, water,
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
-  } = createScene(isMobile);
+  } = createScene();
 
   let character = createCharacter(scene);
 
@@ -119,10 +127,10 @@ export function init(): void {
 
   applySkinPalette(character.palette, particles, dustMat);
 
-  const { zones, projectMeshes, update: updateZones } = createZones(scene, isMobile);
+  const { zones, projectMeshes, update: updateZones } = createZones(scene);
   const animals = createAnimals(scene);
   const animalInteraction = createAnimalInteraction(scene);
-  const seasons = createSeasonSystem(scene, isMobile);
+  const seasons = createSeasonSystem(scene);
   // --- Season system ---
   document.querySelectorAll('[data-season]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -132,9 +140,9 @@ export function init(): void {
     });
   });
 
-  const wind = createWindSystem(scene, isMobile);
-  const particleFx = createParticleEffects(scene, isMobile);
-  const envFx = createEnvironmentEffects(scene, isMobile);
+  const wind = createWindSystem(scene);
+  const particleFx = createParticleEffects(scene);
+  const envFx = createEnvironmentEffects(scene);
   const zoneParticles = createZoneParticles(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
@@ -143,7 +151,7 @@ export function init(): void {
     scene, renderer,
     skyUniforms, sunLight, ambientLight, hemiLight, fillLight, starMaterial,
     water,
-  }, isMobile);
+  });
 
   // --- Skin selection UI ---
   document.querySelectorAll('[data-skin]').forEach(btn => {
@@ -155,7 +163,7 @@ export function init(): void {
     });
   });
 
-  const postfx = createPostFX(renderer, scene, camera, isMobile);
+  const postfx = createPostFX(renderer, scene, camera);
   window.addEventListener('resize', () => postfx.resize(innerWidth, innerHeight));
 
   // --- Time/Weather UI ---
@@ -174,16 +182,7 @@ export function init(): void {
     });
   });
 
-  // Season UI
-  document.querySelectorAll('[data-season]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      seasons.setSeason((btn as HTMLElement).dataset.season as any);
-      document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('tw-on'));
-      btn.classList.add('tw-on');
-    });
-  });
-
-  const collectibles = createCollectibles(scene, audio, isMobile);
+  const collectibles = createCollectibles(scene, audio);
   const npcs = createNPCs(scene, camera);
 
   // Warp teleport
@@ -330,6 +329,16 @@ export function init(): void {
   const fpsEl = document.getElementById('fps')!;
   let frameCount = 0, fpsLastTime = performance.now();
   let _prevTime = performance.now();
+
+  // --- FPS 모니터: 자동 다운그레이드 ---
+  startFpsMonitor((newTier) => {
+    console.log(`[perf] Hot downgrade → ${newTier}`);
+    // 런타임 토글 가능한 항목 즉시 반영
+    renderer.shadowMap.enabled = perf.shadows;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, perf.maxPixelRatio));
+    renderer.toneMappingExposure = perf.tier === 'low' ? 1.1 : 1.4;
+    // PostFX는 매 프레임 perf.bloom 체크하므로 자동 반영
+  });
 
   // --- Main loop ---
 

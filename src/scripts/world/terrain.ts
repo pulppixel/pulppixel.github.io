@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { COMPANIES, PLATFORMS } from '../core/data';
 import { stdMat, stdBox } from '../core/helpers';
+import { perf } from '../core/performance';
 import { isEdgeConnected } from '../core/collision';
 
 // =============================================
@@ -110,7 +111,7 @@ function hash(a: number, b: number): number {
 
 // Platforms
 
-export function buildPlatforms(scene: THREE.Scene, isMobile: boolean): void {
+export function buildPlatforms(scene: THREE.Scene): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
     const pal = getZonePalette(p.x, p.z);
@@ -124,7 +125,7 @@ export function buildPlatforms(scene: THREE.Scene, isMobile: boolean): void {
     grass.position.set(p.x, p.h - 0.06, p.z);
     scene.add(grass);
 
-    if (!isMobile) {
+    if (perf.edgeWireframes) {
       const edge = new THREE.LineSegments(
           new THREE.EdgesGeometry(new THREE.BoxGeometry(p.w + 0.1, 0.12, p.d + 0.1)),
           new THREE.LineBasicMaterial({ color: pal.grassEdge, transparent: true, opacity: 0.15 }),
@@ -476,7 +477,7 @@ export function buildFences(scene: THREE.Scene): void {
 
 // Lanterns
 
-export function buildLanterns(scene: THREE.Scene, isMobile = false): void {
+export function buildLanterns(scene: THREE.Scene): void {
   // 주요 갈림길에만 배치 (디딤돌 위 과밀 방지)
   const spots: [number, number][] = [
     [0, -4],                           // Spawn->Hub 입구
@@ -498,7 +499,7 @@ export function buildLanterns(scene: THREE.Scene, isMobile = false): void {
     ib('lant-lamp', lampGeo, lampMat, lx, base + 1.65, lz);
 
     // PointLight는 instance 불가 -> 개별 유지
-    if (!isMobile) {
+    if (perf.edgeWireframes) {
       const light = new THREE.PointLight(0xf5c870, 0.4, 6);
       light.position.set(lx, base + 1.9, lz);
       scene.add(light);

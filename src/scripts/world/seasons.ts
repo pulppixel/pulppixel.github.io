@@ -1,6 +1,7 @@
 // Season palette system - dramatic color transitions
 // v2: Mobile throttle (매 4프레임마다 갱신)
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 
 export type SeasonName = 'spring' | 'summer' | 'autumn' | 'winter';
 
@@ -76,7 +77,7 @@ function hasTaggedAncestor(obj: THREE.Object3D): boolean {
   return false;
 }
 
-export function createSeasonSystem(scene: THREE.Scene, isMobile = false): SeasonSystem {
+export function createSeasonSystem(scene: THREE.Scene): SeasonSystem {
   let currentSeason: SeasonName = 'summer';
   let targetPreset = PRESETS.summer;
   const currentLeafTint = new THREE.Color(1, 1, 1);
@@ -121,10 +122,10 @@ export function createSeasonSystem(scene: THREE.Scene, isMobile = false): Season
         return;
       }
 
-      if (isMobile) {
+      if (perf.throttleSkip > 1) {
         frameCount++;
-        if (frameCount % 4 !== 0) return;
-        dt *= 4;
+        if (frameCount % perf.throttleSkip !== 0) return;
+        dt *= perf.throttleSkip;
       }
 
       const spd = Math.min(1, 2.5 * dt);

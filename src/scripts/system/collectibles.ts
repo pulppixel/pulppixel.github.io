@@ -5,6 +5,7 @@
 // - Collection: scale-down animation + sound + floating text + particle burst
 // v2: 모바일 PointLight 제거, 수집 시 파티클 burst 추가
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 import {getGroundHeight} from '../core/data';
 import type {GameAudio} from './audio.ts';
 
@@ -117,7 +118,6 @@ export interface CollectibleSystem {
 export function createCollectibles(
     scene: THREE.Scene,
     audio: GameAudio | null,
-    isMobile: boolean,
 ): CollectibleSystem {
     const collectedSet = new Set<number>();
     const states: GemState[] = [];
@@ -136,7 +136,7 @@ export function createCollectibles(
         }
     }
 
-    // ── Gem burst particles (1 draw call) ──
+    // --- Gem burst particles (1 draw call) ---
     const BURST_MAX = 48;
     const BURST_PER = 8;
     const BURST_LIFE = 0.6;
@@ -184,7 +184,7 @@ export function createCollectibles(
         }
     }
 
-    // ── Gem 생성 ──
+    // --- Gem 생성 ---
 
     GEMS.forEach((def, i) => {
         const groundH = getGroundHeight(def.x, def.z);
@@ -214,7 +214,7 @@ export function createCollectibles(
         scene.add(glow);
 
         let light: THREE.PointLight | null = null;
-        if (!isMobile) {
+        if (perf.pointLights) {
             light = new THREE.PointLight(def.color, 0.3, 3);
             light.position.set(def.x, baseY + 0.3, def.z);
             light.visible = !isCollected;
@@ -289,7 +289,7 @@ export function createCollectibles(
                 }
             }
 
-            // ── Burst particle update ──
+            // --- Burst particle update ---
             let activeB = 0;
             for (let i = 0; i < bCount; i++) {
                 if (bLife[i] <= 0) continue;

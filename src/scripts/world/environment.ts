@@ -2,6 +2,7 @@
 // 2. Coastal waves — foam strip opacity pulse
 // 3. Cloud shadows — 구름 아래 이동하는 그림자
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 
 // =============================================
 // Shared particle shader (particles.ts와 동일 구조)
@@ -57,9 +58,9 @@ interface WaterfallP {
     type: 'drop' | 'mist';
 }
 
-function createWaterfall(scene: THREE.Scene, isMobile: boolean) {
-    const dropCount = isMobile ? 25 : 50;
-    const mistCount = isMobile ? 8 : 16;
+function createWaterfall(scene: THREE.Scene) {
+    const dropCount = Math.round(50 * perf.particleMul);
+    const mistCount = Math.round(16 * perf.particleMul);
     const total = dropCount + mistCount;
 
     const pos = new Float32Array(total * 3);
@@ -247,8 +248,8 @@ function createCoastalWaves(scene: THREE.Scene) {
 // 3. Cloud Shadows
 // =============================================
 
-function createCloudShadows(scene: THREE.Scene, isMobile: boolean) {
-    if (isMobile) {
+function createCloudShadows(scene: THREE.Scene) {
+    if (perf.tier === 'low') {
         // 모바일: 구름 그림자 스킵 (오버헤드 대비 효과 미미)
         return { update() {} };
     }
@@ -315,10 +316,10 @@ export interface EnvironmentEffects {
     update(dt: number, t: number): void;
 }
 
-export function createEnvironmentEffects(scene: THREE.Scene, isMobile: boolean): EnvironmentEffects {
-    const waterfall = createWaterfall(scene, isMobile);
+export function createEnvironmentEffects(scene: THREE.Scene): EnvironmentEffects {
+    const waterfall = createWaterfall(scene);
     const waves = createCoastalWaves(scene);
-    const cloudShadows = createCloudShadows(scene, isMobile);
+    const cloudShadows = createCloudShadows(scene);
 
     return {
         update(dt, t) {

@@ -1,6 +1,7 @@
 // Wind animation: gentle swaying for vegetation
 // v2: Mobile throttle (매 3프레임마다 갱신)
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 
 export interface WindSystem {
   update(t: number): void;
@@ -37,7 +38,7 @@ function hasTaggedAncestor(obj: THREE.Object3D): boolean {
   return false;
 }
 
-export function createWindSystem(scene: THREE.Scene, isMobile = false): WindSystem {
+export function createWindSystem(scene: THREE.Scene): WindSystem {
   const targets: SwayTarget[] = [];
   let frameCount = 0;
 
@@ -86,9 +87,9 @@ export function createWindSystem(scene: THREE.Scene, isMobile = false): WindSyst
 
   return {
     update(t: number) {
-      if (isMobile) {
+      if (perf.throttleSkip > 1) {
         frameCount++;
-        if (frameCount % 3 !== 0) return;
+        if (frameCount % perf.throttleSkip !== 0) return;
       }
 
       for (const s of targets) {

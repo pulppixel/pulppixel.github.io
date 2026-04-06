@@ -297,7 +297,7 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
         });
     }
 
-    // ── Wander target 선택 ──
+    // --- Wander target 선택 ---
     function pickWanderTarget(npc: NPCInstance): void {
         const r = npc.def.wanderRadius ?? DEFAULT_WANDER_R;
         const angle = Math.random() * Math.PI * 2;

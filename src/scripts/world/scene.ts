@@ -1,6 +1,7 @@
 // Scene setup + per-frame environment update
-// v2: 모바일 최적화 — PointLight 최소화, exposure 하향
+// v3: Performance tier system (replaces isMobile boolean)
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 import { COMPANIES } from '../core/data';
 import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots, flushInstances } from './terrain';
 import { buildOcean } from './ocean';
@@ -23,39 +24,40 @@ export interface SceneContext {
   starMaterial: THREE.PointsMaterial;
 }
 
-export function createScene(isMobile: boolean): SceneContext {
+export function createScene(): SceneContext {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xc8e8fa);
   scene.fog = new THREE.FogExp2(0xb8daf0, 0.008);
 
   const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
-  const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
+  // perf는 이미 initPerf()로 확정된 상태
+  const renderer = new THREE.WebGLRenderer({ antialias: perf.tier !== 'low' });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, perf.maxPixelRatio));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = isMobile ? 1.1 : 1.4; // 모바일: 낮춰서 over-exposure 방지
-  renderer.shadowMap.enabled = !isMobile;
-  if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMappingExposure = perf.tier === 'low' ? 1.1 : 1.4;
+  renderer.shadowMap.enabled = perf.shadows;
+  if (perf.shadows) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
 
   // Build world
-  buildPlatforms(scene, isMobile);
+  buildPlatforms(scene);
   buildTrees(scene);
   buildFlowers(scene);
   buildMushrooms();
   buildRocks(scene);
   buildFences(scene);
-  buildLanterns(scene, isMobile);
+  buildLanterns(scene);
   buildZonePatches(scene);
   buildPathDots();
   flushInstances(scene);
 
   buildWaterEdge(scene);
   buildBushes(scene);
-  buildZoneDecor(scene, isMobile);
-  buildZoneBoundaries(scene, isMobile);
+  buildZoneDecor(scene);
+  buildZoneBoundaries(scene);
   const skyUniforms = buildSkyDome(scene);
-  const water = buildOcean(scene, isMobile);
+  const water = buildOcean(scene);
   const clouds = buildClouds(scene);
 
   // --- Lighting ---
@@ -68,9 +70,9 @@ export function createScene(isMobile: boolean): SceneContext {
 
   const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
   sun.position.set(15, 25, 10);
-  if (!isMobile) {
+  if (perf.shadows) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(perf.shadowMapSize, perf.shadowMapSize);
     sun.shadow.camera.near = 1;
     sun.shadow.camera.far = 80;
     const c = sun.shadow.camera;
@@ -82,8 +84,8 @@ export function createScene(isMobile: boolean): SceneContext {
   fill.position.set(-10, 15, -8);
   scene.add(fill);
 
-  // Zone area lights — 모바일: intensity 낮추고 distance 줄여서 부하 감소
-  if (!isMobile) {
+  // Zone area lights — pointLights 비활성 시 전부 스킵
+  if (perf.pointLights) {
     const zoneLights: [number, number, number, number, number, number][] = [
       [0xa78bfa, 0.5, 18, 0, 8, -18],
       [0x6ee7b7, 0.4, 16, 28, 13, -40],
@@ -99,7 +101,7 @@ export function createScene(isMobile: boolean): SceneContext {
 
   // --- Pollen particles ---
 
-  const pCount = isMobile ? 80 : 180;
+  const pCount = Math.round(180 * perf.particleMul);
   const pGeo = new THREE.BufferGeometry();
   const pPos = new Float32Array(pCount * 3);
   for (let i = 0; i < pCount; i++) {
@@ -114,7 +116,7 @@ export function createScene(isMobile: boolean): SceneContext {
 
   // --- Sky sparkles ---
 
-  const starCount = isMobile ? 60 : 120;
+  const starCount = Math.round(120 * perf.particleMul);
   const starGeo = new THREE.BufferGeometry();
   const starPos = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
@@ -199,6 +201,7 @@ export function updateEnvironment(
   }
 
   if (water) {
-    (water.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
+    const wMat = water.material as any;
+    if (wMat.uniforms?.uTime) wMat.uniforms.uTime.value = t;
   }
 }

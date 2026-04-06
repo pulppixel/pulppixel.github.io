@@ -1,10 +1,11 @@
 // Zone detail decorations: per-zone structures, water edge, bushes
 // + Zone boundary system: edge glow, corner beacons, ground patterns, entrance gates
 // Purely visual (no collision changes). Add density and architectural interest.
-// v2: isMobile -> Phase 2 구조물 + PointLight 전부 스킵 (GPU 부하 제거)
+// v2: perf tier -> Phase 2 구조물 + PointLight 전부 스킵 (GPU 부하 제거)
 import * as THREE from 'three';
 import { PLATFORMS } from '../core/data';
 import { stdBox, glowBox, stdMat, setPos } from '../core/helpers';
+import { perf } from '../core/performance';
 
 // --- Water edge: reef ring + foam strips around each platform ---
 
@@ -56,11 +57,11 @@ export function buildBushes(scene: THREE.Scene): void {
 
 // --- Zone-specific decorative structures ---
 
-export function buildZoneDecor(scene: THREE.Scene, isMobile = false): void {
-    buildNetherDecor(scene, isMobile);
-    buildTreasureDecor(scene, isMobile);
-    buildBeaconDecor(scene, isMobile);
-    buildOverworldDecor(scene, isMobile);
+export function buildZoneDecor(scene: THREE.Scene): void {
+    buildNetherDecor(scene);
+    buildTreasureDecor(scene);
+    buildBeaconDecor(scene);
+    buildOverworldDecor(scene);
     buildSpawnDecor(scene);
 }
 
@@ -120,7 +121,7 @@ function buildSpawnDecor(scene: THREE.Scene): void {
 
 // --- Nether (0, -18, h=1.0) - Mystical ruins ---
 
-function buildNetherDecor(scene: THREE.Scene, isMobile: boolean): void {
+function buildNetherDecor(scene: THREE.Scene): void {
     const cx = 0, cz = -18, h = 4.0;
     const PURPLE_DK = 0x504068, PURPLE_LT = 0x706088;
 
@@ -158,7 +159,7 @@ function buildNetherDecor(scene: THREE.Scene, isMobile: boolean): void {
     }
 
     // ===== Phase 2: Ruined Obelisk Tower (데스크톱 전용) =====
-    if (isMobile) return;
+    if (!perf.phase2Decor) return;
 
     const OB = 0x887880, OB_ACC = 0x9a7888;
 
@@ -185,7 +186,7 @@ function buildNetherDecor(scene: THREE.Scene, isMobile: boolean): void {
 
 // --- Treasure Isle (28, -40, h=2.5) - Tropical dock ---
 
-function buildTreasureDecor(scene: THREE.Scene, isMobile: boolean): void {
+function buildTreasureDecor(scene: THREE.Scene): void {
     const cx = 28, cz = -40, h = 9.0;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -226,7 +227,7 @@ function buildTreasureDecor(scene: THREE.Scene, isMobile: boolean): void {
     anchorBar.position.set(cx + 3, h + 0.75, cz + 5.5); scene.add(anchorBar);
 
     // ===== Phase 2: Lighthouse Tower (데스크톱 전용) =====
-    if (isMobile) return;
+    if (!perf.phase2Decor) return;
 
     const LH_S = 0x9a8a78, LH_W = 0x8a6540;
 
@@ -261,7 +262,7 @@ function buildTreasureDecor(scene: THREE.Scene, isMobile: boolean): void {
 
 // --- Beacon Peak (-28, -40, h=2.0) - Highland lookout ---
 
-function buildBeaconDecor(scene: THREE.Scene, isMobile: boolean): void {
+function buildBeaconDecor(scene: THREE.Scene): void {
     const cx = -28, cz = -40, h = 8.0;
     const AMBER = 0xa09060, STONE_A = 0x908070;
 
@@ -307,7 +308,7 @@ function buildBeaconDecor(scene: THREE.Scene, isMobile: boolean): void {
     }
 
     // ===== Phase 2: Crystal Spire (데스크톱 전용) =====
-    if (isMobile) return;
+    if (!perf.phase2Decor) return;
 
     const OBSIDIAN = 0x2a2838, CRYS = 0xa78bfa;
 
@@ -366,7 +367,7 @@ function buildBeaconDecor(scene: THREE.Scene, isMobile: boolean): void {
 
 // --- Overworld (0, -58, h=3.2) - Sacred garden ---
 
-function buildOverworldDecor(scene: THREE.Scene, isMobile: boolean): void {
+function buildOverworldDecor(scene: THREE.Scene): void {
     const cx = 0, cz = -58, h = 12.0;
     const GARDEN_STONE = 0xa09898;
 
@@ -402,7 +403,7 @@ function buildOverworldDecor(scene: THREE.Scene, isMobile: boolean): void {
         return n - Math.floor(n);
     };
     // 모바일: 꽃잎 절반
-    const petalCount = isMobile ? 8 : 15;
+    const petalCount = Math.round(15 * perf.particleMul);
     for (let i = 0; i < petalCount; i++) {
         const px = cx + (seed(i * 3.1, i * 7.3) - 0.5) * 14;
         const pz = cz + (seed(i * 5.7, i * 2.1) - 0.5) * 10;
@@ -419,7 +420,7 @@ function buildOverworldDecor(scene: THREE.Scene, isMobile: boolean): void {
     stoneWall(scene, cx + 5, h, cz - 5.5, 4.0, 0.6, 0.35, GARDEN_STONE);
 
     // ===== Phase 2: Lantern Stands + Zen Elements (데스크톱 전용) =====
-    if (isMobile) return;
+    if (!perf.phase2Decor) return;
 
     const LW = 0x7a5a38, GLOW = 0xfbbf24;
 
@@ -524,7 +525,7 @@ function buildOverworldDecor(scene: THREE.Scene, isMobile: boolean): void {
 // v2: 모바일에서 PointLight 제거 (emissive mesh만 유지)
 // =============================================
 
-export function buildZoneBoundaries(scene: THREE.Scene, isMobile = false): void {
+export function buildZoneBoundaries(scene: THREE.Scene): void {
     interface ZDef {
         x: number; z: number; w: number; d: number; h: number;
         color: number;
@@ -549,7 +550,7 @@ export function buildZoneBoundaries(scene: THREE.Scene, isMobile = false): void 
 
         const gemMat = new THREE.MeshStandardMaterial({
             color: z.color, emissive: z.color,
-            emissiveIntensity: isMobile ? 0.8 : 0.5, // 모바일: emissive 보정 (라이트 없으니)
+            emissiveIntensity: perf.pointLights ? 0.5 : 0.8, // 모바일: emissive 보정 (라이트 없으니)
             metalness: 0.2, roughness: 0.5, transparent: true, opacity: 0.9,
         });
 
@@ -579,7 +580,7 @@ export function buildZoneBoundaries(scene: THREE.Scene, isMobile = false): void 
             gem.position.set(cx, z.h + 2.02, cz); gem.rotation.y = Math.PI / 4; scene.add(gem);
 
             // PointLight: 데스크톱에서만
-            if (!isMobile) {
+            if (perf.pointLights) {
                 const light = new THREE.PointLight(z.color, 0.3, 5);
                 light.position.set(cx, z.h + 2.3, cz); scene.add(light);
             }

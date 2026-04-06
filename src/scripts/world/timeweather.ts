@@ -1,5 +1,6 @@
 // Time-of-day + weather: real-time clock auto mode + manual override + rain/snow particles
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 
 export type TimeName = 'auto' | 'dawn' | 'day' | 'sunset' | 'night';
 export type WeatherName = 'clear' | 'rain' | 'snow';
@@ -201,14 +202,14 @@ function createSnowSystem(scene: THREE.Scene, count: number) {
 
 // --- Factory ---
 
-export function createTimeWeather(refs: EnvironmentRefs, isMobile: boolean): TimeWeather {
+export function createTimeWeather(refs: EnvironmentRefs): TimeWeather {
   let timeMode: TimeName = 'auto';
   let weather: WeatherName = 'clear';
   let transitionSpeed = 0;
   let elapsed = 0;
 
-  const rain = createRainSystem(refs.scene, isMobile ? 150 : 350);
-  const snow = createSnowSystem(refs.scene, isMobile ? 100 : 250);
+  const rain = createRainSystem(refs.scene, Math.round(350 * perf.particleMul));
+  const snow = createSnowSystem(refs.scene, Math.round(250 * perf.particleMul));
   let lightningTimer = 10 + Math.random() * 15;
   let lightningFlash = 0;
 

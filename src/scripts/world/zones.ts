@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { COMPANIES, PROJECTS, PLATFORMS } from '../core/data';
 import { stdBox, glowBox, textSprite } from '../core/helpers';
+import { perf } from '../core/performance';
 
 // --- Types ---
 
@@ -39,7 +40,7 @@ function zoneHeight(x: number, z: number): number {
 
 // --- Factory ---
 
-export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext {
+export function createZones(scene: THREE.Scene): ZonesContext {
   const zones: ZoneState[] = [];
   const projectMeshes: THREE.Mesh[] = [];
   const zoneAnims: ZoneAnim[] = [];
@@ -95,7 +96,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
     scene.add(pl);
 
     let pL: THREE.PointLight;
-    if (!isMobile) {
+    if (perf.pointLights) {
       pL = new THREE.PointLight(co.color, 0.2, 5);
       pL.position.set(cx, ph + 2.5, cz - 3.6);
       scene.add(pL);
@@ -226,7 +227,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
     fire.position.set(cx, ph + 0.5, cz - 2); scene.add(fire);
     za({ mesh: fire, type: 'pulse', baseEi: 0.55, range: 0.25, alwaysOn: true });
 
-    if (!isMobile) {
+    if (perf.pointLights) {
       const fireLight = new THREE.PointLight(0xf5a040, 0.6, 6);
       fireLight.position.set(cx, ph + 1.2, cz - 2); scene.add(fireLight);
     }
@@ -269,7 +270,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
     emerald.position.set(cx + 3.5, ph + 2.5, cz - 3); scene.add(emerald);
     za({ mesh: emerald, type: 'spin', axis: 'y', speed: 0.8, baseY: ph + 2.5, float: 0.25 });
 
-    if (!isMobile) {
+    if (perf.pointLights) {
       const treasureLight = new THREE.PointLight(GOLD, 0.6, 6);
       treasureLight.position.set(cx, ph + 1.5, cz - 3.5); scene.add(treasureLight);
     }
@@ -310,7 +311,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
       scene.add(rune);
     });
 
-    if (!isMobile) {
+    if (perf.pointLights) {
       const portalLight = new THREE.PointLight(COL, 0.8, 8);
       portalLight.position.set(cx, ph + 2.5, cz - 4.5); scene.add(portalLight);
     }
@@ -346,7 +347,7 @@ export function createZones(scene: THREE.Scene, isMobile = false): ZonesContext 
       c.position.set(cx + ox, ph + h / 2, cz + oz); scene.add(c);
     });
 
-    if (!isMobile) {
+    if (perf.pointLights) {
       const beaconLight = new THREE.PointLight(COL, 0.7, 8);
       beaconLight.position.set(cx, ph + 3.0, cz - 4.5); scene.add(beaconLight);
     }

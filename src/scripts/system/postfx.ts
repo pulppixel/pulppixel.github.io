@@ -1,6 +1,7 @@
 // Post processing: UnrealBloom + Vignette, auto-adjusts by time-of-day
-// v2: 모바일에서 bloom 완전 비활성화 (fragment shader 부하 제거)
+// v3: perf.bloom 기반 활성화 (low/medium = bloom OFF → fragment shader 부하 제거)
 import * as THREE from 'three';
+import { perf } from '../core/performance';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -38,9 +39,10 @@ const VIGNETTE_MAP: Record<string, number> = { dawn: 0.25, day: 0.15, sunset: 0.
 
 export function createPostFX(
     renderer: THREE.WebGLRenderer, scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera, isMobile: boolean,
+    camera: THREE.PerspectiveCamera,
 ): PostFX {
-  if (isMobile) {
+  // bloom OFF → composer 자체를 만들지 않음 (GPU 메모리 + overhead 제거)
+  if (!perf.bloom) {
     return {
       render() { renderer.render(scene, camera); },
       resize(w, h) { renderer.setSize(w, h); },

@@ -232,7 +232,7 @@ class GuestbookGame extends MinigameBase {
             cx.font = '500 10px "JetBrains Mono"';
             cx.fillStyle = '#a78bfa';
             cx.textAlign = 'center';
-            cx.fillText('✍️ 작성', bx + bw / 2, by + bh / 2 + 3);
+            cx.fillText('✏️ 작성', bx + bw / 2, by + bh / 2 + 3);
         }
 
         this.drawCloseBtn();

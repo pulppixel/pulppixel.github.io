@@ -32,8 +32,8 @@ const title = 'pulppixel - 3D Explore';
     #hero-label h1 { font-size: 15px; color: #7dd3fc; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; text-shadow: 0 0 30px rgba(125,211,252,0.3); }
     #hero-label p { font-size: 11px; color: #5a5a66; letter-spacing: 0.08em; }
     @keyframes heroIn { from { opacity:0; transform:translate(-50%,-45%); } to { opacity:1; transform:translate(-50%,-50%); } }
-    #quest-log { position: absolute; top: 56px; left: 20px; width: 210px; background: rgba(10,10,11,0.88); border: 1px solid rgba(125,211,252,0.15); border-radius: 6px; padding: 10px 12px; backdrop-filter: blur(8px); z-index: 12; font-size: 11px; }
-    .quest-header { color: #7dd3fc; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; animation: questPulse 3s ease 2s 3; }
+    #quest-log { position: absolute; top: 56px; left: 20px; width: 210px; z-index: 12; font-size: 11px; }
+    .quest-header { color: #7dd3fc; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; cursor: pointer; animation: questPulse 3s ease 2s 3; }
     @keyframes questPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
     .quest-icon { font-size: 8px; }
     #quest-toggle { margin-left: auto; background: none; border: none; color: #5a5a66; cursor: pointer; font-size: 10px; font-family: inherit; }
@@ -42,17 +42,16 @@ const title = 'pulppixel - 3D Explore';
     .quest-item .check { width: 12px; flex-shrink: 0; }
     .quest-item.visited .check::after { content: '✓'; }
     .quest-item:not(.visited) .check::after { content: '○'; }
-    .warp-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; color: #8a8a9a; font-size: 10px; cursor: pointer; transition: all 0.2s; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); margin-bottom: 3px; }
+    .warp-item { display: flex; align-items: center; gap: 6px; padding: 5px 10px; color: #8a8a9a; font-size: 10px; cursor: pointer; transition: all 0.2s; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); background: rgba(10,10,11,0.6); backdrop-filter: blur(4px); margin-bottom: 3px; }
     .warp-item:hover { color: #7dd3fc; background: rgba(125,211,252,0.08); border-color: rgba(125,211,252,0.25); }
     .warp-arrow { margin-left: auto; color: #333; font-size: 9px; }
     .warp-item:hover .warp-arrow { color: #7dd3fc; }
-    .warp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .quest-progress { display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; }
-    .quest-bar { flex: 1; height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
+    .warp-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .quest-progress { display: flex; align-items: center; gap: 6px; margin: 6px 0 4px; padding: 0 2px; }
+    .quest-bar { flex: 1; height: 2px; background: #222; border-radius: 2px; overflow: hidden; }
     #quest-fill { height: 100%; width: 0%; background: #7dd3fc; transition: width 0.5s ease; }
     #quest-count { font-size: 10px; color: #5a5a66; white-space: nowrap; }
-    #quest-reset { background: none; border: 1px solid #333; color: #5a5a66; font-size: 10px; padding: 3px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit; }
-    #quest-reset:hover { border-color: #7dd3fc; color: #7dd3fc; }
+    #quest-reset { background: none; border: 1px solid rgba(255,255,255,0.06); color: #5a5a66; font-size: 9px; padding: 3px 8px; border-radius: 3px; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit; } #quest-reset:hover { border-color: #7dd3fc; color: #7dd3fc; }
     #interact-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60px); pointer-events: none; text-align: center; font-size: 12px; color: #7dd3fc; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 15px rgba(125,211,252,0.3); z-index: 6; }
     #interact-hint.show { opacity: 1; }
     .key { display: inline-block; border: 1px solid rgba(125,211,252,0.4); border-radius: 3px; padding: 1px 7px; font-size: 11px; }
@@ -176,7 +175,7 @@ const title = 'pulppixel - 3D Explore';
        color:#a78bfa;width:28px;height:28px;border-radius:4px;
        cursor:pointer;font-size:13px;font-family:inherit;
        display:flex;align-items:center;justify-content:center;
-       transition:all 0.2s;">✍️</button>
+       transition:all 0.2s;">✏️</button>
     <button id="sound-toggle" title="Toggle sound">🔊</button>
   </div>
 </div>

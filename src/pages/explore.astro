@@ -20,49 +20,49 @@ const title = 'pulppixel - 3D Explore';
     #nav { position: absolute; top: 16px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 15; pointer-events: none; }
     #nav > * { pointer-events: auto; }
     .logo { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; color: #e8e8ec; }
-    .logo span { color: #6ee7b7; }
+    .logo span { color: #7dd3fc; }
     .nav-links { display: flex; gap: 12px; align-items: center; }
     .nav-links a { font-size: 10px; color: #5a5a66; text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; padding: 4px 10px; border: 1px solid transparent; border-radius: 4px; }
     .nav-links a:hover { color: #e8e8ec; }
     .classic-link { border-color: #333 !important; }
-    .classic-link:hover { border-color: #6ee7b7 !important; color: #6ee7b7 !important; }
+    .classic-link:hover { border-color: #7dd3fc !important; color: #7dd3fc !important; }
     .is-mobile .nav-links .hide-mobile { display: none; }
     #hero-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; text-align: center; opacity: 0; animation: heroIn 2s ease forwards 0.3s; transition: opacity 0.8s; z-index: 5; }
     #hero-label.hidden { opacity: 0 !important; animation: none; }
-    #hero-label h1 { font-size: 15px; color: #6ee7b7; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; text-shadow: 0 0 30px rgba(110,231,183,0.3); }
+    #hero-label h1 { font-size: 15px; color: #7dd3fc; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; text-shadow: 0 0 30px rgba(125,211,252,0.3); }
     #hero-label p { font-size: 11px; color: #5a5a66; letter-spacing: 0.08em; }
     @keyframes heroIn { from { opacity:0; transform:translate(-50%,-45%); } to { opacity:1; transform:translate(-50%,-50%); } }
-    #quest-log { position: absolute; top: 56px; left: 20px; width: 210px; background: rgba(10,10,11,0.88); border: 1px solid rgba(110,231,183,0.15); border-radius: 6px; padding: 10px 12px; backdrop-filter: blur(8px); z-index: 12; font-size: 11px; }
-    .quest-header { color: #6ee7b7; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; animation: questPulse 3s ease 2s 3; }
+    #quest-log { position: absolute; top: 56px; left: 20px; width: 210px; background: rgba(10,10,11,0.88); border: 1px solid rgba(125,211,252,0.15); border-radius: 6px; padding: 10px 12px; backdrop-filter: blur(8px); z-index: 12; font-size: 11px; }
+    .quest-header { color: #7dd3fc; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; animation: questPulse 3s ease 2s 3; }
     @keyframes questPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
     .quest-icon { font-size: 8px; }
     #quest-toggle { margin-left: auto; background: none; border: none; color: #5a5a66; cursor: pointer; font-size: 10px; font-family: inherit; }
     .quest-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; color: #5a5a66; font-size: 10px; transition: color 0.3s; }
-    .quest-item.visited { color: #6ee7b7; }
+    .quest-item.visited { color: #7dd3fc; }
     .quest-item .check { width: 12px; flex-shrink: 0; }
     .quest-item.visited .check::after { content: '✓'; }
     .quest-item:not(.visited) .check::after { content: '○'; }
     .warp-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; color: #8a8a9a; font-size: 10px; cursor: pointer; transition: all 0.2s; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); margin-bottom: 3px; }
-    .warp-item:hover { color: #6ee7b7; background: rgba(110,231,183,0.08); border-color: rgba(110,231,183,0.25); }
+    .warp-item:hover { color: #7dd3fc; background: rgba(125,211,252,0.08); border-color: rgba(125,211,252,0.25); }
     .warp-arrow { margin-left: auto; color: #333; font-size: 9px; }
-    .warp-item:hover .warp-arrow { color: #6ee7b7; }
+    .warp-item:hover .warp-arrow { color: #7dd3fc; }
     .warp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .quest-progress { display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; }
     .quest-bar { flex: 1; height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
-    #quest-fill { height: 100%; width: 0%; background: #6ee7b7; transition: width 0.5s ease; }
+    #quest-fill { height: 100%; width: 0%; background: #7dd3fc; transition: width 0.5s ease; }
     #quest-count { font-size: 10px; color: #5a5a66; white-space: nowrap; }
     #quest-reset { background: none; border: 1px solid #333; color: #5a5a66; font-size: 10px; padding: 3px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; width: 100%; font-family: inherit; }
-    #quest-reset:hover { border-color: #6ee7b7; color: #6ee7b7; }
-    #interact-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60px); pointer-events: none; text-align: center; font-size: 12px; color: #6ee7b7; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 15px rgba(110,231,183,0.3); z-index: 6; }
+    #quest-reset:hover { border-color: #7dd3fc; color: #7dd3fc; }
+    #interact-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, 60px); pointer-events: none; text-align: center; font-size: 12px; color: #7dd3fc; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 15px rgba(125,211,252,0.3); z-index: 6; }
     #interact-hint.show { opacity: 1; }
-    .key { display: inline-block; border: 1px solid rgba(110,231,183,0.4); border-radius: 3px; padding: 1px 7px; font-size: 11px; }
+    .key { display: inline-block; border: 1px solid rgba(125,211,252,0.4); border-radius: 3px; padding: 1px 7px; font-size: 11px; }
     .mobile-hint { display: none; }
     .is-mobile .desktop-hint { display: none; }
     .is-mobile .mobile-hint { display: inline; }
-    #project-label { position: absolute; pointer-events: none; padding: 6px 14px; background: rgba(10,10,11,0.88); border: 1px solid rgba(110,231,183,0.3); border-radius: 4px; font-size: 12px; letter-spacing: 0.04em; display: none; backdrop-filter: blur(8px); white-space: nowrap; left: 50%; top: 38%; transform: translateX(-50%); z-index: 6; }
+    #project-label { position: absolute; pointer-events: none; padding: 6px 14px; background: rgba(10,10,11,0.88); border: 1px solid rgba(125,211,252,0.3); border-radius: 4px; font-size: 12px; letter-spacing: 0.04em; display: none; backdrop-filter: blur(8px); white-space: nowrap; left: 50%; top: 38%; transform: translateX(-50%); z-index: 6; }
     .lbl-period { font-size: 10px; color: #5a5a66; margin-left: 8px; }
     .lbl-badge { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
-    #panel { position: absolute; top: 0; right: 0; width: 440px; height: 100vh; background: rgba(8,8,10,0.97); border-left: 1px solid rgba(110,231,183,0.1); backdrop-filter: blur(20px); transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1); overflow-y: auto; z-index: 20; padding: 0; }
+    #panel { position: absolute; top: 0; right: 0; width: 440px; height: 100vh; background: rgba(8,8,10,0.97); border-left: 1px solid rgba(125,211,252,0.1); backdrop-filter: blur(20px); transform: translateX(100%); transition: transform 0.45s cubic-bezier(0.16,1,0.3,1); overflow-y: auto; z-index: 20; padding: 0; }
     #panel.open { transform: translateX(0); }
     #panel.open .p-header { animation: panelSlideIn 0.5s ease forwards 0.1s; opacity: 0; }
     #panel.open .p-body { animation: panelSlideIn 0.5s ease forwards 0.2s; opacity: 0; }
@@ -90,42 +90,42 @@ const title = 'pulppixel - 3D Explore';
     .p-sec::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.04); }
     .p-list { list-style: none; padding: 0; margin-bottom: 1.5rem; }
     .p-list li { font-size: 12px; color: #8a8a9a; line-height: 1.75; padding: 5px 0 5px 4px; position: relative; transition: color 0.2s; border-left: 2px solid rgba(255,255,255,0.03); padding-left: 12px; margin-left: 2px; }
-    .p-list li:hover { color: #c8c8d0; border-left-color: rgba(110,231,183,0.3); }
+    .p-list li:hover { color: #c8c8d0; border-left-color: rgba(125,211,252,0.3); }
     .p-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.04); }
     .p-link { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #6a6a78; text-decoration: none; padding: 9px 18px; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; transition: all 0.2s; background: rgba(255,255,255,0.02); }
-    .p-link:hover { border-color: rgba(110,231,183,0.3); color: #6ee7b7; background: rgba(110,231,183,0.04); }
-    .p-link-primary { border-color: rgba(110,231,183,0.2); color: #6ee7b7; }
-    #joystick-base { position: absolute; display: none; pointer-events: none; z-index: 10; width: 110px; height: 110px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.2); background: rgba(110,231,183,0.03); transform: translate(-50%, -50%); }
+    .p-link:hover { border-color: rgba(125,211,252,0.3); color: #7dd3fc; background: rgba(125,211,252,0.04); }
+    .p-link-primary { border-color: rgba(125,211,252,0.2); color: #7dd3fc; }
+    #joystick-base { position: absolute; display: none; pointer-events: none; z-index: 10; width: 110px; height: 110px; border-radius: 50%; border: 1.5px solid rgba(125,211,252,0.2); background: rgba(125,211,252,0.03); transform: translate(-50%, -50%); }
     #joystick-base.active { display: block; }
-    #joystick-thumb { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(110,231,183,0.2); border: 1px solid rgba(110,231,183,0.4); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-    #joystick-thumb.active { background: rgba(110,231,183,0.45); }
-    #mobile-interact { position: absolute; bottom: 70px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.3); background: rgba(110,231,183,0.06); backdrop-filter: blur(4px); color: #6ee7b7; font-size: 11px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
+    #joystick-thumb { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(125,211,252,0.2); border: 1px solid rgba(125,211,252,0.4); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+    #joystick-thumb.active { background: rgba(125,211,252,0.45); }
+    #mobile-interact { position: absolute; bottom: 70px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.06); backdrop-filter: blur(4px); color: #7dd3fc; font-size: 11px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
     .is-mobile #mobile-interact.show { display: flex; }
-    #mobile-interact:active { background: rgba(110,231,183,0.3); transform: scale(0.93); }
-    #mobile-jump { position: absolute; bottom: 140px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(110,231,183,0.2); background: rgba(110,231,183,0.04); backdrop-filter: blur(4px); color: #6ee7b7; font-size: 16px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; transition: all 0.15s; }
+    #mobile-interact:active { background: rgba(125,211,252,0.3); transform: scale(0.93); }
+    #mobile-jump { position: absolute; bottom: 140px; right: 35px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(125,211,252,0.2); background: rgba(125,211,252,0.04); backdrop-filter: blur(4px); color: #7dd3fc; font-size: 16px; font-family: inherit; display: none; align-items: center; justify-content: center; z-index: 11; cursor: pointer; transition: all 0.15s; }
     .is-mobile #mobile-jump { display: flex; }
-    #mobile-jump:active { background: rgba(110,231,183,0.3); transform: scale(0.93); }
-    #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #6ee7b7; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(110,231,183,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; z-index: 5; }
+    #mobile-jump:active { background: rgba(125,211,252,0.3); transform: scale(0.93); }
+    #controls-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); color: #7dd3fc; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; text-shadow: 0 0 20px rgba(125,211,252,0.3); opacity: 0; animation: heroIn 1.5s ease forwards 1.5s; z-index: 5; }
     .is-mobile #controls-hint { bottom: 16px; font-size: 10px; animation-delay: 1s; }
     #fps { position: absolute; top: 16px; right: 20px; color: #5a5a66; font-size: 10px; z-index: 5; pointer-events: none; }
     .is-mobile #fps { top: auto; bottom: 16px; right: 16px; }
-    #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border: 1px solid rgba(110,231,183,0.3); border-radius: 50%; pointer-events: none; z-index: 5; display: none; }
+    #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border: 1px solid rgba(125,211,252,0.3); border-radius: 50%; pointer-events: none; z-index: 5; display: none; }
     body:not(.is-mobile) #crosshair { display: block; }
-    #zone-hint { position: absolute; left: 0; right: 0; top: 65%; height: 1px; background: linear-gradient(90deg, transparent 5%, rgba(110,231,183,0.1) 50%, transparent 95%); pointer-events: none; z-index: 3; opacity: 0; }
+    #zone-hint { position: absolute; left: 0; right: 0; top: 65%; height: 1px; background: linear-gradient(90deg, transparent 5%, rgba(125,211,252,0.1) 50%, transparent 95%); pointer-events: none; z-index: 3; opacity: 0; }
     .is-mobile #zone-hint { opacity: 1; animation: zoneHintFade 4s ease forwards 3s; }
     @keyframes zoneHintFade { to { opacity: 0; } }
     @media (max-width: 520px) { #panel { width: 100vw; padding: 2rem 1.25rem; } #quest-log { width: 170px; font-size: 10px; } }
     #sound-toggle {
-      background: rgba(110,231,183,0.06); border: 1px solid rgba(110,231,183,0.2);
-      color: #6ee7b7; width: 28px; height: 28px; border-radius: 4px;
+      background: rgba(125,211,252,0.06); border: 1px solid rgba(125,211,252,0.2);
+      color: #7dd3fc; width: 28px; height: 28px; border-radius: 4px;
       cursor: pointer; font-size: 14px; font-family: inherit;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    #sound-toggle:hover { border-color: #6ee7b7; background: rgba(110,231,183,0.12); }
+    #sound-toggle:hover { border-color: #7dd3fc; background: rgba(125,211,252,0.12); }
     #tw-panel {
       position: absolute; bottom: 20px; left: 20px;
-      background: rgba(10,10,11,0.88); border: 1px solid rgba(110,231,183,0.15);
+      background: rgba(10,10,11,0.88); border: 1px solid rgba(125,211,252,0.15);
       border-radius: 6px; padding: 8px 10px; backdrop-filter: blur(8px);
       z-index: 12; font-size: 10px;
     }
@@ -137,22 +137,22 @@ const title = 'pulppixel - 3D Explore';
       color: #5a5a66; font-size: 10px; padding: 3px 8px; border-radius: 3px;
       cursor: pointer; font-family: inherit; transition: all 0.2s;
     }
-    .tw-row button:hover { border-color: rgba(110,231,183,0.3); color: #8a8a9a; }
-    .tw-row button.tw-on { border-color: rgba(110,231,183,0.4); color: #6ee7b7; background: rgba(110,231,183,0.08); }
+    .tw-row button:hover { border-color: rgba(125,211,252,0.3); color: #8a8a9a; }
+    .tw-row button.tw-on { border-color: rgba(125,211,252,0.4); color: #7dd3fc; background: rgba(125,211,252,0.08); }
     .is-mobile #tw-panel { bottom: 12px; left: 12px; }
     @media (max-width: 520px) { #tw-panel { font-size: 9px; } .tw-row button { padding: 3px 6px; } }
     .tw-row button.sk-on { border-color: rgba(251,191,36,0.4); color: #fbbf24; background: rgba(251,191,36,0.08); }
     #tw-toggle {
       position: absolute; bottom: 20px; left: 20px;
       width: 32px; height: 32px; border-radius: 6px;
-      border: 1px solid rgba(110,231,183,0.2);
+      border: 1px solid rgba(125,211,252,0.2);
       background: rgba(10,10,11,0.75); backdrop-filter: blur(4px);
-      color: #6ee7b7; font-size: 16px; font-family: inherit;
+      color: #7dd3fc; font-size: 16px; font-family: inherit;
       cursor: pointer; z-index: 13;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    #tw-toggle:hover { border-color: rgba(110,231,183,0.5); }
+    #tw-toggle:hover { border-color: rgba(125,211,252,0.5); }
 
     #tw-panel {
       position: absolute; bottom: 60px; left: 20px;
@@ -165,76 +165,76 @@ const title = 'pulppixel - 3D Explore';
   </style>
 </head>
 <body>
-  <div id="nav">
-    <a href="/" class="logo">pulppixel<span>.</span></a>
-    <div class="nav-links">
-      <a href="/" class="classic-link">classic view</a>
-      <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
-      <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
-      <button id="sound-toggle" title="Toggle sound">♪</button>
-    </div>
+<div id="nav">
+  <a href="/" class="logo">pulppixel<span>.</span></a>
+  <div class="nav-links">
+    <a href="/" class="classic-link">classic view</a>
+    <a href="https://github.com/pulppixel" target="_blank" class="hide-mobile">github ↗</a>
+    <a href="mailto:devenvy100@gmail.com" class="hide-mobile">email ↗</a>
+    <button id="sound-toggle" title="Toggle sound">♪</button>
   </div>
+</div>
 
-  <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, 6 yrs, explore my projects</p></div>
-  <div id="controls-hint">
-    <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
-    <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
+<div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, 6 yrs, explore my projects</p></div>
+<div id="controls-hint">
+  <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
+  <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
+</div>
+<div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
+<div id="project-label"></div>
+<div id="crosshair"></div>
+<div id="zone-hint"></div>
+
+<div id="quest-log">
+  <div class="quest-header"><span class="quest-icon">◆</span> TELEPORT <button id="quest-toggle">▼</button></div>
+  <div id="quest-list"></div>
+  <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
+  <button id="quest-reset">↻ reset</button>
+</div>
+
+<button id="tw-toggle">+</button>
+<div id="tw-panel" class="tw-closed">
+  <div class="tw-label">TIME</div>
+  <div class="tw-row">
+    <button data-time="auto" class="tw-on">A</button>
+    <button data-time="dawn">🌅</button>
+    <button data-time="day">☀️</button>
+    <button data-time="sunset">🌇</button>
+    <button data-time="night">🌙</button>
   </div>
-  <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>
-  <div id="project-label"></div>
-  <div id="crosshair"></div>
-  <div id="zone-hint"></div>
-
-  <div id="quest-log">
-    <div class="quest-header"><span class="quest-icon">◆</span> TELEPORT <button id="quest-toggle">▼</button></div>
-    <div id="quest-list"></div>
-    <div class="quest-progress"><div class="quest-bar"><div id="quest-fill"></div></div><span id="quest-count">0 / 8</span></div>
-    <button id="quest-reset">↻ reset</button>
+  <div class="tw-label">WEATHER</div>
+  <div class="tw-row">
+    <button data-weather="clear" class="tw-on">🌞</button>
+    <button data-weather="rain">🌧️</button>
+    <button data-weather="snow">❄️</button>
   </div>
-
-  <button id="tw-toggle">+</button>
-  <div id="tw-panel" class="tw-closed">
-    <div class="tw-label">TIME</div>
-    <div class="tw-row">
-      <button data-time="auto" class="tw-on">A</button>
-      <button data-time="dawn">🌅</button>
-      <button data-time="day">☀️</button>
-      <button data-time="sunset">🌇</button>
-      <button data-time="night">🌙</button>
-    </div>
-    <div class="tw-label">WEATHER</div>
-    <div class="tw-row">
-      <button data-weather="clear" class="tw-on">🌞</button>
-      <button data-weather="rain">🌧️</button>
-      <button data-weather="snow">❄️</button>
-    </div>
-    <div class="tw-label">CHARACTER</div>
-    <div class="tw-row">
-      <button data-skin="0" title="Bunny">🐰</button>
-      <button data-skin="1" title="Frog">🐸</button>
-      <button data-skin="2" title="Bear">🐻</button>
-      <button data-skin="3" title="Robot">🤖</button>
-      <button data-skin="4" title="Penguin">🐧</button>
-    </div>
-    <div class="tw-label">SEASON</div>
-    <div class="tw-row">
-      <button data-season="spring">🌸</button>
-      <button data-season="summer" class="tw-on">🌿</button>
-      <button data-season="autumn">🍂</button>
-      <button data-season="winter">⛄</button>
-    </div>
+  <div class="tw-label">CHARACTER</div>
+  <div class="tw-row">
+    <button data-skin="0" title="Bunny">🐰</button>
+    <button data-skin="1" title="Frog">🐸</button>
+    <button data-skin="2" title="Bear">🐻</button>
+    <button data-skin="3" title="Robot">🤖</button>
+    <button data-skin="4" title="Penguin">🐧</button>
   </div>
+  <div class="tw-label">SEASON</div>
+  <div class="tw-row">
+    <button data-season="spring">🌸</button>
+    <button data-season="summer" class="tw-on">🌿</button>
+    <button data-season="autumn">🍂</button>
+    <button data-season="winter">⛄</button>
+  </div>
+</div>
 
-  <div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
-  <div id="minigame-container" style="display:none;position:absolute;inset:0;z-index:25;"></div>
-  <div id="joystick-base"><div id="joystick-thumb"></div></div>
-  <button id="mobile-jump">▲</button>
-  <button id="mobile-interact">E</button>
-  <div id="fps"></div>
+<div id="panel"><button id="panel-close">×</button><div id="panel-content"></div></div>
+<div id="minigame-container" style="display:none;position:absolute;inset:0;z-index:25;"></div>
+<div id="joystick-base"><div id="joystick-thumb"></div></div>
+<button id="mobile-jump">▲</button>
+<button id="mobile-interact">E</button>
+<div id="fps"></div>
 
-  <script>
-    import { init } from "../scripts/main";
-    init();
-  </script>
+<script>
+  import { init } from "../scripts/main";
+  init();
+</script>
 </body>
 </html>

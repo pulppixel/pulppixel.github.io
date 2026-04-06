@@ -43,8 +43,8 @@ function computeColliders(): FenceCollider[] {
 
   function closeSeg(
     start: number, end: number,
-    runsZ: boolean, edgePos: number, fenceTop: number,
-    axis: 'x' | 'z', dir: number, p: Platform,
+    runsZ: boolean, _edgePos: number, fenceTop: number,
+    _axis: 'x' | 'z', dir: number, p: Platform,
   ): void {
     const halfLen = (end - start) / 2 + 0.15;
     const mid = (start + end) / 2;
@@ -118,15 +118,4 @@ function computeColliders(): FenceCollider[] {
 }
 
 // Computed once (PLATFORMS is const)
-export const FENCE_COLLIDERS = computeColliders();
-
-export function isFenceBlocked(px: number, pz: number, py: number, radius = 0.25): boolean {
-  for (const f of FENCE_COLLIDERS) {
-    if (py > f.top) continue;
-    if (px + radius > f.x - f.hw && px - radius < f.x + f.hw &&
-        pz + radius > f.z - f.hd && pz - radius < f.z + f.hd) {
-      return true;
-    }
-  }
-  return false;
-}
+computeColliders();

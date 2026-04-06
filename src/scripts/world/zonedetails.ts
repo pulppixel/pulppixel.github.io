@@ -8,28 +8,28 @@ import { stdBox, glowBox, stdMat, setPos } from '../core/helpers';
 // --- Water edge: reef ring + foam strips around each platform ---
 
 export function buildWaterEdge(scene: THREE.Scene): void {
-    const foamMat = new THREE.MeshBasicMaterial({
-        color: 0xc8f0f5, transparent: true, opacity: 0.18,
-    });
-
-    for (const p of PLATFORMS) {
-        if (p.h <= 0) continue;
-        if (p.w < 10) continue;
-        const hw = p.w / 2, hd = p.d / 2;
-
-        // Foam strips on 4 sides
-        const foamData: [number, number, number, number, number, number][] = [
-            [p.x, p.h + 0.15, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
-            [p.x, 0.2, p.z - hd - 1.1, p.w + 2.4, 0.03, 0.5],
-            [p.x + hw + 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
-            [p.x - hw - 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
-        ];
-        for (const [fx, fy, fz, fw, fh, fd] of foamData) {
-            const foam = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, fd), foamMat);
-            foam.position.set(fx, fy, fz);
-            scene.add(foam);
-        }
-    }
+    // const foamMat = new THREE.MeshBasicMaterial({
+    //     color: 0xc8f0f5, transparent: true, opacity: 0.18,
+    // });
+    //
+    // for (const p of PLATFORMS) {
+    //     if (p.h <= 0) continue;
+    //     if (p.w < 10) continue;
+    //     const hw = p.w / 2, hd = p.d / 2;
+    //
+    //     // Foam strips on 4 sides
+    //     const foamData: [number, number, number, number, number, number][] = [
+    //         [p.x, p.h + 0.15, p.z + hd + 1.1, p.w + 2.4, 0.03, 0.5],
+    //         [p.x, 0.2, p.z - hd - 1.1, p.w + 2.4, 0.03, 0.5],
+    //         [p.x + hw + 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
+    //         [p.x - hw - 1.1, 0.2, p.z, 0.5, 0.03, p.d + 1.4],
+    //     ];
+    //     for (const [fx, fy, fz, fw, fh, fd] of foamData) {
+    //         const foam = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, fd), foamMat);
+    //         foam.position.set(fx, fy, fz);
+    //         scene.add(foam);
+    //     }
+    // }
 }
 
 // --- Small bushes (low vegetation for density) ---
@@ -39,18 +39,18 @@ export function buildBushes(scene: THREE.Scene): void {
     const bushSmGeo = new THREE.BoxGeometry(0.5, 0.35, 0.5);
     const colors = [0x4a9a4a, 0x3a8a3a, 0x5aaa5a, 0x408840];
 
-    // Positions on platforms (margin 2+ from edges, avoid zone centers)
+    // Positions on platforms — 존별 밀도 조절
     const spots: [number, number][] = [
-        // Spawn
-        [-5, -2], [4, 4], [6, -4],
-        // Zone 0 - Nether
-        [-7, -13], [8, -22], [-3, -24], [7, -12],
-        // Zone 1 - Treasure
-        [21, -35], [35, -42], [25, -45], [33, -35],
-        // Zone 2 - Beacon
-        [-35, -35], [-21, -42], [-33, -45], [-23, -35],
-        // Zone 3 - Overworld
-        [-7, -53], [7, -63], [-6, -60], [8, -54],
+        // Spawn: 1개 (탁 트인)
+        [4, 4],
+        // Hub: 3개 (숲속)
+        [-7, -13], [8, -22], [7, -12],
+        // Treasure: 2개 (해안)
+        [21, -35], [33, -35],
+        // Nether: 3개 (어두운 덤불)
+        [-35, -35], [-21, -42], [-33, -45],
+        // Peak: 2개 (정원)
+        [-7, -53], [8, -54],
     ];
 
     spots.forEach(([sx, sz], i) => {
@@ -680,144 +680,46 @@ function buildOverworldDecor(scene: THREE.Scene): void {
 // =============================================
 
 export function buildZoneBoundaries(scene: THREE.Scene): void {
+    // 간소화: 코너 비콘 + 센터 메달리온만 유지
+    // 엣지 글로우, 바닥 패턴, 게이트 모두 제거 (시각적 노이즈)
     interface ZDef {
         x: number; z: number; w: number; d: number; h: number;
         color: number;
-        gateEdge: 'n' | 's' | 'e' | 'w';
-        gateOff: number; // offset along the gate edge
     }
 
     const ZONES: ZDef[] = [
-        // Overworld hub — from spawn (south)
-        { x: 0, z: -18, w: 18, d: 14, h: 4.0, color: 0xff6b9d, gateEdge: 's', gateOff: 0 },
-        // Treasure Isle — stepping stones arrive at south edge near x=22
-        { x: 28, z: -40, w: 18, d: 14, h: 9.0, color: 0x6ee7b7, gateEdge: 's', gateOff: -6 },
-        // The Nether — stepping stones arrive at south edge near x=-22
-        { x: -28, z: -40, w: 18, d: 14, h: 8.0, color: 0xa78bfa, gateEdge: 's', gateOff: 6 },
-        // Beacon Peak — from center path (south)
-        { x: 0, z: -58, w: 18, d: 14, h: 12.0, color: 0xfbbf24, gateEdge: 's', gateOff: 0 },
+        { x: 0, z: -18, w: 18, d: 14, h: 4.0, color: 0xff6b9d },
+        { x: 28, z: -40, w: 18, d: 14, h: 9.0, color: 0x6ee7b7 },
+        { x: -28, z: -40, w: 18, d: 14, h: 8.0, color: 0xa78bfa },
+        { x: 0, z: -58, w: 18, d: 14, h: 12.0, color: 0xfbbf24 },
     ];
 
-    // Shared geometries
     const pillarBaseGeo = new THREE.BoxGeometry(0.5, 0.15, 0.5);
     const pillarBodyGeo = new THREE.BoxGeometry(0.28, 1.6, 0.28);
     const pillarCapGeo = new THREE.BoxGeometry(0.4, 0.12, 0.4);
     const beaconGemGeo = new THREE.BoxGeometry(0.24, 0.24, 0.24);
-    const cornerTileGeo = new THREE.BoxGeometry(0.6, 0.03, 0.6);
-    const gatePillarGeo = new THREE.BoxGeometry(0.4, 3.2, 0.4);
-    const gateAccentGeo = new THREE.BoxGeometry(0.42, 0.08, 0.42);
-    const gateGemGeo = new THREE.BoxGeometry(0.34, 0.34, 0.34);
-
-    // Shared materials (zone-independent)
     const stoneMat = stdMat(0x706868);
     const stoneCapMat = stdMat(0x808078);
-    const gateStoneMat = stdMat(0x605858);
 
     for (const z of ZONES) {
         const hw = z.w / 2, hd = z.d / 2;
 
-        // Per-zone emissive materials
-        const borderMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.2,
-            metalness: 0.15, roughness: 0.6, transparent: true, opacity: 0.5,
-        });
-        const innerMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.08,
-            metalness: 0.1, roughness: 0.8, transparent: true, opacity: 0.25,
-        });
         const gemMat = new THREE.MeshStandardMaterial({
             color: z.color, emissive: z.color, emissiveIntensity: 0.5,
             metalness: 0.2, roughness: 0.5, transparent: true, opacity: 0.9,
         });
-        const gateAccentMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.25,
-            metalness: 0.2, roughness: 0.5,
-        });
+
+        // ── 센터 메달리온 (존 정체성 마커) ──
         const centerMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.12,
-            metalness: 0.15, roughness: 0.7, transparent: true, opacity: 0.3,
+            color: z.color, emissive: z.color, emissiveIntensity: 0.08,
+            metalness: 0.15, roughness: 0.7, transparent: true, opacity: 0.2,
         });
-
-        // ========================================
-        // 1. EDGE GLOW BORDER
-        // Raised emissive strips framing the zone — 가장 체감 큰 요소
-        // ========================================
-        const ey = z.h + 0.04;
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(z.w + 0.2, 0.07, 0.16), borderMat), z.x, ey, z.z - hd + 0.1));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(z.w + 0.2, 0.07, 0.16), borderMat), z.x, ey, z.z + hd - 0.1));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, z.d + 0.2), borderMat), z.x - hw + 0.1, ey, z.z));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, z.d + 0.2), borderMat), z.x + hw - 0.1, ey, z.z));
-
-        // ========================================
-        // 2. GROUND PATTERN
-        // Inner frame + cross + center medallion
-        // ========================================
-        const inset = 2.5;
-        const iW = z.w - inset * 2, iD = z.d - inset * 2;
-        const fy = z.h + 0.015;
-
-        // Inner rectangular frame
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(iW, 0.025, 0.1), innerMat), z.x, fy, z.z - hd + inset));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(iW, 0.025, 0.1), innerMat), z.x, fy, z.z + hd - inset));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.025, iD), innerMat), z.x - hw + inset, fy, z.z));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.025, iD), innerMat), z.x + hw - inset, fy, z.z));
-
-        // Cross lines through center
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(iW * 0.7, 0.02, 0.06), innerMat), z.x, fy - 0.002, z.z));
-        scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, iD * 0.7), innerMat), z.x, fy - 0.002, z.z));
-
-        // Diagonal lines (X pattern)
-        const diagLen = Math.min(iW, iD) * 0.4;
-        for (const ry of [Math.PI / 4, -Math.PI / 4]) {
-            const diag = new THREE.Mesh(new THREE.BoxGeometry(diagLen, 0.02, 0.05), innerMat);
-            diag.position.set(z.x, fy - 0.003, z.z);
-            diag.rotation.y = ry;
-            scene.add(diag);
-        }
-
-        // Inner frame corner accent tiles
-        for (const [cx, cz] of [
-            [z.x - hw + inset, z.z - hd + inset],
-            [z.x + hw - inset, z.z - hd + inset],
-            [z.x - hw + inset, z.z + hd - inset],
-            [z.x + hw - inset, z.z + hd - inset],
-        ] as [number, number][]) {
-            const tile = new THREE.Mesh(cornerTileGeo, innerMat);
-            tile.position.set(cx, z.h + 0.018, cz);
-            tile.rotation.y = Math.PI / 4;
-            scene.add(tile);
-        }
-
-        // Center medallion (large rotated diamond)
         const med = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.03, 2.2), centerMat);
         med.position.set(z.x, z.h + 0.02, z.z);
         med.rotation.y = Math.PI / 4;
         scene.add(med);
 
-        // Inner diamond (brighter)
-        const innerDiamond = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.035, 1.1), borderMat);
-        innerDiamond.position.set(z.x, z.h + 0.025, z.z);
-        innerDiamond.rotation.y = Math.PI / 4;
-        scene.add(innerDiamond);
-
-        // Zone-specific ground accent dots (4 cardinal directions from center)
-        const dotDist = 3.5;
-        const dotMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.15,
-            metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.35,
-        });
-        const dotGeo = new THREE.BoxGeometry(0.35, 0.025, 0.35);
-        for (const [dx, dz] of [[dotDist, 0], [-dotDist, 0], [0, dotDist], [0, -dotDist]] as [number, number][]) {
-            const dot = new THREE.Mesh(dotGeo, dotMat);
-            dot.position.set(z.x + dx, z.h + 0.016, z.z + dz);
-            dot.rotation.y = Math.PI / 4;
-            scene.add(dot);
-        }
-
-        // ========================================
-        // 3. CORNER BEACONS
-        // Stone pillar + emissive gem + point light
-        // ========================================
+        // ── 코너 비콘 (랜드마크) ──
         const cInset = 1.3;
         const beaconCorners: [number, number][] = [
             [z.x - hw + cInset, z.z - hd + cInset],
@@ -827,38 +729,19 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
         ];
 
         for (const [cx, cz] of beaconCorners) {
-            // Base
             scene.add(setPos(new THREE.Mesh(pillarBaseGeo, stoneCapMat), cx, z.h + 0.075, cz));
-            // Pillar body
             const body = new THREE.Mesh(pillarBodyGeo, stoneMat);
             body.position.set(cx, z.h + 0.95, cz);
             body.castShadow = true;
             scene.add(body);
-            // Cap
             scene.add(setPos(new THREE.Mesh(pillarCapGeo, stoneCapMat), cx, z.h + 1.82, cz));
-            // Glowing gem
             const gem = new THREE.Mesh(beaconGemGeo, gemMat);
             gem.position.set(cx, z.h + 2.02, cz);
             gem.rotation.y = Math.PI / 4;
             scene.add(gem);
-            // Point light
             const light = new THREE.PointLight(z.color, 0.3, 5);
             light.position.set(cx, z.h + 2.3, cz);
             scene.add(light);
         }
     }
-
-    // ========================================
-    // SPAWN BOUNDARY (simpler — edge glow only)
-    // ========================================
-    const spawnBorderMat = new THREE.MeshStandardMaterial({
-        color: 0x6ee7b7, emissive: 0x6ee7b7, emissiveIntensity: 0.08,
-        metalness: 0.1, roughness: 0.7, transparent: true, opacity: 0.25,
-    });
-    const sp = { x: 0, z: 0, w: 14, d: 12, h: 1.0 };
-    const shw = sp.w / 2, shd = sp.d / 2;
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(sp.w, 0.05, 0.1), spawnBorderMat), sp.x, sp.h + 0.03, sp.z - shd + 0.08));
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(sp.w, 0.05, 0.1), spawnBorderMat), sp.x, sp.h + 0.03, sp.z + shd - 0.08));
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, sp.d), spawnBorderMat), sp.x - shw + 0.08, sp.h + 0.03, sp.z));
-    scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, sp.d), spawnBorderMat), sp.x + shw - 0.08, sp.h + 0.03, sp.z));
 }

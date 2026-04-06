@@ -41,12 +41,12 @@ export function createScene(isMobile: boolean): SceneContext {
   buildPlatforms(scene, isMobile);
   buildTrees(scene);
   buildFlowers(scene);
-  buildMushrooms(scene);
+  buildMushrooms();
   buildRocks(scene);
   buildFences(scene);
   buildLanterns(scene);
   buildZonePatches(scene);
-  buildPathDots(scene);
+  buildPathDots();
   flushInstances(scene);
 
   buildWaterEdge(scene);

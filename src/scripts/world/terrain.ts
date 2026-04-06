@@ -82,24 +82,11 @@ function getZonePalette(px: number, pz: number): ZonePalette {
 }
 
 type LeafType = 'green' | 'orange' | 'pink';
-
-function getZoneLeafType(x: number, z: number): LeafType {
-  const pal = getZonePalette(x, z);
-  if (pal === PALETTES.beacon) return 'orange';
-  if (pal === PALETTES.overworld) return 'pink';
-  return 'green';
-}
-
-// Static Palette
-
 const WOOD = 0x8a6540, WOOD_LT = 0xb09868, BARK = 0x6a4a2a;
 const LEAF_GR = 0x4aaa4a, LEAF_DK = 0x3a8a3a;
 const LEAF_OR = 0xf09050, LEAF_RD = 0xe87040;
 const LEAF_PK = 0xf0a0b8, LEAF_PK2 = 0xe888a0;
 const FL_PK = 0xf5a8c0, FL_YL = 0xf0d060, FL_BL = 0x88c8e8;
-const STONE_LT = 0xc8c0b8;
-
-// Helpers
 
 function getH(x: number, z: number): number {
   let h = -1;
@@ -258,7 +245,7 @@ export function buildFlowers(scene: THREE.Scene): void {
 
 // Mushrooms
 
-export function buildMushrooms(scene: THREE.Scene): void {
+export function buildMushrooms(): void {
   // Hub + Nether에만 배치 (숲/신비 분위기)
   const spots: [number, number, number][] = [
     // Hub
@@ -538,7 +525,7 @@ export function buildZonePatches(scene: THREE.Scene): void {
 
 // --- zone palette별 그룹 ---
 
-export function buildPathDots(scene: THREE.Scene): void {
+export function buildPathDots(): void {
   const dotGeo = new THREE.BoxGeometry(0.3, 0.06, 0.3);
 
   for (let i = 0; i < COMPANIES.length; i++) {

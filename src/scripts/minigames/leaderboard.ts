@@ -30,8 +30,8 @@ export const GAMES: Record<string, GameInfo> = {
     ruby:      { id: 'ruby',      title: '루비의 모험',     color: '#ff6b9d', maxScore: 99999,  formatExtra: e => e.metadata?.combo ? `×${e.metadata.combo}` : '' },
     maze:      { id: 'maze',      title: 'Math Master',   color: '#a78bfa', maxScore: 30000,  formatExtra: e => `${e.metadata?.gems ?? 0}◇ ${e.metadata?.time?.toFixed(1) ?? '?'}s` },
     nomads:    { id: 'nomads',    title: 'Nomads Planet', color: '#fbbf24', maxScore: 999999, formatExtra: e => e.metadata?.combo ? `×${e.metadata.combo}` : '' },
-    haul:      { id: 'haul',      title: 'HAUL',          color: '#fbbf24', maxScore: 99999,  formatExtra: e => `◆${e.metadata?.cores ?? 0}` },
-    ninetosix: { id: 'ninetosix', title: 'Frenzy Circle', color: '#6ee7b7', maxScore: 99999,  formatExtra: e => e.metadata?.combo ? `×${e.metadata.combo}` : '' },
+    haul:      { id: 'haul',      title: 'HAUL',          color: '#ff966b', maxScore: 99999,  formatExtra: e => `◆${e.metadata?.cores ?? 0}` },
+    ninetosix: { id: 'ninetosix', title: 'Frenzy Circle', color: '#22d3ee', maxScore: 99999,  formatExtra: e => e.metadata?.combo ? `×${e.metadata.combo}` : '' },
 };
 
 export const GAME_ORDER = ['spody', 'ruby', 'maze', 'nomads', 'haul', 'ninetosix'];

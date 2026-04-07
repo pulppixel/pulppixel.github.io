@@ -1,0 +1,195 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="Guestbook - Pulppixel">
+    <Nav showBackLink={true} />
+
+    <article class="gb-page">
+        <div class="container">
+            <header class="gb-header">
+                <div class="gb-label">Leave a message</div>
+                <h1>방명록</h1>
+                <p class="gb-subtitle">남기고 싶은 한마디를 적어주세요. 짧은 인사도, 피드백도, 무엇이든 환영합니다.</p>
+                <a href="/explore/" class="gb-cta">3D 씬으로 이동 ◆</a>
+            </header>
+
+            <section class="gb-form">
+                <div class="gb-form-label">◆ 새 메시지</div>
+                <input id="gb-nick" type="text" maxlength="20" placeholder="닉네임 (선택)" />
+                <textarea id="gb-msg" maxlength="200" placeholder="메시지를 남겨주세요 (1~200자)"></textarea>
+                <div class="gb-form-foot">
+                    <span id="gb-count">0/200</span>
+                    <button id="gb-submit">등록</button>
+                </div>
+                <div id="gb-toast" class="gb-toast"></div>
+            </section>
+
+            <div id="gb-list" class="gb-list">
+                <div class="gb-loading">불러오는 중...</div>
+            </div>
+        </div>
+    </article>
+
+    <Footer />
+</BaseLayout>
+
+<script>
+    const SB_URL = 'https://fmizlkvnlantaopdwwrn.supabase.co';
+    const SB_KEY = 'sb_publishable_-XhnhEFgHoZvBD8jEl1hlQ_IXoDJHO1';
+    const API = `${SB_URL}/rest/v1/guestbook`;
+    const AUTH = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` };
+    const NICK_KEY = 'pulppixel-last-nickname';
+    const COOLDOWN_MS = 10000;
+    const FETCH_LIMIT = 50;
+
+    interface GuestEntry { id: number; nickname: string; message: string; created_at: string; }
+
+    const listEl = document.getElementById('gb-list')!;
+    const nickEl = document.getElementById('gb-nick') as HTMLInputElement;
+    const msgEl = document.getElementById('gb-msg') as HTMLTextAreaElement;
+    const countEl = document.getElementById('gb-count')!;
+    const submitEl = document.getElementById('gb-submit') as HTMLButtonElement;
+    const toastEl = document.getElementById('gb-toast')!;
+
+    let lastSubmit = 0;
+    let toastTimer = 0;
+
+    try { nickEl.value = localStorage.getItem(NICK_KEY) || ''; } catch { /* noop */ }
+
+    msgEl.addEventListener('input', () => { countEl.textContent = `${msgEl.value.length}/200`; });
+
+    function showToast(text: string): void {
+        toastEl.textContent = text;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), 2500);
+    }
+
+    function escapeHtml(s: string): string {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function formatDate(iso: string): string {
+        const d = new Date(iso);
+        const M = d.getMonth() + 1, D = d.getDate();
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${M}/${D} ${h}:${m}`;
+    }
+
+    async function fetchEntries(): Promise<void> {
+        try {
+            const res = await fetch(`${API}?select=*&order=created_at.desc&limit=${FETCH_LIMIT}`, { headers: AUTH });
+            if (!res.ok) throw new Error(`${res.status}`);
+            const entries: GuestEntry[] = await res.json();
+            renderList(entries);
+        } catch {
+            listEl.innerHTML = '<div class="gb-empty"><p>불러오기 실패</p><p>잠시 후 다시 시도해주세요</p></div>';
+        }
+    }
+
+    function renderList(entries: GuestEntry[]): void {
+        if (entries.length === 0) {
+            listEl.innerHTML = '<div class="gb-empty"><p>아직 메시지가 없습니다</p><p>첫 번째 방명록을 남겨보세요!</p></div>';
+            return;
+        }
+        listEl.innerHTML = entries.map(e => `
+            <div class="gb-row">
+                <div class="gb-row-head">
+                    <span class="gb-nick-tag">${escapeHtml(e.nickname)}</span>
+                    <span class="gb-date">${formatDate(e.created_at)}</span>
+                </div>
+                <div class="gb-msg-text">${escapeHtml(e.message)}</div>
+            </div>
+        `).join('');
+    }
+
+    async function submit(): Promise<void> {
+        const now = Date.now();
+        if (now - lastSubmit < COOLDOWN_MS) {
+            showToast(`${Math.ceil((COOLDOWN_MS - (now - lastSubmit)) / 1000)}초 후 다시 시도해주세요`);
+            return;
+        }
+        const nick = (nickEl.value.trim() || 'anonymous').slice(0, 20);
+        const msg = msgEl.value.trim();
+        if (!msg) { showToast('메시지를 입력해주세요'); return; }
+        if (msg.length > 200) { showToast('200자 이내로 입력해주세요'); return; }
+
+        submitEl.disabled = true;
+        submitEl.textContent = '전송 중...';
+        try {
+            const res = await fetch(API, {
+                method: 'POST',
+                headers: { ...AUTH, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+                body: JSON.stringify({ nickname: nick, message: msg }),
+            });
+            if (!res.ok) throw new Error(`${res.status}`);
+            lastSubmit = now;
+            try { localStorage.setItem(NICK_KEY, nick); } catch { /* noop */ }
+            msgEl.value = '';
+            countEl.textContent = '0/200';
+            showToast('등록 완료!');
+            await fetchEntries();
+        } catch {
+            showToast('전송 실패');
+        } finally {
+            submitEl.disabled = false;
+            submitEl.textContent = '등록';
+        }
+    }
+
+    submitEl.addEventListener('click', submit);
+    msgEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
+    });
+
+    fetchEntries();
+</script>
+
+<style is:global>
+    .gb-page { padding-top: calc(56px + 4rem); padding-bottom: 4rem; }
+
+    .gb-header { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    .gb-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #a78bfa; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .gb-header h1 { font-family: 'Outfit', 'Pretendard Variable', sans-serif; font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .gb-subtitle { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; max-width: 600px; margin-bottom: 1.5rem; }
+    .gb-cta { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #a78bfa; text-decoration: none; padding: 0.5rem 1rem; border: 1px solid rgba(167,139,250,0.3); border-radius: 6px; transition: all 0.2s; }
+    .gb-cta:hover { background: rgba(167,139,250,0.08); border-color: #a78bfa; }
+
+    .gb-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; position: relative; }
+    .gb-form-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #a78bfa; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.85rem; }
+    .gb-form input, .gb-form textarea { width: 100%; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); padding: 0.7rem 0.9rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; box-sizing: border-box; outline: none; transition: border-color 0.15s; }
+    .gb-form input:focus, .gb-form textarea:focus { border-color: rgba(167,139,250,0.5); }
+    .gb-form input { margin-bottom: 0.6rem; }
+    .gb-form textarea { height: 90px; resize: vertical; min-height: 70px; max-height: 200px; }
+    .gb-form-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; }
+    .gb-form-foot #gb-count { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-tertiary); }
+    .gb-form-foot button { background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); color: #a78bfa; padding: 0.5rem 1.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; }
+    .gb-form-foot button:hover:not(:disabled) { background: rgba(167,139,250,0.18); border-color: #a78bfa; }
+    .gb-form-foot button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .gb-toast { position: absolute; bottom: -2rem; left: 0; right: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a78bfa; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+    .gb-toast.show { opacity: 1; }
+
+    .gb-list { min-height: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
+    .gb-loading, .gb-empty { text-align: center; padding: 3rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-tertiary); }
+    .gb-empty p { margin-bottom: 0.4rem; }
+
+    .gb-row { background: var(--bg-card); border: 1px solid var(--border); border-left: 2px solid rgba(167,139,250,0.4); border-radius: 6px; padding: 0.95rem 1.15rem; transition: background 0.15s, border-color 0.15s; }
+    .gb-row:hover { background: var(--bg-card-hover); border-left-color: #a78bfa; }
+    .gb-row-head { display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 0.45rem; }
+    .gb-nick-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #a78bfa; font-weight: 600; }
+    .gb-date { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-tertiary); }
+    .gb-msg-text { font-size: 0.92rem; color: var(--text-primary); line-height: 1.55; word-break: break-word; white-space: pre-wrap; }
+
+    @media (max-width: 640px) {
+        .gb-form { padding: 1.2rem; }
+        .gb-row { padding: 0.85rem 1rem; }
+        .gb-msg-text { font-size: 0.88rem; }
+    }
+</style>

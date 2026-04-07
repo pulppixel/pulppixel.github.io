@@ -92,7 +92,7 @@ export function init(): void {
   }
 
   document.getElementById('guestbook-btn')?.addEventListener('click', () => {
-    enterMinigame('guestbook');
+    window.location.href = '/guestbook/';
   });
 
   document.getElementById('leaderboard-btn')?.addEventListener('click', () => {

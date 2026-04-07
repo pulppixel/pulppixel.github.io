@@ -187,6 +187,8 @@ const title = 'pulppixel - 3D Explore';
         backdrop-filter: blur(8px);
       }
     }
+    #quest-log, #tw-panel, #tw-toggle, #controls-hint, #fps, #crosshair, #nav .nav-links, #interact-hint, #project-label { transition: opacity 0.35s ease; }
+    body.walking-mode #quest-log, body.walking-mode #tw-panel, body.walking-mode #tw-toggle, body.walking-mode #controls-hint, body.walking-mode #fps, body.walking-mode #crosshair, body.walking-mode #nav .nav-links, body.walking-mode #interact-hint, body.walking-mode #project-label, body.walking-mode #gem-counter { opacity: 0 !important; pointer-events: none !important; }
   </style>
 </head>
 <body>
@@ -214,7 +216,7 @@ const title = 'pulppixel - 3D Explore';
 
 <div id="hero-label"><h1>pulppixel</h1><p>Game Client Engineer, explore my projects</p></div>
 <div id="controls-hint">
-  <span class="desktop-hint">wasd - move, shift - run, space - jump, mouse - look, e - interact</span>
+  <span class="desktop-hint">WASD - MOVE, SHIFT - RUN, SPACE - JUMP, V - WALK, MOUSE - LOOK, E - INTERACT</span>
   <span class="mobile-hint">아래 - 이동, 위 - 회전, ▲ - 점프, E - 상호작용</span>
 </div>
 <div id="interact-hint"><span class="desktop-hint"><span class="key">E</span> interact</span><span class="mobile-hint">tap to interact</span></div>

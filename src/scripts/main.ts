@@ -361,8 +361,13 @@ export function init(): void {
     if (input.keys['KeyA'] || input.keys['ArrowLeft']) _mv.x -= 1;
     if (input.keys['KeyD'] || input.keys['ArrowRight']) _mv.x += 1;
     if (input.moveTid !== null) { _mv.x += input.jIn.x; _mv.z += input.jIn.y; }
-
-    if (input.keys['KeyV']) { isWalking = !isWalking; input.keys['KeyV'] = false; }
+    if (input.keys['KeyV']) {
+      isWalking = !isWalking;
+      document.body.classList.toggle('walking-mode', isWalking);
+      const gc = document.getElementById('gem-counter');
+      if (gc) gc.style.display = isWalking ? 'none' : '';
+      input.keys['KeyV'] = false;
+    }
 
     const wantSprint = input.keys['ShiftLeft'] || input.keys['ShiftRight'];
     isSprinting = false;
@@ -541,7 +546,7 @@ export function init(): void {
     }
 
     // Camera
-    const walkCamDist = isWalking ? Math.min(input.camDist, 3.5) : input.camDist;
+    const walkCamDist = input.camDist;
     const camH = walkCamDist * 0.55 + input.pitch * walkCamDist * 0.8;
     const camZ = walkCamDist * Math.cos(input.pitch * 0.5);
 

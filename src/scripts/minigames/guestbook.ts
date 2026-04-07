@@ -1,4 +1,4 @@
-// ETERNA Guestbook — Supabase REST API
+// PULPPIXEL Guestbook — Supabase REST API
 import { MinigameBase, rgba, C } from './base';
 import type { GameAudio } from '../system/audio';
 
@@ -22,7 +22,7 @@ interface GuestEntry {
 type Phase = 'loading' | 'browse' | 'write';
 
 class GuestbookGame extends MinigameBase {
-    protected readonly title = 'ETERNA GUESTBOOK';
+    protected readonly title = 'PULPPIXEL GUESTBOOK';
     protected readonly titleColor = '#a78bfa';
     protected cursorStyle = 'default';
 

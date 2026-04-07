@@ -6,8 +6,8 @@ import type { GameAudio } from '../system/audio';
 // Constants & Types
 
 const WL = 1, WR = 2, WU = 4, WD = 8, WV = 128;
-const MOVE_SPD = 200;
-const MOVE_SPD_MOBILE = 120;
+const STEP_DUR = 0.18;
+const STEP_DUR_MOBILE = 0.22;
 const STAGES = [
     { w: 7, h: 7, fog: 0, time: 60 },
     { w: 11, h: 11, fog: 6, time: 90 },
@@ -21,6 +21,7 @@ interface HintTrail { x: number; y: number; a: number; }
 interface Trail { x: number; y: number; a: number; }
 
 type Phase = 'intro' | 'play' | 'clear' | 'result';
+type Dir = 'L' | 'R' | 'U' | 'D';
 
 // Maze Generation (MazeGenerator.cs 포팅)
 
@@ -123,6 +124,17 @@ class MazeGame extends MinigameBase {
     private lbStarted = false;
     private goalCharge = 0;
 
+    // Grid lock movement state
+    private gx = 0; private gy = 0;        // 현재 grid
+    private mvFx = 0; private mvFy = 0;    // 보간 from
+    private mvTx = 0; private mvTy = 0;    // 보간 to
+    private mvT = 1; private mvDur = 0;    // 진행도(0~1), 총 duration
+    private bufDx = 0; private bufDy = 0;  // 입력 버퍼 (이동 중 들어온 다음 방향)
+
+    // Keyboard direction stack (last-pressed-wins)
+    private prevKeys: Record<string, boolean> = {};
+    private dirStack: Dir[] = [];
+
     protected resetGame(): void {
         this.setupMobileControls({ joystick: true });
         this.lbStarted = false;
@@ -148,6 +160,10 @@ class MazeGame extends MinigameBase {
         this.calcLayout();
         this.px = this.ox + this.cs * 0.5;
         this.py = this.oy + this.cs * 0.5;
+        this.gx = 0; this.gy = 0;
+        this.mvT = 1; this.mvDur = 0;
+        this.bufDx = 0; this.bufDy = 0;
+        this.prevKeys = {}; this.dirStack = [];
         this.goalX = this.mW - 1; this.goalY = this.mH - 1;
         this.timer = 0;
         this.timeLeft = s.time;
@@ -172,31 +188,60 @@ class MazeGame extends MinigameBase {
         return { x: Math.floor((px - this.ox) / this.cs), y: Math.floor((py - this.oy) / this.cs) };
     }
 
-    // --- Movement ---
-    private tryMove(dx: number, dy: number, dt: number, speed = MOVE_SPD): void {
-        const spd = speed * dt, pad = 4;
-        let nx = this.px + dx * spd, ny = this.py + dy * spd;
-        const { ox, oy, cs, mW, mH, maze } = this;
-        if (dx !== 0) {
-            const g = this.gridOf(this.px, this.py);
-            const ng = this.gridOf(nx, this.py);
-            if (g.x !== ng.x && g.x >= 0 && g.x < mW && g.y >= 0 && g.y < mH) {
-                if (dx > 0 && (maze[g.x][g.y] & WR)) nx = ox + (g.x + 1) * cs - pad;
-                if (dx < 0 && (maze[g.x][g.y] & WL)) nx = ox + g.x * cs + pad;
+    // --- Input helpers ---
+    private updateDirStack(): void {
+        const map: Array<[Dir, string[]]> = [
+            ['L', ['KeyA', 'ArrowLeft']],
+            ['R', ['KeyD', 'ArrowRight']],
+            ['U', ['KeyW', 'ArrowUp']],
+            ['D', ['KeyS', 'ArrowDown']],
+        ];
+        for (const [dir, ks] of map) {
+            const now = ks.some(k => this.keys[k]);
+            const prev = ks.some(k => this.prevKeys[k]);
+            if (now && !prev) {
+                // 새로 눌림: 기존 위치 제거 후 맨 뒤로
+                const idx = this.dirStack.indexOf(dir);
+                if (idx >= 0) this.dirStack.splice(idx, 1);
+                this.dirStack.push(dir);
+            } else if (!now && prev) {
+                const idx = this.dirStack.indexOf(dir);
+                if (idx >= 0) this.dirStack.splice(idx, 1);
             }
         }
-        if (dy !== 0) {
-            const g = this.gridOf(nx, this.py);
-            const ng = this.gridOf(nx, ny);
-            if (g.y !== ng.y && g.x >= 0 && g.x < mW && g.y >= 0 && g.y < mH) {
-                if (dy > 0 && (maze[g.x][g.y] & WD)) ny = oy + (g.y + 1) * cs - pad;
-                if (dy < 0 && (maze[g.x][g.y] & WU)) ny = oy + g.y * cs + pad;
-            }
+        // prevKeys 갱신 (4방향 키만)
+        for (const [, ks] of map) for (const k of ks) this.prevKeys[k] = !!this.keys[k];
+    }
+
+    private sampleInputDir(): { dx: number; dy: number } {
+        // 키보드: 가장 최근에 눌린 방향 우선 (last-pressed-wins)
+        if (this.dirStack.length > 0) {
+            const top = this.dirStack[this.dirStack.length - 1];
+            if (top === 'L') return { dx: -1, dy: 0 };
+            if (top === 'R') return { dx: 1, dy: 0 };
+            if (top === 'U') return { dx: 0, dy: -1 };
+            return { dx: 0, dy: 1 };
         }
-        nx = Math.max(ox + pad, Math.min(ox + mW * cs - pad, nx));
-        ny = Math.max(oy + pad, Math.min(oy + mH * cs - pad, ny));
-        if (nx !== this.px || ny !== this.py) this.trails.push({ x: this.px, y: this.py, a: 0.5 });
-        this.px = nx; this.py = ny;
+        // Joystick: 큰 축만 채택 (대각선 차단)
+        const ax = Math.abs(this.mJoy.x), ay = Math.abs(this.mJoy.y);
+        const dz = 0.3;
+        if (ax > ay && ax > dz) return { dx: this.mJoy.x > 0 ? 1 : -1, dy: 0 };
+        if (ay > dz) return { dx: 0, dy: this.mJoy.y > 0 ? 1 : -1 };
+        return { dx: 0, dy: 0 };
+    }
+
+    private tryStep(dx: number, dy: number, dur: number): boolean {
+        const cell = this.maze[this.gx][this.gy];
+        if (dx > 0 && (cell & WR)) return false;
+        if (dx < 0 && (cell & WL)) return false;
+        if (dy > 0 && (cell & WD)) return false;
+        if (dy < 0 && (cell & WU)) return false;
+        const tx = this.gx + dx, ty = this.gy + dy;
+        if (tx < 0 || tx >= this.mW || ty < 0 || ty >= this.mH) return false;
+        this.mvFx = this.gx; this.mvFy = this.gy;
+        this.mvTx = tx; this.mvTy = ty;
+        this.mvT = 0; this.mvDur = dur;
+        return true;
     }
 
     private showHint(): void {
@@ -264,17 +309,52 @@ class MazeGame extends MinigameBase {
             return;
         }
 
-        // Movement
-        let mx = 0, my = 0;
-        if (this.keys['KeyW'] || this.keys['ArrowUp']) my -= 1;
-        if (this.keys['KeyS'] || this.keys['ArrowDown']) my += 1;
-        if (this.keys['KeyA'] || this.keys['ArrowLeft']) mx -= 1;
-        if (this.keys['KeyD'] || this.keys['ArrowRight']) mx += 1;
-        if (mx === 0 && my === 0 && (this.mJoy.x || this.mJoy.y)) {
-            mx = this.mJoy.x > 0.3 ? 1 : this.mJoy.x < -0.3 ? -1 : 0;
-            my = this.mJoy.y > 0.3 ? 1 : this.mJoy.y < -0.3 ? -1 : 0;
+        // Movement (grid lock step + input buffer + last-pressed-wins)
+        this.updateDirStack();
+        const stepDur = this.mob ? STEP_DUR_MOBILE : STEP_DUR;
+
+        if (this.mvT < 1) {
+            // 이동 중: linear 보간
+            this.mvT = Math.min(1, this.mvT + dt / this.mvDur);
+            const t = this.mvT;
+            this.px = this.ox + (this.mvFx + (this.mvTx - this.mvFx) * t) * this.cs + this.cs * 0.5;
+            this.py = this.oy + (this.mvFy + (this.mvTy - this.mvFy) * t) * this.cs + this.cs * 0.5;
+
+            // 이동 중 입력 감지: 다른 방향이면 buffer에 저장
+            const inp = this.sampleInputDir();
+            if (inp.dx !== 0 || inp.dy !== 0) {
+                const sdx = Math.sign(this.mvTx - this.mvFx);
+                const sdy = Math.sign(this.mvTy - this.mvFy);
+                if (inp.dx !== sdx || inp.dy !== sdy) {
+                    this.bufDx = inp.dx; this.bufDy = inp.dy;
+                }
+            }
+
+            if (this.mvT >= 1) {
+                this.gx = this.mvTx; this.gy = this.mvTy;
+                this.trails.push({ x: this.px, y: this.py, a: 0.5 });
+            }
+        } else {
+            // 도착 후 다음 step 결정: buffer 우선, 없으면 현재 입력
+            let dx = 0, dy = 0, usedBuf = false;
+            if (this.bufDx !== 0 || this.bufDy !== 0) {
+                dx = this.bufDx; dy = this.bufDy;
+                this.bufDx = 0; this.bufDy = 0;
+                usedBuf = true;
+            } else {
+                const inp = this.sampleInputDir();
+                dx = inp.dx; dy = inp.dy;
+            }
+
+            let moved = false;
+            if (dx !== 0 || dy !== 0) moved = this.tryStep(dx, dy, stepDur);
+
+            // buffer 방향이 벽에 막혔으면 현재 입력으로 즉시 폴백
+            if (!moved && usedBuf) {
+                const inp = this.sampleInputDir();
+                if (inp.dx !== 0 || inp.dy !== 0) this.tryStep(inp.dx, inp.dy, stepDur);
+            }
         }
-        if (mx !== 0 || my !== 0) this.tryMove(mx, my, dt, this.mob ? MOVE_SPD_MOBILE : MOVE_SPD);
 
         const pg = this.gridOf(this.px, this.py);
         if (pg.x >= 0 && pg.x < this.mW && pg.y >= 0 && pg.y < this.mH) this.explored.add(`${pg.x},${pg.y}`);
@@ -465,12 +545,13 @@ class MazeGame extends MinigameBase {
         cx.fillText(`${Math.ceil(this.timeLeft)}s`, W / 2, 32);
 
         // Hint button
-        const hbx = W - 90, hby = 55;
-        cx.beginPath(); cx.roundRect(hbx, hby, 70, 28, 5);
+        const hbx = 200, hby = 50, hbw = 70, hbh = 24;
+        cx.beginPath(); cx.roundRect(hbx, hby, hbw, hbh, 5);
         cx.strokeStyle = rgba(C.accent, 0.3); cx.lineWidth = 1; cx.stroke();
         cx.fillStyle = rgba(C.accent, 0.05); cx.fill();
         cx.font = '500 10px "JetBrains Mono",monospace'; cx.fillStyle = rgba(C.accent, 0.6);
-        cx.textAlign = 'center'; cx.fillText('HINT (A*)', hbx + 35, hby + 17);
+        cx.textAlign = 'center'; cx.textBaseline = 'middle';
+        cx.fillText('HINT (A*)', hbx + hbw / 2, hby + hbh / 2);
 
         this.drawCloseBtn();
 
@@ -585,7 +666,7 @@ class MazeGame extends MinigameBase {
             if (hit === 'exit') this.stop();
             return;
         }
-        if (x > this.W - 90 && x < this.W - 20 && y > 55 && y < 83 && this.phase === 'play') {
+        if (x > 200 && x < 270 && y > 50 && y < 74 && this.phase === 'play') {
             this.showHint();
         }
     }

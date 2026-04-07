@@ -25,7 +25,7 @@ const FAKE_RESPAWN = 4.0;
 // 위장 적 떨림
 const FAKE_TWITCH_INTERVAL = 3.0;  // 평균 간격
 const FAKE_TWITCH_DUR = 0.45;      // 떨림 지속
-const FAKE_CORE_COLOR = '#9a8a4a'; // 시든 망고
+const FAKE_CORE_COLOR = '#e0b813'; // 시든 망고
 
 // 인간 NPC
 const HUMAN_W = 14;

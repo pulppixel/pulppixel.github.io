@@ -289,10 +289,16 @@ const awards = [
           <div class="contact-comment">// open to new connections</div>
         </div>
         <div class="contact-right">
-          <a href="mailto:devenvy100@gmail.com">Email ↗</a>
-          <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub ↗</a>
-          <a href="https://www.linkedin.com/in/hwankee-baik-272948266/" target="_blank" rel="noopener">LinkedIn ↗</a>
-          <a href="/explore/" class="explore-contact-link">3D Explore ◆</a>
+          <div class="contact-group">
+            <a href="mailto:devenvy100@gmail.com">Email ↗</a>
+            <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub ↗</a>
+            <a href="https://www.linkedin.com/in/hwankee-baik-272948266/" target="_blank" rel="noopener">LinkedIn ↗</a>
+          </div>
+          <div class="contact-divider"></div>
+          <div class="contact-group">
+            <a href="/leaderboard/" class="contact-action" style="--c: #fbbf24;">★ 리더보드</a>
+            <a href="/guestbook/" class="contact-action" style="--c: #a78bfa;">✎ 방명록</a>
+          </div>
         </div>
       </div>
     </div>
@@ -445,43 +451,24 @@ const awards = [
   }
 
   /* CONTACT */
-  .contact-section {
-    padding: 4rem 0;
-    border-top: 1px solid var(--border);
-  }
-  .contact-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-  .contact-left .section-label {
-    margin-bottom: 0.5rem;
-  }
-  .contact-comment {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--text-tertiary);
-  }
-  .contact-right {
-    display: flex;
-    gap: 1.5rem;
-  }
-  .contact-right a {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--text-tertiary);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .contact-right a:hover {
-    color: var(--accent);
-  }
+  .contact-section { padding: 4rem 0; border-top: 1px solid var(--border); }
+  .contact-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; }
+  .contact-left .section-label { margin-bottom: 0.5rem; }
+  .contact-comment { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-tertiary); }
+  .contact-right { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+  .contact-group { display: flex; gap: 1.25rem; align-items: center; }
+  .contact-divider { width: 1px; height: 14px; background: var(--border); }
+  .contact-right a { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-tertiary); text-decoration: none; transition: color 0.2s; }
+  .contact-right a:hover { color: var(--accent); }
+  .contact-action { font-size: 0.7rem !important; color: var(--c) !important; padding: 0.4rem 0.85rem; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); border-radius: 4px; letter-spacing: 0.04em; transition: all 0.2s !important; }
+  .contact-action:hover { background: color-mix(in srgb, var(--c) 12%, transparent); border-color: var(--c); color: var(--c) !important; }
 
   @media (max-width: 768px) {
     .project-grid { grid-template-columns: 1fr; }
     .skills-grid { grid-template-columns: 1fr; gap: 1.5rem; }
     .two-col { grid-template-columns: 1fr; gap: 2.5rem; }
     .contact-row { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    .contact-divider { display: none; }
   }
 
   .explore-contact-link { color: var(--accent) !important; }

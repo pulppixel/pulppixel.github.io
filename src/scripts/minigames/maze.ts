@@ -9,10 +9,11 @@ const WL = 1, WR = 2, WU = 4, WD = 8, WV = 128;
 const MOVE_SPD = 200;
 const MOVE_SPD_MOBILE = 120;
 const STAGES = [
-    { w: 7, h: 7, fog: 0 },
-    { w: 11, h: 11, fog: 0 },
-    { w: 15, h: 15, fog: 4 },
+    { w: 7, h: 7, fog: 0, time: 60 },
+    { w: 11, h: 11, fog: 6, time: 90 },
+    { w: 15, h: 15, fog: 4, time: 120 },
 ];
+const GOAL_HOLD = 0.7;
 
 interface Gem { x: number; y: number; collected: boolean; }
 interface DPart { x: number; y: number; vx: number; vy: number; a: number; sz: number; }
@@ -109,6 +110,7 @@ class MazeGame extends MinigameBase {
     private px = 0; private py = 0;
     private goalX = 0; private goalY = 0;
     private timer = 0;
+    private timeLeft = 0;
     private stageTimes: number[] = [];
     private totalGems: number[] = [];
     private gems: Gem[] = [];
@@ -119,6 +121,7 @@ class MazeGame extends MinigameBase {
     private hintTrails: HintTrail[] = [];
     private dissolve: DPart[] = [];
     private lbStarted = false;
+    private goalCharge = 0;
 
     protected resetGame(): void {
         this.setupMobileControls({ joystick: true });
@@ -145,6 +148,8 @@ class MazeGame extends MinigameBase {
         this.py = this.oy + this.cs * 0.5;
         this.goalX = this.mW - 1; this.goalY = this.mH - 1;
         this.timer = 0;
+        this.timeLeft = s.time;
+        this.goalCharge = 0;
         this.hintPath = null; this.hintProg = 0;
         this.trails = []; this.hintTrails = []; this.dissolve = [];
         this.explored = new Set(['0,0']);
@@ -244,6 +249,18 @@ class MazeGame extends MinigameBase {
         if (this.phase !== 'play') return;
 
         this.timer += dt;
+        this.timeLeft -= dt;
+        if (this.timeLeft <= 0) {
+            this.timeLeft = 0;
+            this.stageTimes.push(this.timer);
+            this.totalGems.push(this.gems.filter(g => g.collected).length);
+            this.spawnDissolve();
+            this.audio?.mgFail();
+            this.stage++;
+            if (this.stage >= STAGES.length) { this.phase = 'result'; this.tryStartLb(); }
+            else this.startStage();
+            return;
+        }
 
         // Movement
         let mx = 0, my = 0;
@@ -292,12 +309,17 @@ class MazeGame extends MinigameBase {
         i = this.trails.length;
         while (i-- > 0) { this.trails[i].a -= dt * 0.4; if (this.trails[i].a <= 0) { this.trails[i] = this.trails[this.trails.length - 1]; this.trails.pop(); } }
 
-        // Goal check
+        // Goal check (hold to clear)
         if (pg.x === this.goalX && pg.y === this.goalY) {
-            this.stageTimes.push(this.timer);
-            this.spawnDissolve();
-            this.audio?.mgWaveClear(); // 🔊 스테이지 클리어
-            this.phase = 'clear'; this.phaseT = 1.8;
+            this.goalCharge += dt;
+            if (this.goalCharge >= GOAL_HOLD) {
+                this.stageTimes.push(this.timer);
+                this.spawnDissolve();
+                this.audio?.mgWaveClear();
+                this.phase = 'clear'; this.phaseT = 1.8;
+            }
+        } else {
+            this.goalCharge = 0;
         }
     }
 
@@ -371,6 +393,16 @@ class MazeGame extends MinigameBase {
         cx.fillStyle = rgba(C.yellow, 0.8 * gVis); cx.textAlign = 'center'; cx.textBaseline = 'middle';
         cx.fillText('★', gsx, gsy + 1);
 
+        // Goal hold charge ring
+        if (this.goalCharge > 0 && this.phase === 'play') {
+            const p = Math.min(1, this.goalCharge / GOAL_HOLD);
+            cx.beginPath();
+            cx.arc(gsx, gsy, cs * 0.42, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
+            cx.strokeStyle = rgba(C.yellow, 0.85);
+            cx.lineWidth = 3;
+            cx.stroke();
+        }
+
         // Hint trails + scout
         for (const t of this.hintTrails) {
             cx.beginPath(); cx.arc(t.x, t.y, cs * 0.08 * (t.a / 0.7), 0, Math.PI * 2);
@@ -422,6 +454,14 @@ class MazeGame extends MinigameBase {
         cx.fillStyle = C.cyan; cx.fillText(`◇ ${gc}/${this.gems.length}`, 130, 46);
         this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}${fog > 0 ? ' · FOG' : ''}`, 62, '#3a3a44');
 
+        // Time-left countdown (center top)
+        const tFlash = this.timeLeft < 10 && Math.sin(now * 8) > 0;
+        const tCol = this.timeLeft > 30 ? C.accent : this.timeLeft > 10 ? C.yellow : C.red;
+        cx.font = '600 18px "JetBrains Mono",monospace';
+        cx.fillStyle = tFlash ? rgba(C.red, 0.9) : rgba(tCol, 0.75);
+        cx.textAlign = 'center';
+        cx.fillText(`${Math.ceil(this.timeLeft)}s`, W / 2, 32);
+
         // Hint button
         const hbx = W - 90, hby = 55;
         cx.beginPath(); cx.roundRect(hbx, hby, 70, 28, 5);
@@ -435,8 +475,8 @@ class MazeGame extends MinigameBase {
         // Phase overlays
         if (this.phase === 'intro') {
             this.drawIntro(this.phaseT, `STAGE ${this.stage + 1}`,
-                `${mW}×${mH}${fog > 0 ? ' · FOG OF WAR' : ''}`,
-                this.mob ? '터치 = 이동 · HINT = A* 경로' : 'WASD 이동 · HINT = A* 경로');
+                `${mW}×${mH} · ${STAGES[this.stage].time}s${fog > 0 ? ' · FOG' : ''}`,
+                '★ 위에서 잠시 멈춰야 클리어');
         }
         if (this.phase === 'clear') this.renderClearOverlay();
         if (this.phase === 'result') this.renderResult();
@@ -448,16 +488,35 @@ class MazeGame extends MinigameBase {
         const mmCs = mmSz / Math.max(mW, mH);
         const mmOx = mmX + (mmSz - mW * mmCs) / 2, mmOy = mmY + (mmSz - mH * mmCs) / 2;
         const pg = this.gridOf(this.px, this.py);
+
+        // Background
         cx.fillStyle = rgba(C.bg, 0.85);
         cx.beginPath(); cx.roundRect(mmX - 5, mmY - 5, mmSz + 10, mmSz + 10, 4); cx.fill();
         cx.strokeStyle = rgba(C.accent, 0.15); cx.lineWidth = 1; cx.stroke();
+
+        // Explored cells
         for (const k of this.explored) {
             const [ex, ey] = k.split(',').map(Number);
             cx.fillStyle = rgba(C.accent, 0.2);
             cx.fillRect(mmOx + ex * mmCs + 0.5, mmOy + ey * mmCs + 0.5, mmCs - 1, mmCs - 1);
         }
+
+        // Goal
         cx.fillStyle = rgba(C.yellow, 0.5);
         cx.fillRect(mmOx + this.goalX * mmCs, mmOy + this.goalY * mmCs, mmCs, mmCs);
+
+        // Gems (uncollected only) - cyan dots
+        for (const gem of this.gems) {
+            if (gem.collected) continue;
+            const gxc = mmOx + gem.x * mmCs + mmCs / 2;
+            const gyc = mmOy + gem.y * mmCs + mmCs / 2;
+            cx.beginPath();
+            cx.arc(gxc, gyc, Math.max(1.2, mmCs * 0.3), 0, Math.PI * 2);
+            cx.fillStyle = rgba(C.cyan, 0.85);
+            cx.fill();
+        }
+
+        // Player (drawn last so it's on top)
         cx.fillStyle = C.accent;
         cx.fillRect(mmOx + pg.x * mmCs, mmOy + pg.y * mmCs, mmCs, mmCs);
     }

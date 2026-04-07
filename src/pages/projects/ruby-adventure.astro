@@ -40,6 +40,8 @@ import YouTube from '../../components/YouTube.astro';
     <li>스킬 입력은 어떤 상태에서든 쿨다운 + 마나 조건만 충족하면 즉시 전이</li>
   </ul>
 
+  <img src="/images/ruby_fight.jpg" alt="루비의 모험 - 일반 전투, 플레이어 FSM이 스킬셋으로 구성되어 있다." />
+
   <h2>전투, 스킬 시스템</h2>
   <ul>
     <li><strong>콤보 공격</strong> - <code>CharacterCombat</code>에서 <code>waitAnimating()</code>으로 현재 공격 애니메이션(Attack 0~4) 종료를 체크한 뒤 다음 공격 트리거. 쿨다운 기반 연타 방지</li>
@@ -54,6 +56,8 @@ import YouTube from '../../components/YouTube.astro';
     <code>Stat</code> 클래스는 modifier 패턴 - <code>baseValue</code>에 <code>List&lt;int&gt;</code> 수정치를 누적해서
     장비/버프 효과를 유연하게 적용할 수 있는 구조입니다.
   </p>
+
+  <img src="/images/ruby_chasing.jpg" alt="루비의 모험 - 거대 간수로부터 도망가는 씬" />
 
   <h2>몬스터 AI</h2>
   <ul>

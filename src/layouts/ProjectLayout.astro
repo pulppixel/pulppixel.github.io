@@ -234,8 +234,8 @@ const minigameKey = minigameMap[currentSlug];
   .minigame-cta { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.95rem; background: var(--accent-dim); border: 1px solid var(--accent-mid); border-radius: 6px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; text-decoration: none; transition: all 0.2s; }
   .minigame-cta:hover { background: var(--accent-mid); transform: translateX(2px); box-shadow: 0 0 16px var(--accent-dim); }
   .minigame-cta .cta-icon { font-size: 0.95rem; }
-  .minigame-cta .cta-arrow { opacity: 0.6; transition: opacity 0.2s, transform 0.2s; }
-  .minigame-cta:hover .cta-arrow { opacity: 1; transform: translateX(2px); }
+  .minigame-cta .cta-arrow { display: inline-block; opacity: 0.6; transform: translateY(-1px); transition: opacity 0.2s, transform 0.2s; }
+  .minigame-cta:hover .cta-arrow { opacity: 1; transform: translateY(-1px) translateX(2px); }
 
   /* CONTENT AREA */
   .detail-content {

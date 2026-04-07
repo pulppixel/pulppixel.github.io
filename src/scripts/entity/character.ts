@@ -24,8 +24,8 @@ export interface Character {
 
 function BX(w: number, h: number, d: number, c: number, ei = 0.3): THREE.Mesh {
   const m = new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: ei, metalness: 0.05, roughness: 0.85 }),
+      new THREE.BoxGeometry(w, h, d),
+      new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: ei, metalness: 0.05, roughness: 0.85 }),
   );
   m.castShadow = true;
   return m;
@@ -37,8 +37,8 @@ function SB(w: number, h: number, d: number, c: number): THREE.Mesh {
 
 function GL(w: number, h: number, d: number, c: number, ei = 0.8): THREE.Mesh {
   return new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshStandardMaterial({ color: 0x080810, emissive: c, emissiveIntensity: ei, metalness: 0.3, roughness: 0.5 }),
+      new THREE.BoxGeometry(w, h, d),
+      new THREE.MeshStandardMaterial({ color: 0x080810, emissive: c, emissiveIntensity: ei, metalness: 0.3, roughness: 0.5 }),
   );
 }
 
@@ -270,7 +270,7 @@ export function createCharacter(scene: THREE.Scene, skinIndex?: number): Charact
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.005; ch.add(shadow);
 
   const cLight = new THREE.PointLight(skin.light, 0.5, 4);
-  cLight.position.y = 1.4; ch.add(cLight);
+  cLight.position.y = 1.1; ch.add(cLight);
 
   let squashT = 0;
   function landSquash(): void { squashT = 0.18; }

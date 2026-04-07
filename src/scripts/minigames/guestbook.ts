@@ -36,6 +36,7 @@ class GuestbookGame extends MinigameBase {
     private toast = '';
     private toastLife = 0;
     private formWrap: HTMLDivElement | null = null;
+    private formViewportHandler: (() => void) | null = null;
     private particles: { x: number; y: number; vx: number; vy: number; life: number }[] = [];
 
     protected resetGame(): void {
@@ -185,6 +186,39 @@ class GuestbookGame extends MinigameBase {
         });
 
         setTimeout(() => nickEl.focus(), 50);
+
+        // 모바일 키보드 회피: 키보드가 form을 가릴 때만, 가린 만큼만 위로 올림
+        // (visualViewport API. 미지원 브라우저는 그냥 기본 동작)
+        const vv = window.visualViewport;
+        if (vv) {
+            const adjust = (): void => {
+                if (!this.formWrap) return;
+                // 키보드 높이 = 레이아웃 viewport - visual viewport
+                const kbH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+                if (kbH < 20) {
+                    // 키보드 없음 (또는 무시할 수준) -> 원위치
+                    this.formWrap.style.transform = 'translate(-50%, -50%)';
+                    return;
+                }
+                // form의 실제 bottom 위치 (transform 리셋 상태 기준 측정)
+                this.formWrap.style.transform = 'translate(-50%, -50%)';
+                const rect = this.formWrap.getBoundingClientRect();
+                const visibleBottom = window.innerHeight - kbH;
+                const overlap = rect.bottom - visibleBottom;
+                if (overlap <= 0) {
+                    // 키보드가 form까지 안 닿음 -> 그대로
+                    return;
+                }
+                // 가린 만큼 + 살짝 여유(8px)만 올림
+                const shift = overlap + 8;
+                this.formWrap.style.transform = `translate(-50%, calc(-50% - ${shift}px))`;
+            };
+            this.formViewportHandler = adjust;
+            vv.addEventListener('resize', adjust);
+            vv.addEventListener('scroll', adjust);
+            // focus 이벤트 직후엔 키보드가 아직 안 떴을 수 있으니 약간 늦게도 한 번
+            setTimeout(adjust, 300);
+        }
     }
 
     private spawnPixels(): void {
@@ -206,6 +240,11 @@ class GuestbookGame extends MinigameBase {
     }
 
     private destroyForm(): void {
+        if (this.formViewportHandler && window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', this.formViewportHandler);
+            window.visualViewport.removeEventListener('scroll', this.formViewportHandler);
+            this.formViewportHandler = null;
+        }
         this.formWrap?.remove();
         this.formWrap = null;
     }

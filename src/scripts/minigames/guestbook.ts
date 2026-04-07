@@ -36,6 +36,7 @@ class GuestbookGame extends MinigameBase {
     private toast = '';
     private toastLife = 0;
     private formWrap: HTMLDivElement | null = null;
+    private particles: { x: number; y: number; vx: number; vy: number; life: number }[] = [];
 
     protected resetGame(): void {
         this.phase = 'loading';
@@ -159,8 +160,12 @@ class GuestbookGame extends MinigameBase {
         msgEl.addEventListener('input', () => {
             this.message = msgEl.value;
             countEl.textContent = `${msgEl.value.length}/${MAX_MSG}`;
+            this.spawnPixels();
         });
-        nickEl.addEventListener('input', () => { this.nickname = nickEl.value; });
+        nickEl.addEventListener('input', () => {
+            this.nickname = nickEl.value;
+            this.spawnPixels();
+        });
         wrap.querySelector('#gb-cancel')!.addEventListener('click', () => {
             this.destroyForm();
             this.phase = 'browse';
@@ -171,10 +176,33 @@ class GuestbookGame extends MinigameBase {
         nickEl.addEventListener('keydown', (e) => e.stopPropagation());
         msgEl.addEventListener('keydown', (e) => {
             e.stopPropagation();
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.submitEntry(); }
+            this.spawnPixels();
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.submitEntry().then(_ => {});
+            }
+            this.spawnPixels();
         });
 
         setTimeout(() => nickEl.focus(), 50);
+    }
+
+    private spawnPixels(): void {
+        if (!this.formWrap) return;
+        this.audio?.mgKey();
+        const rect = this.formWrap.getBoundingClientRect();
+        const cvRect = this.cv.getBoundingClientRect();
+        const fx = rect.left + Math.random() * rect.width - cvRect.left;
+        const fy = rect.top - cvRect.top;
+        for (let i = 0; i < 2; i++) {
+            this.particles.push({
+                x: fx + (Math.random() - 0.5) * 6,
+                y: fy,
+                vx: (Math.random() - 0.5) * 40,
+                vy: -80 - Math.random() * 40,
+                life: 0.7 + Math.random() * 0.3,
+            });
+        }
     }
 
     private destroyForm(): void {
@@ -189,6 +217,14 @@ class GuestbookGame extends MinigameBase {
 
     protected updateGame(dt: number): void {
         if (this.toastLife > 0) this.toastLife -= dt;
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 90 * dt;
+            p.life -= dt;
+            if (p.life <= 0) this.particles.splice(i, 1);
+        }
     }
 
     protected renderGame(now: number): void {
@@ -260,7 +296,7 @@ class GuestbookGame extends MinigameBase {
             cx.fillText(e.nickname, 28, y + 16);
 
             const date = new Date(e.created_at);
-            const ts = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            const ts = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
             cx.font = '400 9px "JetBrains Mono"';
             cx.fillStyle = '#3a3a44';
             cx.fillText(ts, 28 + cx.measureText(e.nickname).width + 8, y + 16);
@@ -272,6 +308,11 @@ class GuestbookGame extends MinigameBase {
         }
 
         cx.restore();
+
+        for (const p of this.particles) {
+            cx.fillStyle = rgba('#a78bfa', Math.min(1, p.life * 2));
+            cx.fillRect(Math.floor(p.x / 2) * 2, Math.floor(p.y / 2) * 2, 5, 5);
+        }
 
         if (this.maxScroll > 0) {
             const barH = Math.max(20, listH * (listH / (this.entries.length * ENTRY_H)));

@@ -32,6 +32,7 @@ export interface GameAudio {
   mgNearMiss(): void;
   mgLoot(): void;
   mgExtract(): void;
+  mgKey(): void;
 }
 
 export function createAudio(): GameAudio {
@@ -486,6 +487,13 @@ export function createAudio(): GameAudio {
         toneAt(f * 0.5, 0.35, 0.025, i * 0.07, 'triangle');
       });
       noiseBurst(3000, 0.5, 0.15, 0.03, 'highpass');
+    },
+
+    mgKey() {
+      if (!ensure()) return;
+      const base = 600 + (Math.random() - 0.5) * 80;
+      tone(base, 0.04, 0.05, 'triangle', 0.002, 0.025);
+      noiseBurst(2000, 4, 0.015, 0.025, 'bandpass');
     },
   };
 }

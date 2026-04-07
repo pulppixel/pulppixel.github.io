@@ -1492,7 +1492,7 @@ Pink Hub는 wisp, Green Treasure는 firefly, Purple Nether는 crystal 첨탑
 - 등산형 zone 구조는 작업 중 유기적으로 도출되었습니다.
 
 **Author**
-- 환기 (Hwankee Baik)
+- HWANKEE BAIK
 - Email: devenvy100@gmail.com
 - GitHub: https://github.com/pulppixel
 - LinkedIn: https://www.linkedin.com/in/hwankee-baik-272948266/
@@ -1516,7 +1516,7 @@ Pink Hub는 wisp, Green Treasure는 firefly, Purple Nether는 crystal 첨탑
 - 어떤 형태로든 재배포
 
 모든 코드, 3D 모델, 텍스처, 디자인, 그 외 asset의 지적재산권은 저작권자
-(환기)에게 귀속됩니다. 라이선싱 문의는 repository 소유자에게 연락
+(HWANKEE)에게 귀속됩니다. 라이선싱 문의는 repository 소유자에게 연락
 바랍니다.
 
 Featured Projects 섹션에서 언급한 회사 프로젝트들(ETERNA, REIW, IW Zombie

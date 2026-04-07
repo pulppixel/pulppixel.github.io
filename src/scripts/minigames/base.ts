@@ -297,7 +297,10 @@ export abstract class MinigameBase {
     cx.strokeStyle = primary ? rgba(C.accent, 0.4) : '#333'; cx.lineWidth = 1; cx.stroke();
     cx.font = '500 12px "JetBrains Mono",monospace';
     cx.fillStyle = primary ? C.accent : '#8a8a9a';
-    cx.textAlign = 'center'; cx.fillText(text, x + w / 2, y + h / 2 + 4);
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillText(text, x + w / 2, y + h / 2);
+    cx.textBaseline = 'alphabetic';
   }
 
   protected drawCloseBtn(y = 38): void {
@@ -590,8 +593,8 @@ export abstract class MinigameBase {
   };
 
   private isCloseHit(x: number, y: number): boolean {
-    const sz = this.mob ? 48 : 40;
-    return x > this.W - sz && y < sz + 10;
+    const sz = this.mob ? 60 : 44;
+    return x > this.W - sz && y < sz;
   }
 
   private handleClick(e: MouseEvent): void {

@@ -46,8 +46,13 @@ class RubyGame extends MinigameBase {
     private shX = 0; private shY = 0;
     private mX = 0; private mY = 0;
     private clickMark: { x: number; y: number; a: number } | null = null;
+    private lbStarted = false;
 
     protected resetGame(): void {
+        this.lbStarted = false;
+        this.lbStatus = 'idle';
+        this.lbScores = [];
+        this.lbNewId = null;
         this.px = this.W / 2; this.py = this.H / 2; this.pDir = 0;
         this.cState = 'idle'; this.cTimer = 0;
         this.moveTo = null; this.chaseTarget = null;
@@ -111,7 +116,7 @@ class RubyGame extends MinigameBase {
         this.hp--; this.iFrames = 0.7; this.combo = 0;
         this.shX = 6 * (Math.random() > 0.5 ? 1 : -1); this.shY = 4 * (Math.random() - 0.5);
         this.audio?.mgHurt(); // 🔊 피격
-        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); } // 🔊 사망
+        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); this.tryStartLb(); }
     }
 
     // --- Update ---
@@ -121,7 +126,11 @@ class RubyGame extends MinigameBase {
             this.phaseT -= dt;
             if (this.phaseT <= 0) {
                 if (this.phase === 'intro') this.phase = 'play';
-                else { this.wave++; if (this.wave >= WAVES.length) this.phase = 'result'; else this.startWave(); }
+                else {
+                    this.wave++;
+                    if (this.wave >= WAVES.length) { this.phase = 'result'; this.tryStartLb(); }
+                    else this.startWave();
+                }
             }
         }
         if (this.phase !== 'play') return;
@@ -326,20 +335,33 @@ class RubyGame extends MinigameBase {
         if (this.phase === 'result' || this.phase === 'dead') this.renderResult();
     }
 
+    private tryStartLb(): void {
+        if (this.lbStarted) return;
+        this.lbStarted = true;
+        this.startLeaderboard('ruby', this.score, {
+            kills: this.kills,
+            combo: this.maxCombo,
+            wave: this.wave + 1,
+        });
+    }
+
     private renderResult(): void {
         const isWin = this.phase === 'result';
         const { bx, by } = this.drawResultBg(isWin ? 'COMPLETE' : 'DEFEATED', isWin ? C.accent : C.red);
         const { cx } = this;
-        cx.font = '700 36px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by - 16);
-        cx.font = '400 10px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by + 4);
-        cx.fillText(`${this.kills} KILLS · MAX COMBO ×${this.maxCombo}`, bx, by + 24);
-        this.drawResultBtns(bx, by + 48);
+        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by - 40);
+        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by - 24);
+        cx.fillText(`${this.kills} KILLS · ×${this.maxCombo} COMBO`, bx, by - 8);
+
+        this.drawLeaderboard(bx, by + 100, 280);
+        this.drawResultBtns(bx, by + 220);
     }
 
     // --- Input ---
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') {
-            const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 48);
+            if (this.isLeaderboardBusy()) return;
+            const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 220);
             if (hit === 'retry') this.resetGame();
             if (hit === 'exit') this.stop();
             return;

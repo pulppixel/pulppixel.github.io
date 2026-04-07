@@ -32,8 +32,13 @@ class SpodyGame extends MinigameBase {
   private ammo = MAX_AMMO; private ammoT = 0;
   private combo = 0; private maxCombo = 0; private lastHit = -10;
   private mX = 0; private mY = 0;
+  private lbStarted = false;
 
   protected resetGame(): void {
+    this.lbStarted = false;
+    this.lbStatus = 'idle';
+    this.lbScores = [];
+    this.lbNewId = null;
     this.score = 0; this.hits = 0; this.totalTgt = 0;
     this.combo = 0; this.maxCombo = 0; this.lastHit = -10;
     this.wave = 0;
@@ -110,7 +115,13 @@ class SpodyGame extends MinigameBase {
       this.phaseT -= dt;
       if (this.phaseT <= 0) {
         if (this.phase === 'intro') this.phase = 'play';
-        else { this.wave++; if (this.wave >= WAVES.length) this.phase = 'result'; else this.startWave(); }
+        else {
+          this.wave++;
+          if (this.wave >= WAVES.length) {
+            this.phase = 'result';
+            this.tryStartLb();
+          } else this.startWave();
+        }
       }
     }
     if (this.phase === 'play' && now - this.lastHit > COMBO_WIN) this.combo = 0;
@@ -224,18 +235,31 @@ class SpodyGame extends MinigameBase {
     if (this.phase === 'result') this.renderResult();
   }
 
+  private tryStartLb(): void {
+    if (this.lbStarted) return;
+    this.lbStarted = true;
+    this.startLeaderboard('spody', this.score, {
+      hits: this.hits,
+      totalTgt: this.totalTgt,
+      combo: this.maxCombo,
+    }).then(_ => {});
+  }
+
   private renderResult(): void {
     const { bx, by } = this.drawResultBg('COMPLETE');
     const { cx } = this;
-    cx.font = '700 36px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by - 16);
-    cx.font = '400 10px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by + 4);
-    cx.fillText(`${this.hits}/${this.totalTgt} HITS · BEST COMBO ×${this.maxCombo}`, bx, by + 24);
-    this.drawResultBtns(bx, by + 48);
+    cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by - 40);
+    cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by - 24);
+    cx.fillText(`${this.hits}/${this.totalTgt} HITS · ×${this.maxCombo} COMBO`, bx, by - 8);
+
+    this.drawLeaderboard(bx, by + 100, 280);
+    this.drawResultBtns(bx, by + 220);
   }
 
   protected onClickAt(x: number, y: number): void {
     if (this.phase === 'result') {
-      const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 48);
+      if (this.isLeaderboardBusy()) return;
+      const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 220);
       if (hit === 'retry') this.resetGame();
       if (hit === 'exit') this.stop();
       return;

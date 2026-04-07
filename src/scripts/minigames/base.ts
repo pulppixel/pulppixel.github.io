@@ -2,6 +2,7 @@
 // + Audio integration + Mobile virtual controls
 
 import type { GameAudio } from '../system/audio';
+import { fetchTop10, willMakeTop10, submitScore, loadNickname, type ScoreEntry } from './leaderboard.ts';
 
 // --- Utilities ---
 
@@ -46,6 +47,14 @@ export abstract class MinigameBase {
   protected pts: Particle[] = [];
   protected pops: Popup[] = [];
   protected audio: GameAudio | null;
+
+  // Leaderboard state
+  protected lbScores: ScoreEntry[] = [];
+  protected lbLoaded = false;
+  protected lbNewId: number | null = null;
+  protected lbStatus: 'idle' | 'loading' | 'eligible' | 'submitting' | 'done' | 'skipped' = 'idle';
+  protected lbForm: HTMLDivElement | null = null;
+  private lbCurrentGame: string | null = null;
 
   // Mobile virtual controls state
   protected mJoy = { x: 0, y: 0 };  // joystick normalized -1~1
@@ -261,6 +270,7 @@ export abstract class MinigameBase {
   stop(): void {
     this.on = false;
     cancelAnimationFrame(this.aId);
+    this.destroyLbForm();
     this.cleanupMobileControls();
     for (const h of this.boundHandlers) h.el.removeEventListener(h.type, h.fn);
     this.boundHandlers = [];
@@ -402,6 +412,156 @@ export abstract class MinigameBase {
     this.cx.font = `700 ${14 + Math.min(combo, 5) * 2}px "JetBrains Mono",monospace`;
     this.cx.fillStyle = rgba(C.yellow, 0.5 + Math.sin(now * 5) * 0.15);
     this.cx.fillText('\u00D7' + combo, x, y);
+  }
+
+  // =============================================
+  // LEADERBOARD
+  // =============================================
+
+  /** result 진입 시 호출. 점수 fetch + Top10이면 form 띄움 */
+  protected async startLeaderboard(gameId: string, score: number, metadata: any = {}): Promise<void> {
+    if (this.lbStatus !== 'idle') return;
+    this.lbCurrentGame = gameId;
+    this.lbStatus = 'loading';
+    this.lbScores = await fetchTop10(gameId);
+    this.lbLoaded = true;
+
+    if (willMakeTop10(this.lbScores, score)) {
+      this.lbStatus = 'eligible';
+      this.createLbForm(gameId, score, metadata);
+    } else {
+      this.lbStatus = 'skipped';
+    }
+  }
+
+  private createLbForm(gameId: string, score: number, metadata: any): void {
+    if (this.lbForm) return;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:${Math.min(340, this.W - 40)}px;background:rgba(10,10,11,0.95);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:20px;z-index:30;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(251,191,36,0.15);`;
+
+    wrap.innerHTML = `
+      <div style="font-size:9px;color:#fbbf24;letter-spacing:0.12em;margin-bottom:6px;">★ TOP 10 ENTRY</div>
+      <div style="font-size:18px;color:#e8e8ec;font-weight:600;margin-bottom:14px;">SCORE ${Math.round(score)}</div>
+      <input id="lb-nick" type="text" maxlength="20" placeholder="닉네임 (선택)"
+        style="width:100%;background:#161618;border:1px solid #2a2a30;color:#e8e8ec;padding:10px 12px;border-radius:4px;font-family:inherit;font-size:12px;box-sizing:border-box;margin-bottom:10px;outline:none;" />
+      <div id="lb-err" style="font-size:10px;color:#ef4444;min-height:14px;margin-bottom:6px;"></div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;">
+        <button id="lb-skip" style="background:none;border:1px solid #333;color:#8a8a9a;padding:7px 14px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;">건너뛰기</button>
+        <button id="lb-submit" style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;padding:7px 14px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;">등록</button>
+      </div>
+    `;
+
+    this.cv.parentElement!.appendChild(wrap);
+    this.lbForm = wrap;
+
+    const nickEl = wrap.querySelector('#lb-nick') as HTMLInputElement;
+    const errEl = wrap.querySelector('#lb-err') as HTMLElement;
+    const placeholder = loadNickname();
+    if (placeholder) nickEl.placeholder = placeholder;
+
+    const doSubmit = async () => {
+      if (this.lbStatus !== 'eligible') return;
+      this.lbStatus = 'submitting';
+      const result = await submitScore(gameId, nickEl.value || placeholder || 'anonymous', score, metadata);
+      if (result.ok) {
+        this.lbNewId = result.newId ?? null;
+        this.lbScores = await fetchTop10(gameId);
+        this.lbStatus = 'done';
+        this.audio?.mgCoin(3);
+        this.destroyLbForm();
+      } else {
+        errEl.textContent = result.error || '실패';
+        this.lbStatus = 'eligible';
+      }
+    };
+
+    nickEl.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doSubmit();
+      }
+    });
+    wrap.querySelector('#lb-submit')!.addEventListener('click', doSubmit);
+    wrap.querySelector('#lb-skip')!.addEventListener('click', () => {
+      this.lbStatus = 'skipped';
+      this.destroyLbForm();
+    });
+
+    setTimeout(() => nickEl.focus(), 50);
+  }
+
+  private destroyLbForm(): void {
+    this.lbForm?.remove();
+    this.lbForm = null;
+  }
+
+  /** Result 화면에서 호출. (cx, cy) 중심으로 Top10 리스트 그림 */
+  protected drawLeaderboard(cx: number, cy: number, width = 280): void {
+    const c = this.cx;
+    const lineH = 16;
+    const headerH = 18;
+    const totalH = headerH + 10 * lineH + 8;
+    const x = cx - width / 2;
+    const y = cy - totalH / 2;
+
+    // Background
+    c.fillStyle = rgba(C.bg, 0.7);
+    c.beginPath();
+    c.roundRect(x, y, width, totalH, 6);
+    c.fill();
+    c.strokeStyle = rgba(C.accent, 0.15);
+    c.lineWidth = 1;
+    c.stroke();
+
+    // Header
+    c.font = '600 9px "JetBrains Mono",monospace';
+    c.fillStyle = '#5a5a66';
+    c.textAlign = 'left';
+    c.fillText('★ TOP 10', x + 12, y + 13);
+    c.textAlign = 'right';
+    c.fillText(this.lbLoaded ? `${this.lbScores.length} ENTRIES` : 'LOADING...', x + width - 12, y + 13);
+
+    // Entries
+    c.font = '500 10px "JetBrains Mono",monospace';
+    for (let i = 0; i < 10; i++) {
+      const ey = y + headerH + 6 + i * lineH + 8;
+      const entry = this.lbScores[i];
+      const isNew = entry && entry.id === this.lbNewId;
+
+      // Rank
+      c.textAlign = 'left';
+      c.fillStyle = isNew ? C.yellow : i < 3 ? rgba(C.accent, 0.7) : '#3a3a44';
+      c.fillText(`${i + 1}`.padStart(2, '0'), x + 12, ey);
+
+      if (entry) {
+        // Nickname (truncate)
+        c.fillStyle = isNew ? C.yellow : '#a8a8b3';
+        const nick = entry.nickname.length > 12 ? entry.nickname.slice(0, 11) + '…' : entry.nickname;
+        c.fillText(nick, x + 36, ey);
+
+        // Score (right-aligned)
+        c.textAlign = 'right';
+        c.fillStyle = isNew ? C.yellow : '#e8e8ec';
+        c.fillText(`${Math.round(entry.score)}`, x + width - 12, ey);
+
+        // NEW badge
+        if (isNew) {
+          c.font = '700 8px "JetBrains Mono",monospace';
+          c.fillStyle = C.yellow;
+          c.textAlign = 'left';
+          c.fillText('NEW', x + width - 80, ey);
+          c.font = '500 10px "JetBrains Mono",monospace';
+        }
+      } else {
+        c.fillStyle = '#1f1f24';
+        c.fillText('—', x + 36, ey);
+      }
+    }
+  }
+
+  protected isLeaderboardBusy(): boolean {
+    return this.lbStatus === 'loading' || this.lbStatus === 'submitting' || this.lbForm !== null;
   }
 
   // --- Internal ---

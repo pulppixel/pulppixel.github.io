@@ -118,9 +118,14 @@ class MazeGame extends MinigameBase {
     private hintProg = 0;
     private hintTrails: HintTrail[] = [];
     private dissolve: DPart[] = [];
+    private lbStarted = false;
 
     protected resetGame(): void {
         this.setupMobileControls({ joystick: true });
+        this.lbStarted = false;
+        this.lbStatus = 'idle';
+        this.lbScores = [];
+        this.lbNewId = null;
         this.stage = 0;
         this.stageTimes = [];
         this.totalGems = [];
@@ -231,7 +236,8 @@ class MazeGame extends MinigameBase {
             if (this.phaseT <= 0) {
                 this.totalGems.push(this.gems.filter(g => g.collected).length);
                 this.stage++;
-                if (this.stage >= STAGES.length) this.phase = 'result'; else this.startStage();
+                if (this.stage >= STAGES.length) { this.phase = 'result'; this.tryStartLb(); }
+                else this.startStage();
             }
             return;
         }
@@ -472,30 +478,37 @@ class MazeGame extends MinigameBase {
         this.cx.globalAlpha = 1;
     }
 
+    private tryStartLb(): void {
+        if (this.lbStarted) return;
+        this.lbStarted = true;
+        const totalTime = this.stageTimes.reduce((a, b) => a + b, 0);
+        const totalGems = this.totalGems.reduce((a, b) => a + b, 0);
+        const score = totalGems * 1000 - Math.round(totalTime * 10);
+        this.startLeaderboard('maze', score, {
+            gems: totalGems,
+            time: totalTime,
+        }).then(_ => {});
+    }
+
     private renderResult(): void {
         const { bx, by } = this.drawResultBg('ALL CLEAR');
         const { cx } = this;
         const total = this.stageTimes.reduce((a, b) => a + b, 0);
-        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec';
-        cx.fillText(this.fmtTime(total), bx, by - 35);
-        cx.font = '400 10px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66';
-        cx.fillText('TOTAL TIME', bx, by - 15);
-        this.stageTimes.forEach((t, i) => {
-            const gemStr = this.totalGems[i] !== undefined ? `  ◇ ${this.totalGems[i]}` : '';
-            cx.fillStyle = '#5a5a66';
-            cx.fillText(`Stage ${i + 1}: ${this.fmtTime(t)}${gemStr}`, bx, by + 8 + i * 16);
-        });
         const allGems = this.totalGems.reduce((a, b) => a + b, 0);
-        if (allGems > 0) {
-            cx.fillStyle = C.cyan; cx.font = '500 11px "JetBrains Mono",monospace';
-            cx.fillText(`TOTAL ◇ ${allGems}`, bx, by + 8 + STAGES.length * 16 + 6);
-        }
-        const btnY = by + 8 + STAGES.length * 16 + 30;
-        this.drawResultBtns(bx, btnY);
+        const score = allGems * 1000 - Math.round(total * 10);
+
+        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec';
+        cx.fillText(`${score}`, bx, by - 40);
+        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66';
+        cx.fillText('SCORE', bx, by - 24);
+        cx.fillText(`${allGems} GEMS · ${this.fmtTime(total)}`, bx, by - 8);
+
+        this.drawLeaderboard(bx, by + 100, 280);
+        this.drawResultBtns(bx, by + 220);
     }
 
     private get resultBtnY(): number {
-        return this.H / 2 + 8 + STAGES.length * 16 + 30;
+        return this.H / 2 + 220;
     }
 
     private fmtTime(t: number): string {
@@ -505,6 +518,7 @@ class MazeGame extends MinigameBase {
     // --- Input ---
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result') {
+            if (this.isLeaderboardBusy()) return;
             const hit = this.hitResultBtn(x, y, this.W / 2, this.resultBtnY);
             if (hit === 'retry') this.resetGame();
             if (hit === 'exit') this.stop();

@@ -83,6 +83,7 @@ class NomadsGame extends MinigameBase {
     private nearMissCd = 0; private nmFlash = 0;
     private inIntersection = false; private stageStars: number[] = [];
     private violationPending: { ix: number; iy: number; heading: 'n'|'s'|'e'|'w' } | null = null;
+    private lbStarted = false;
 
     private sig(d: TfDir): TfCol { return d === this.tfAct ? this.tfCol : 'red'; }
     private sigCol(s: TfCol): string { return s === 'green' ? C.accent : s === 'yellow' ? C.yellow : C.red; }
@@ -91,6 +92,10 @@ class NomadsGame extends MinigameBase {
 
     protected resetGame(): void {
         this.setupMobileControls({ joystick: true });
+        this.lbStarted = false;
+        this.lbStatus = 'idle';
+        this.lbScores = [];
+        this.lbNewId = null;
         this.stage = 0; this.score = 0; this.combo = 0; this.maxCombo = 0;
         this.lastCoinT = -10; this.stageStars = [];
         this.startStage();
@@ -348,7 +353,7 @@ class NomadsGame extends MinigameBase {
         this.shX = 6 * (Math.random() > 0.5 ? 1 : -1); this.shY = 4 * (Math.random() - 0.5);
         this.addBurst(this.px, this.py, C.pink, 8, 120);
         this.audio?.mgHurt(); // 🔊 피격
-        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); } // 🔊 사망
+        if (this.hp <= 0) { this.phase = 'dead'; this.audio?.mgFail(); this.tryStartLb(); }
     }
 
     private updatePlayer(dt: number): void {
@@ -416,7 +421,15 @@ class NomadsGame extends MinigameBase {
     protected updateGame(dt: number): void {
         const now = performance.now() / 1000;
         if (this.phase === 'intro') { this.phaseT -= dt; if (this.phaseT <= 0) this.phase = 'play'; return; }
-        if (this.phase === 'clear') { this.phaseT -= dt; if (this.phaseT <= 0) { this.stage++; if (this.stage >= STAGES.length) this.phase = 'result'; else this.startStage(); } return; }
+        if (this.phase === 'clear') {
+            this.phaseT -= dt;
+            if (this.phaseT <= 0) {
+                this.stage++;
+                if (this.stage >= STAGES.length) { this.phase = 'result'; this.tryStartLb(); }
+                else this.startStage();
+            }
+            return;
+        }
         if (this.phase !== 'play') return;
 
         if (now - this.lastCoinT > COMBO_WIN) this.combo = 0;
@@ -690,22 +703,42 @@ class NomadsGame extends MinigameBase {
         if (this.phase === 'result' || this.phase === 'dead') this.renderResult();
     }
 
+    private tryStartLb(): void {
+        if (this.lbStarted) return;
+        this.lbStarted = true;
+        this.startLeaderboard('nomads', this.score, {
+            stages: this.stageStars,
+            combo: this.maxCombo,
+        });
+    }
+
     private renderResult(): void {
         const isWin = this.phase === 'result';
         const { bx, by } = this.drawResultBg(isWin ? 'ALL CLEAR' : 'CRASHED', isWin ? C.accent : C.red);
         const { cx } = this;
-        cx.font = '700 36px "JetBrains Mono"'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by-16);
-        cx.font = '400 10px "JetBrains Mono"'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by+4);
-        this.stageStars.forEach((s, i) => { cx.fillStyle = '#5a5a66'; cx.fillText(`Stage ${i+1}: ${'★'.repeat(s)}${'☆'.repeat(3-s)}`, bx, by+22+i*16); });
-        cx.fillText(`MAX COMBO ×${this.maxCombo}`, bx, by+22+this.stageStars.length*16+4);
-        this.drawResultBtns(bx, by+22+this.stageStars.length*16+28);
+        cx.font = '700 32px "JetBrains Mono"'; cx.fillStyle = '#e8e8ec';
+        cx.fillText(`${this.score}`, bx, by - 40);
+        cx.font = '400 9px "JetBrains Mono"'; cx.fillStyle = '#5a5a66';
+        cx.fillText('POINTS', bx, by - 24);
+        const starStr = this.stageStars.map(s => '★'.repeat(s) + '☆'.repeat(3 - s)).join(' ');
+        cx.fillText(`${starStr} · ×${this.maxCombo}`, bx, by - 8);
+
+        this.drawLeaderboard(bx, by + 100, 280);
+        this.drawResultBtns(bx, by + 220);
     }
-    private get rBtnY() { return this.H/2+22+this.stageStars.length*16+28; }
+
+    private get rBtnY() { return this.H / 2 + 220; }
 
     // --- Input ---
 
     protected onClickAt(x: number, y: number): void {
-        if (this.phase === 'result' || this.phase === 'dead') { const h = this.hitResultBtn(x, y, this.W/2, this.rBtnY); if (h === 'retry') this.resetGame(); if (h === 'exit') this.stop(); return; }
+        if (this.phase === 'result' || this.phase === 'dead') {
+            if (this.isLeaderboardBusy()) return;
+            const h = this.hitResultBtn(x, y, this.W/2, this.rBtnY);
+            if (h === 'retry') this.resetGame();
+            if (h === 'exit') this.stop();
+            return;
+        }
     }
     // Touch input handled by base class virtual joystick
 }

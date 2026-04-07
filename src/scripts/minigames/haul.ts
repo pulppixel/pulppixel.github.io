@@ -52,9 +52,26 @@ class HaulGame extends MinigameBase {
     private stTime = 0; private score = 0; private totCore = 0;
     private stRes: {core:number;time:number;animal:string}[] = [];
     private shX = 0; private shY = 0; private alertFl = 0; private petFlash = 0;
+    private lbStarted = false;
 
-    protected resetGame(): void { this.setupMobileControls({ joystick: true, actionBtn: 'E', jumpBtn: true }); this.stage=0; this.score=0; this.totCore=0; this.stRes=[]; this.selA=''; this.phase='select'; }
-    protected onResized(): void { this.gndY=this.H*GND_R; this.sewerFloor=this.gndY+this.H*SEWER_H_R; }
+    protected resetGame(): void {
+        this.setupMobileControls({joystick: true, actionBtn: 'E', jumpBtn: true});
+        this.lbStarted = false;
+        this.lbStatus = 'idle';
+        this.lbScores = [];
+        this.lbNewId = null;
+        this.stage = 0;
+        this.score = 0;
+        this.totCore = 0;
+        this.stRes = [];
+        this.selA = '';
+        this.phase = 'select';
+    }
+
+    protected onResized(): void {
+        this.gndY = this.H * GND_R;
+        this.sewerFloor = this.gndY + this.H * SEWER_H_R;
+    }
 
     private startStage(): void {
         const s=STAGES[this.stage]; const d=ANIM[this.selA]; this.aD=d;
@@ -163,8 +180,8 @@ class HaulGame extends MinigameBase {
         this.shX=5*(Math.random()>0.5?1:-1);this.shY=3*(Math.random()-0.5);
         this.addBurst(this.px,this.py,C.red,6,80);this.addPop(this.px,this.py-22,`-${dmg}`,false,0.8);
         this.lootTgt=null;this.lootP=0;this.extracting=false;this.exP=0;
-        this.audio?.mgHurt(); // 🔊 피격
-        if(this.hp<=0){this.phase='dead';this.audio?.mgFail();} // 🔊 사망
+        this.audio?.mgHurt();
+        if(this.hp<=0){this.phase='dead';this.audio?.mgFail();this.tryStartLb();}
     }
 
     private doInteract(): void {
@@ -187,9 +204,9 @@ class HaulGame extends MinigameBase {
     protected updateGame(dt: number): void {
         if(this.phase==='select')return;
         if(this.phase==='intro'){this.phT-=dt;if(this.phT<=0)this.phase='play';return;}
-        if(this.phase==='clear'){this.phT-=dt;if(this.phT<=0){this.stage++;if(this.stage>=STAGES.length)this.phase='result';else this.startStage();}return;}
+        if(this.phase==='clear'){this.phT-=dt;if(this.phT<=0){this.stage++;if(this.stage>=STAGES.length){this.phase='result';this.tryStartLb();}else this.startStage();}return;}
         if(this.phase!=='play')return;
-        this.stTime-=dt;if(this.stTime<=0){this.stTime=0;this.phase='dead';this.audio?.mgFail();return;}
+        this.stTime-=dt;if(this.stTime<=0){this.stTime=0;this.phase='dead';this.audio?.mgFail();this.tryStartLb();return;}
         if(this.petFlash>0){this.petFlash-=dt;this.pvx=0;}
         if(this.keys['KeyE']||this.keys['KeyF']||this.mAction){this.doInteract();this.keys['KeyE']=false;this.keys['KeyF']=false;this.mAction=false;}
         if(this.lootTgt){this.lootP+=dt;if(this.lootP>=LOOT_DUR){const g=Math.min(Math.ceil(this.lootTgt.core*this.aD.coreMul),this.maxC-this.core);this.core+=g;this.score+=Math.round(g*100*this.aD.scoreMul);this.lootTgt.looted=true;this.addBurst(this.lootTgt.x,this.lootTgt.y,this.lootTgt.isSewer?C.purple:C.yellow,6,60);this.addPop(this.lootTgt.x,this.lootTgt.y-22,`+${g} ◆`,true,1.0);this.audio?.mgLoot();this.lootTgt=null;this.lootP=0;}}
@@ -273,20 +290,36 @@ class HaulGame extends MinigameBase {
         cx.font='400 9px "JetBrains Mono"';cx.fillStyle='#3a3a44';cx.textAlign='center';cx.fillText(this.mob?'동물을 탭하세요':'동물을 클릭하세요',W/2,H*0.9);this.drawCloseBtn();
     }
 
+    private tryStartLb(): void {
+        if (this.lbStarted) return;
+        this.lbStarted = true;
+        this.startLeaderboard('haul', this.score, {
+            cores: this.totCore,
+            animal: this.selA,
+            stages: this.stRes.length,
+        });
+    }
+
     private renderRes(): void {
         const isW=this.phase==='result',t=isW?'MISSION COMPLETE':this.hp<=0?'DETECTED':'TIME UP';
         const{bx,by}=this.drawResultBg(t,isW?C.accent:C.red);const{cx}=this;
-        cx.font='700 32px "JetBrains Mono"';cx.fillStyle='#e8e8ec';cx.fillText(`${this.score}`,bx,by-22);
-        cx.font='400 10px "JetBrains Mono"';cx.fillStyle='#5a5a66';cx.fillText('POINTS',bx,by-4);cx.fillStyle=C.yellow;cx.fillText(`◆ ${this.totCore} 코어 원소 총 회수`,bx,by+14);
-        this.stRes.forEach((r,i)=>{const a=ANIM[r.animal];cx.fillStyle='#5a5a66';cx.fillText(`Stage ${i+1}: ${a?.sym} ◆${r.core} · ${r.time.toFixed(1)}s`,bx,by+34+i*15);});
-        const bOff=34+this.stRes.length*15+16;cx.fillStyle=rgba(this.aD?.color||'#fff',0.3);cx.fillText(`${this.aD?.sym} ${this.aD?.name} · 코어 ×${this.aD?.coreMul} · 점수 ×${this.aD?.scoreMul}`,bx,by+bOff-6);
-        this.drawResultBtns(bx,by+bOff+10);
+        cx.font='700 32px "JetBrains Mono"';cx.fillStyle='#e8e8ec';cx.fillText(`${this.score}`,bx,by-40);
+        cx.font='400 9px "JetBrains Mono"';cx.fillStyle='#5a5a66';cx.fillText('POINTS',bx,by-24);
+        cx.fillStyle=C.yellow;cx.fillText(`◆ ${this.totCore} 코어 · ${ANIM[this.selA]?.sym || ''} ${ANIM[this.selA]?.name || ''}`,bx,by-8);
+
+        this.drawLeaderboard(bx, by + 100, 280);
+        this.drawResultBtns(bx, by + 220);
     }
-    private get rBY():number{return this.H/2+34+this.stRes.length*15+26;}
+
+    private get rBY():number{return this.H/2+220;}
 
     protected onClickAt(x:number,y:number):void{
         if(this.phase==='select'){this.selClick(x,y);return;}
-        if(this.phase==='result'||this.phase==='dead'){const h=this.hitResultBtn(x,y,this.W/2,this.rBY);if(h==='retry')this.resetGame();if(h==='exit')this.stop();return;}
+        if(this.phase==='result'||this.phase==='dead'){
+            if(this.isLeaderboardBusy())return;
+            const h=this.hitResultBtn(x,y,this.W/2,this.rBY);
+            if(h==='retry')this.resetGame();if(h==='exit')this.stop();return;
+        }
     }
     private selClick(x:number,y:number):void{const keys=['pigeon','cat','rat'],cW=Math.min(165,(this.W-60)/3),gp=12,tW=cW*3+gp*2,sx=(this.W-tW)/2,cy=this.H*0.33,ch=this.H*0.52;for(let i=0;i<3;i++){const cx2=sx+i*(cW+gp);if(x>=cx2&&x<=cx2+cW&&y>=cy&&y<=cy+ch){this.selA=keys[i];this.startStage();return;}}}
     protected onMouseMoveAt(x:number,y:number):void{if(this.phase!=='select')return;const keys=['pigeon','cat','rat'],cW=Math.min(165,(this.W-60)/3),gp=12,tW=cW*3+gp*2,sx=(this.W-tW)/2,cy=this.H*0.33,ch=this.H*0.52;this.hovA=null;for(let i=0;i<3;i++){const cx2=sx+i*(cW+gp);if(x>=cx2&&x<=cx2+cW&&y>=cy&&y<=cy+ch){this.hovA=keys[i];break;}}}

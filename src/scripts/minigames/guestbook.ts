@@ -45,7 +45,7 @@ class GuestbookGame extends MinigameBase {
         this.sending = false;
         this.toast = '';
         this.toastLife = 0;
-        this.fetchEntries();
+        this.fetchEntries().then(_ => {});
     }
 
     private async fetchEntries(): Promise<void> {

@@ -94,10 +94,15 @@ class NineToSixGame extends MinigameBase {
     private lastJumpT = -10;
     private shX = 0;
     private shY = 0;
+    private lbStarted = false;
 
     // --- Lifecycle ---
 
     protected resetGame(): void {
+        this.lbStarted = false;
+        this.lbStatus = 'idle';
+        this.lbScores = [];
+        this.lbNewId = null;
         this.gcx = this.W / 2;
         this.gcy = this.H / 2;
         this.maxR = Math.min(this.W, this.H) * 0.42;
@@ -222,6 +227,7 @@ class NineToSixGame extends MinigameBase {
         this.addPop(px, py - 30, msg, true, 1.2);
         if (this.score > this.best) this.best = this.score;
         this.audio?.mgFail();
+        this.tryStartLb();
         this.phase = 'dead';
         this.phT = 1.0;
     }
@@ -549,6 +555,16 @@ class NineToSixGame extends MinigameBase {
 
     // --- Result ---
 
+    private tryStartLb(): void {
+        if (this.lbStarted) return;
+        this.lbStarted = true;
+        this.startLeaderboard('ninetosix', this.score, {
+            time: Math.floor(this.elapsed),
+            jumps: this.jumps,
+            combo: this.maxCombo,
+        }).then(_ => {});
+    }
+
     private renderRes(): void {
         const ok = this.jumps >= 10;
         const { bx, by } = this.drawResultBg(ok ? 'GREAT RUN!' : 'GAME OVER', ok ? C.accent : C.red);
@@ -556,22 +572,24 @@ class NineToSixGame extends MinigameBase {
         c.font = '700 32px "JetBrains Mono"';
         c.fillStyle = '#e8e8ec';
         c.textAlign = 'center';
-        c.fillText(`${this.score}`, bx, by - 20);
-        c.font = '400 10px "JetBrains Mono"';
+        c.fillText(`${this.score}`, bx, by - 40);
+        c.font = '400 9px "JetBrains Mono"';
         c.fillStyle = '#5a5a66';
-        c.fillText('POINTS', bx, by);
+        c.fillText('POINTS', bx, by - 24);
         const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
-        c.fillText(`${ts} survived · ${this.jumps} jumps · x${this.maxCombo} combo`, bx, by + 18);
-        if (this.best > 0) { c.fillStyle = C.accent; c.fillText(`BEST: ${this.best}`, bx, by + 36); }
-        this.drawResultBtns(bx, by + 56);
+        c.fillText(`${ts} · ${this.jumps} jumps · ×${this.maxCombo}`, bx, by - 8);
+
+        this.drawLeaderboard(bx, by + 100, 280);
+        this.drawResultBtns(bx, by + 220);
     }
 
-    private get resBY(): number { return this.H / 2 + 56; }
+    private get resBY(): number { return this.H / 2 + 220; }
 
     // --- Input ---
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result') {
+            if (this.isLeaderboardBusy()) return;
             const h = this.hitResultBtn(x, y, this.W / 2, this.resBY);
             if (h === 'retry') this.resetGame();
             if (h === 'exit') this.stop();

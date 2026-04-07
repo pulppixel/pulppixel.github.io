@@ -260,8 +260,12 @@ export function createCharacter(scene: THREE.Scene, skinIndex?: number): Charact
   const parts = skin.build(headGrp, bodyGrp, armPivotL, armPivotR, legPivotL, legPivotR, ch);
 
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(0.32, 16),
-    new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.3 }),
+      new THREE.CircleGeometry(0.32, 16),
+      new THREE.MeshBasicMaterial({
+        color: 0x080810, transparent: true, opacity: 0.3,
+        depthWrite: false,
+        polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
+      }),
   );
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.005; ch.add(shadow);
 

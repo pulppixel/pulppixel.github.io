@@ -309,7 +309,11 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     // Shadow
     const shadow = new THREE.Mesh(
         new THREE.CircleGeometry(0.25, 12),
-        new THREE.MeshBasicMaterial({ color: 0x080810, transparent: true, opacity: 0.15 }),
+        new THREE.MeshBasicMaterial({
+            color: 0x080810, transparent: true, opacity: 0.15,
+            depthWrite: false,
+            polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
+        }),
     );
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.005;

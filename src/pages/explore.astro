@@ -153,13 +153,39 @@ const title = 'pulppixel - 3D Explore';
     #tw-toggle:hover { border-color: rgba(125,211,252,0.5); }
 
     #tw-panel {
-      position: absolute; bottom: 60px; left: 20px;
-      max-height: calc(100vh - 160px);
+      position: absolute; bottom: 20px; left: 20px;
+      max-height: calc(100vh - 60px);
       overflow-y: auto;
+      padding-top: 32px;
       transition: opacity 0.2s, transform 0.2s;
     }
     #tw-panel.tw-closed {
       opacity: 0; pointer-events: none; transform: translateY(8px);
+    }
+    #tw-close {
+      position: absolute; top: 6px; right: 6px;
+      width: 22px; height: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #8a8a9a; font-size: 14px;
+      border-radius: 4px; cursor: pointer;
+      font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0; z-index: 1;
+    }
+    #tw-close:hover { color: #e8e8ec; border-color: rgba(255,255,255,0.25); }
+    #tw-title {
+      position: absolute; top: 8px; left: 12px;
+      font-size: 10px; color: #7dd3fc;
+      letter-spacing: 0.1em;
+      font-family: inherit;
+    }
+    @media (max-width: 520px) {
+      #tw-panel {
+        max-height: 60vh;
+        background: rgba(10,10,11,0.55);
+        backdrop-filter: blur(8px);
+      }
     }
   </style>
 </head>
@@ -205,6 +231,8 @@ const title = 'pulppixel - 3D Explore';
 
 <button id="tw-toggle">+</button>
 <div id="tw-panel" class="tw-closed">
+  <div id="tw-title">◆ SETTINGS</div>
+  <button id="tw-close">×</button>
   <div class="tw-label">TIME</div>
   <div class="tw-row">
     <button data-time="auto" class="tw-on">A</button>
@@ -243,6 +271,23 @@ const title = 'pulppixel - 3D Explore';
 <button id="mobile-interact">E</button>
 <div id="fps"></div>
 
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const panel = document.getElementById('tw-panel');
+    const toggle = document.getElementById('tw-toggle');
+    const closeBtn = document.getElementById('tw-close');
+    if (!panel || !toggle || !closeBtn) return;
+
+    toggle.addEventListener('click', () => {
+      panel.classList.remove('tw-closed');
+      toggle.style.display = 'none';
+    });
+    closeBtn.addEventListener('click', () => {
+      panel.classList.add('tw-closed');
+      toggle.style.display = 'flex';
+    });
+  });
+</script>
 <script>
   import { init } from "../scripts/main";
   init();

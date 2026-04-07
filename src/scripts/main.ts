@@ -38,13 +38,6 @@ const JUMP_FORCE = 9.6;
 const SPAWN = { x: 0, y: 1.5, z: 0 };
 const WATER_Y = -3.0;
 
-const twToggle = document.getElementById('tw-toggle')!;
-const twPanel = document.getElementById('tw-panel')!;
-twToggle.addEventListener('click', () => {
-  const open = twPanel.classList.toggle('tw-closed');
-  twToggle.textContent = open ? '+' : '-';
-});
-
 // --- Skin palette tint helper ---
 function applySkinPalette(
     palette: SkinPalette,

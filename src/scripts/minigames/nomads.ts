@@ -13,7 +13,6 @@ const MAX_SPD = 180;
 const BOOST_MULT = 1.7;
 const FRICTION = 3.6;
 const TURN_SPD = 7.5;
-const DRIFT_TH = 0.45;
 
 const HIT_R = 16;
 const COIN_R = 7;
@@ -30,16 +29,13 @@ const BOOST_DUR = 4.0;
 const BOOST_SPAWN = 12.0;     // 부스트 패드 재생성 간격
 
 const HP_MAX = 5;
-const HP_NPC = 6;
+const HP_NPC = 7;
 const NPC_COUNT = 5;
 
 const STAGES = [
-    // Stage 1: 워밍업 — NPC 느림/멍청, 코인 풍부
-    { time: 40, coinCount: 16, coinRespawn: 1.2, npcSpeedMul: 0.75, npcAttackChance: 0.35, npcDumbBase: 0.55 },
-    // Stage 2: 정상 — NPC 보통, 가끔 플레이어 노림
-    { time: 50, coinCount: 14, coinRespawn: 1.5, npcSpeedMul: 0.95, npcAttackChance: 0.6, npcDumbBase: 0.35 },
-    // Stage 3: 카오스 — NPC 빠르고 공격적
-    { time: 60, coinCount: 12, coinRespawn: 1.8, npcSpeedMul: 1.15, npcAttackChance: 0.85, npcDumbBase: 0.15 },
+    { time: 40, coinCount: 14, npcAggression: 0.4, coinRespawn: 1.5 },
+    { time: 50, coinCount: 16, npcAggression: 0.65, coinRespawn: 1.2 },
+    { time: 60, coinCount: 18, npcAggression: 0.9, coinRespawn: 0.9 },
 ];
 
 const NPC_NAMES = ['ROVER', 'BLITZ', 'NOVA', 'GRIM', 'ZEPH'];
@@ -165,7 +161,7 @@ class NomadsGame extends MinigameBase {
                 stunT: 0, invulT: 0, ramCd: 0, boostT: 0,
                 isPlayer: false, eliminated: false,
                 btTarget: null, btDecideCd: Math.random() * 0.5,
-                btDumbness: s.npcDumbBase + Math.random() * 0.15,
+                btDumbness: 0.4 - s.npcAggression * 0.25 + Math.random() * 0.2,
             });
         }
 
@@ -213,7 +209,7 @@ class NomadsGame extends MinigameBase {
     private btTick(npc: Car, dt: number): void {
         npc.btDecideCd -= dt;
         if (npc.btDecideCd > 0 && npc.btTarget) return;
-        npc.btDecideCd = 0.15 + Math.random() * 0.25;
+        npc.btDecideCd = 0.3 + Math.random() * 0.4;
 
         // 1. 위기 회피: 부스트 받은 적이 가까운가?
         for (const c of this.cars) {
@@ -268,28 +264,21 @@ class NomadsGame extends MinigameBase {
             }
         }
 
-        // 4. 적 공격 — 플레이어 강한 우선, NPC끼리는 거의 안 노림
-        const stage = STAGES[this.stage];
-        if (Math.random() < stage.npcAttackChance * (1 - npc.btDumbness * 0.5)) {
+        // 4. 약한 적 공격 (코인 많은 차 + 플레이어 가중치)
+        if (Math.random() < 0.6 + (1 - npc.btDumbness) * 0.3) {
             let target: Car | null = null;
-            let bestScore = -Infinity;
+            let bestScore = 0;
             for (const c of this.cars) {
                 if (c.id === npc.id || c.eliminated || c.boostT > 0) continue;
                 if (c.invulT > 0) continue;
                 const d = Math.hypot(c.x - npc.x, c.y - npc.y);
-                if (d > 320) continue;
-                let sc: number;
-                if (c.isPlayer) {
-                    // 플레이어는 거리 페널티 작음 + 큰 보너스
-                    sc = 100 - d * 0.05 + c.coins * 1.5;
-                } else {
-                    // NPC끼리는 매우 가깝고 코인 많을 때만
-                    if (d > 100) continue;
-                    sc = c.coins * 1.5 - d * 0.3 - 30; // -30 페널티
-                }
+                if (d > 280) continue;
+                // 코인 + 거리 + 플레이어 보너스
+                let sc = c.coins * 2 - d * 0.02;
+                if (c.isPlayer) sc += 15; // 플레이어 우선
                 if (sc > bestScore) { bestScore = sc; target = c; }
             }
-            if (target && bestScore > 0) {
+            if (target) {
                 npc.btTarget = { type: 'car', x: target.x, y: target.y, targetId: target.id };
                 return;
             }
@@ -384,16 +373,12 @@ class NomadsGame extends MinigameBase {
         if (d < 8) { npc.btTarget = null; npc.btDecideCd = 0; return; }
 
         const ang = Math.atan2(dy, dx);
-        // 플레이어 추격 시 가속/회전 보너스
-        const isChasingPlayer = npc.btTarget.type === 'car' && npc.btTarget.targetId === 0;
-        const accelMul = isChasingPlayer ? 1.15 : 0.85;
-        const turnMul = isChasingPlayer ? 1.0 : 0.7;
-        npc.vx += Math.cos(ang) * ACCEL * accelMul * dt;
-        npc.vy += Math.sin(ang) * ACCEL * accelMul * dt;
+        npc.vx += Math.cos(ang) * ACCEL * 0.85 * dt;
+        npc.vy += Math.sin(ang) * ACCEL * 0.85 * dt;
         let df = ang - npc.dir;
         while (df > Math.PI) df -= Math.PI * 2;
         while (df < -Math.PI) df += Math.PI * 2;
-        npc.dir += df * TURN_SPD * turnMul * dt;
+        npc.dir += df * TURN_SPD * 0.7 * dt;
     }
 
     private moveCar(c: Car, dt: number): void {
@@ -408,9 +393,8 @@ class NomadsGame extends MinigameBase {
         if (spd > 0.5) { const f = Math.max(0, 1 - FRICTION * dt); c.vx *= f; c.vy *= f; }
         else { c.vx = 0; c.vy = 0; }
 
-        // Speed cap (NPC는 스테이지별 멀티플라이어 적용)
-        let maxSpd = c.boostT > 0 ? MAX_SPD * BOOST_MULT : MAX_SPD;
-        if (!c.isPlayer) maxSpd *= STAGES[this.stage].npcSpeedMul;
+        // Speed cap
+        const maxSpd = c.boostT > 0 ? MAX_SPD * BOOST_MULT : MAX_SPD;
         const cur = Math.hypot(c.vx, c.vy);
         if (cur > maxSpd) { c.vx *= maxSpd / cur; c.vy *= maxSpd / cur; }
 
@@ -540,12 +524,9 @@ class NomadsGame extends MinigameBase {
     }
 
     private executeRam(attacker: Car, victim: Car, mutual = false): void {
-        // 데미지 결정
+        // NPC끼리 충돌은 데미지 절반 (자살 방지)
         const npcVsNpc = !attacker.isPlayer && !victim.isPlayer;
-        let dmg: number;
-        if (npcVsNpc) dmg = 0.5;              // NPC 자기들끼리는 약함
-        else if (victim.isPlayer) dmg = 1.5;  // NPC가 플레이어 박으면 더 세게
-        else dmg = 1;                          // 플레이어가 NPC 박는 건 기본
+        const dmg = npcVsNpc ? 0.5 : 1;
 
         // Stun + HP
         victim.stunT = STUN_DUR;
@@ -948,7 +929,7 @@ class NomadsGame extends MinigameBase {
         if (this.phase === 'result' || this.phase === 'dead') this.renderResult();
     }
 
-    private renderScoreboard(now: number): void {
+    private renderScoreboard(_now: number): void {
         const { cx, W } = this;
         const ranked = [...this.cars].sort((a, b) => {
             if (a.eliminated && !b.eliminated) return 1;

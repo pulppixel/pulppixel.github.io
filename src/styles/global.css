@@ -45,7 +45,7 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.7;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.3s ease-out, color 0.3s ease-out;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -73,12 +73,12 @@ section { padding: 5rem 0; }
 }
 .fade-in {
   opacity: 0; transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
-.fade-in:nth-child(2) { transition-delay: 0.08s; }
-.fade-in:nth-child(3) { transition-delay: 0.16s; }
-.fade-in:nth-child(4) { transition-delay: 0.24s; }
+.fade-in:nth-child(2) { transition-delay: 0.07s; }
+.fade-in:nth-child(3) { transition-delay: 0.14s; }
+.fade-in:nth-child(4) { transition-delay: 0.21s; }
 
 /* 뒤로가기로 돌아왔을 때 애니메이션 스킵 */
 .no-intro .fade-in { opacity: 1; transform: none; transition: none; }

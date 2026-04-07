@@ -1,5 +1,4 @@
-// HAUL — 1-hit 플랫포머 (Celeste 영감)
-// Phase C: Stage 3 + 함정 종류 랜덤화 + 위장 적 떨림 힌트 + 점수 정식화
+// HAUL — 1-hit 플랫포머
 import { MinigameBase, rgba, C } from './base';
 import type { GameAudio } from '../system/audio';
 
@@ -19,13 +18,14 @@ const RESPAWN_FADE = 0.4;
 const VIEW_BOTTOM_PAD = 80;
 
 // 트롤 함정
-const FALL_DELAY = 0.15;         // 단축: 빨리 지나가도 못 피함
+const FALL_DELAY = 0.125;
 const FALL_RESPAWN = 4.0;
 const FAKE_RESPAWN = 4.0;
 
 // 위장 적 떨림
 const FAKE_TWITCH_INTERVAL = 3.0;  // 평균 간격
 const FAKE_TWITCH_DUR = 0.45;      // 떨림 지속
+const FAKE_CORE_COLOR = '#9a8a4a'; // 시든 망고
 
 // 인간 NPC
 const HUMAN_W = 14;
@@ -33,8 +33,8 @@ const HUMAN_H = 22;
 const HUMAN_SPD = 60;
 
 // 점수
-const STAGE_CORE_VALUE = [50, 100, 200];   // S1, S2, S3 코어 가치
-const TIME_BONUS_BASE = 600;                // 600초 기준
+const STAGE_CORE_VALUE = [50, 100, 200];
+const TIME_BONUS_BASE = 600;
 const DEATH_PENALTY = 30;
 
 // =============================================
@@ -44,7 +44,7 @@ const DEATH_PENALTY = 30;
 interface Plat {
     x: number; y: number; w: number; h: number;
     kind: 'solid' | 'falling' | 'fake';
-    trapSlot?: boolean;     // S3 랜덤화 후보
+    trapSlot?: boolean;
     state?: 'idle' | 'shaking' | 'falling' | 'gone';
     timer?: number;
     fallVy?: number;
@@ -819,9 +819,15 @@ class HaulGame extends MinigameBase {
         }
         const dx = c.x + twitchX;
 
+        // 시든 망고: fakeCore는 채도/밝기 낮은 색 + alpha도 살짝 낮춰 "기운 없는" 느낌
+        const col = c.fake ? FAKE_CORE_COLOR : C.yellow;
+        const glowA = c.fake ? 0.06 : 0.08;
+        const fillA = c.fake ? 0.55 : 0.7;
+        const strokeA = c.fake ? 0.72 : 0.9;
+
         cx.beginPath();
         cx.arc(dx, c.y + bob, CORE_R * 1.6, 0, Math.PI * 2);
-        cx.fillStyle = rgba(C.yellow, 0.08);
+        cx.fillStyle = rgba(col, glowA);
         cx.fill();
         cx.beginPath();
         cx.moveTo(dx, c.y + bob - CORE_R);
@@ -829,9 +835,9 @@ class HaulGame extends MinigameBase {
         cx.lineTo(dx, c.y + bob + CORE_R);
         cx.lineTo(dx - CORE_R * 0.7, c.y + bob);
         cx.closePath();
-        cx.fillStyle = rgba(C.yellow, 0.7);
+        cx.fillStyle = rgba(col, fillA);
         cx.fill();
-        cx.strokeStyle = rgba(C.yellow, 0.9);
+        cx.strokeStyle = rgba(col, strokeA);
         cx.lineWidth = 1;
         cx.stroke();
     }

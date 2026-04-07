@@ -1,0 +1,156 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="Leaderboard - Pulppixel">
+    <Nav showBackLink={true} />
+
+    <article class="lb-page">
+        <div class="container">
+            <header class="lb-header">
+                <div class="lb-label">Mini-game Hall of Fame</div>
+                <h1>리더보드</h1>
+                <p class="lb-subtitle">3D 씬 내 미니게임의 Top 10 기록입니다. 각 게임 큐브에 다가가서 E를 누르면 플레이할 수 있어요.</p>
+                <a href="/explore/" class="lb-cta">3D 씬으로 이동 ◆</a>
+            </header>
+
+            <div id="lb-tabs" class="lb-tabs"></div>
+            <div id="lb-content" class="lb-content">
+                <div class="lb-loading">불러오는 중...</div>
+            </div>
+        </div>
+    </article>
+
+    <Footer />
+</BaseLayout>
+
+<script>
+    import { GAMES, GAME_ORDER, fetchTop10, type ScoreEntry } from '../scripts/minigames/leaderboard';
+
+    const tabsEl = document.getElementById('lb-tabs')!;
+    const contentEl = document.getElementById('lb-content')!;
+
+    let currentGame = GAME_ORDER[0];
+    const cache: Record<string, ScoreEntry[]> = {};
+
+    function renderTabs() {
+        tabsEl.innerHTML = '';
+        for (const id of GAME_ORDER) {
+            const g = GAMES[id];
+            const btn = document.createElement('button');
+            btn.className = 'lb-tab' + (id === currentGame ? ' active' : '');
+            btn.style.setProperty('--tab-color', g.color);
+            btn.innerHTML = `<span class="lb-tab-dot"></span>${g.title}`;
+            btn.addEventListener('click', () => {
+                currentGame = id;
+                renderTabs();
+                renderContent();
+            });
+            tabsEl.appendChild(btn);
+        }
+    }
+
+    async function renderContent() {
+        const g = GAMES[currentGame];
+        if (!cache[currentGame]) {
+            contentEl.innerHTML = '<div class="lb-loading">불러오는 중...</div>';
+            cache[currentGame] = await fetchTop10(currentGame);
+        }
+        const entries = cache[currentGame];
+
+        if (entries.length === 0) {
+            contentEl.innerHTML = `
+        <div class="lb-empty">
+          <div class="lb-empty-title" style="color:${g.color};">${g.title}</div>
+          <p>아직 등록된 기록이 없습니다.</p>
+          <p>첫 번째 도전자가 되어보세요!</p>
+        </div>
+      `;
+            return;
+        }
+
+        const rows = entries.map((e, i) => {
+            const date = new Date(e.created_at);
+            const ts = `${date.getMonth() + 1}/${date.getDate()}`;
+            const extra = g.formatExtra(e);
+            const rank = String(i + 1).padStart(2, '0');
+            const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            return `
+        <div class="lb-row">
+          <div class="lb-rank ${rankClass}">${rank}</div>
+          <div class="lb-nick">${escapeHtml(e.nickname)}</div>
+          <div class="lb-extra">${escapeHtml(extra)}</div>
+          <div class="lb-score">${Math.round(e.score)}</div>
+          <div class="lb-date">${ts}</div>
+        </div>
+      `;
+        }).join('');
+
+        contentEl.innerHTML = `
+      <div class="lb-table" style="--game-color:${g.color};">
+        <div class="lb-table-header">
+          <div class="lb-rank">#</div>
+          <div class="lb-nick">PLAYER</div>
+          <div class="lb-extra">DETAIL</div>
+          <div class="lb-score">SCORE</div>
+          <div class="lb-date">DATE</div>
+        </div>
+        ${rows}
+      </div>
+    `;
+    }
+
+    function escapeHtml(s: string): string {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    renderTabs();
+    renderContent();
+</script>
+
+<style is:global>
+    .lb-page { padding-top: calc(56px + 4rem); padding-bottom: 4rem; }
+
+    .lb-header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    .lb-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .lb-header h1 { font-family: 'Outfit', 'Pretendard Variable', sans-serif; font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .lb-subtitle { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; max-width: 600px; margin-bottom: 1.5rem; }
+    .lb-cta { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.5rem 1rem; border: 1px solid var(--accent-mid); border-radius: 6px; transition: all 0.2s; }
+    .lb-cta:hover { background: var(--accent-dim); border-color: var(--accent); }
+
+    .lb-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+    .lb-tab { display: flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.55rem 1rem; cursor: pointer; transition: all 0.2s; }
+    .lb-tab:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .lb-tab.active { border-color: var(--tab-color); color: var(--tab-color); background: color-mix(in srgb, var(--tab-color) 8%, transparent); }
+    .lb-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tab-color); }
+
+    .lb-content { min-height: 400px; }
+    .lb-loading, .lb-empty { text-align: center; padding: 4rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-tertiary); }
+    .lb-empty-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
+    .lb-empty p { margin-bottom: 0.4rem; }
+
+    .lb-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .lb-table-header, .lb-row { display: grid; grid-template-columns: 50px 1fr 120px 100px 60px; align-items: center; padding: 0.85rem 1.25rem; gap: 1rem; }
+    .lb-table-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; }
+    .lb-row { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: var(--bg-card-hover); }
+    .lb-rank { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-tertiary); font-weight: 600; }
+    .lb-rank.gold { color: #fbbf24; }
+    .lb-rank.silver { color: #d4d4d8; }
+    .lb-rank.bronze { color: #c08458; }
+    .lb-nick { font-size: 0.92rem; color: var(--text-primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-extra { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-tertiary); }
+    .lb-score { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--game-color); font-weight: 600; text-align: right; }
+    .lb-date { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-tertiary); text-align: right; }
+
+    @media (max-width: 640px) {
+        .lb-table-header, .lb-row { grid-template-columns: 36px 1fr 80px; gap: 0.75rem; padding: 0.75rem 1rem; }
+        .lb-extra, .lb-date { display: none; }
+        .lb-score { font-size: 0.9rem; }
+    }
+</style>

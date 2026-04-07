@@ -102,6 +102,10 @@ export function init(): void {
     enterMinigame('guestbook');
   });
 
+  document.getElementById('leaderboard-btn')?.addEventListener('click', () => {
+    window.location.href = '/leaderboard/';
+  });
+
   // --- Dust particles ---
   const DUST_MAX = 80;
   const dustGeo = new THREE.BufferGeometry();

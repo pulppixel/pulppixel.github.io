@@ -17,6 +17,7 @@ const { showBackLink = false } = Astro.props;
         <a href="#contact" class="hide-mobile">Contact</a>
       </>
     )}
+    <!--<a href="/leaderboard/" class="lb-link">★</a>-->
     <a href="/explore/" class="explore-link">◆ 3D</a>
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">◐</button>
   </div>
@@ -69,5 +70,19 @@ const { showBackLink = false } = Astro.props;
   @media (max-width: 768px) {
     nav { padding: 0 1.25rem; }
     .hide-mobile { display: none; }
+  }
+  .lb-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem !important;
+    color: #fbbf24 !important;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+    transition: all 0.2s;
+  }
+  .lb-link:hover {
+    background: rgba(251, 191, 36, 0.08);
+    border-color: rgba(251, 191, 36, 0.6);
   }
 </style>

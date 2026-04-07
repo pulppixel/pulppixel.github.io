@@ -249,11 +249,8 @@ function createSmoke(scene: THREE.Scene, count: number) {
                 buf.pos[i3] = p.x;
                 buf.pos[i3 + 1] = p.y;
                 buf.pos[i3 + 2] = p.z;
-
-                // 크기: 시간에 따라 커짐 (연기 확산)
                 buf.size[i] = p.baseSize * (1 + progress * 2.5);
 
-                // 알파: 나타났다 사라짐 (0→peak→0)
                 const fadeIn = Math.min(1, p.life / 0.3);
                 const fadeOut = Math.max(0, 1 - (progress - 0.4) / 0.6);
                 buf.alpha[i] = fadeIn * fadeOut * 0.25;
@@ -419,17 +416,14 @@ function createSeasonalParticles(scene: THREE.Scene, count: number) {
                 buf.pos[i3 + 1] = p.y;
                 buf.pos[i3 + 2] = p.z;
 
-                // 크기: 약간의 펄스 (회전하는 느낌)
                 const sizePulse = 1 + Math.sin(t * 3 + p.rotPhase) * 0.2;
                 buf.size[i] = p.sizeBase * sizePulse;
 
-                // 알파: fade in → sustain → fade out
                 const progress = p.life / p.maxLife;
                 const fadeIn = Math.min(1, p.life / 0.5);
                 const fadeOut = Math.max(0, 1 - (progress - 0.7) / 0.3);
                 buf.alpha[i] = fadeIn * fadeOut * 0.6 * fadeAlpha;
 
-                // 색상: cfg에서 랜덤 선택 (spawn 시 결정, i로 일관성)
                 const ci = cfg.colors[i % cfg.colors.length];
                 buf.color[i3] = ci[0];
                 buf.color[i3 + 1] = ci[1];

@@ -79,6 +79,7 @@ export abstract class MinigameBase {
   private joyThumb: HTMLDivElement | null = null;
   private joyTouchId: number | null = null;
   private joyOrigin = { x: 0, y: 0 };
+  private _lastInteractive = true;
 
   constructor(container: HTMLElement, onExit: () => void, audio?: GameAudio) {
     this.container = container;
@@ -236,6 +237,23 @@ export abstract class MinigameBase {
     this.joyBase = null; this.joyThumb = null; this.joyTouchId = null;
     this.mJoy = { x: 0, y: 0 }; this.mAction = false; this.mJump = false;
   }
+
+  protected setMobileControlsVisible(visible: boolean): void {
+    if (!this.mobileOverlay) return;
+    if (this._lastInteractive === visible) return;
+    this._lastInteractive = visible;
+    this.mobileOverlay.style.display = visible ? 'block' : 'none';
+    if (!visible) {
+      this.joyTouchId = null;
+      this.mJoy = { x: 0, y: 0 };
+      this.mAction = false;
+      this.mJump = false;
+      if (this.joyThumb) this.joyThumb.style.transform = 'translate(-50%,-50%)';
+    }
+  }
+
+  /** 입력을 받아야 하는 phase인지 — 각 게임에서 override */
+  protected isInteractive(): boolean { return true; }
 
   // =============================================
   // PUBLIC API
@@ -589,6 +607,7 @@ export abstract class MinigameBase {
     const dt = Math.min((n - this.prevT) / 1000, 0.05);
     this.prevT = n;
     this.updateGame(dt); this.renderGame(n / 1000);
+    this.setMobileControlsVisible(this.isInteractive());
     this.aId = requestAnimationFrame(this.loop);
   };
 

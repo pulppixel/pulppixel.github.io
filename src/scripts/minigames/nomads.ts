@@ -123,6 +123,8 @@ class NomadsGame extends MinigameBase {
         this.startStage();
     }
 
+    protected isInteractive(): boolean { return this.phase === 'play'; }
+
     protected onResized(): void { /* arena uses W/H directly */ }
 
     private startStage(): void {

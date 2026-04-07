@@ -68,6 +68,8 @@ class HaulGame extends MinigameBase {
         this.phase = 'select';
     }
 
+    protected isInteractive(): boolean { return this.phase === 'play'; }
+
     protected onResized(): void {
         this.gndY = this.H * GND_R;
         this.sewerFloor = this.gndY + this.H * SEWER_H_R;

@@ -36,6 +36,19 @@ const currentSlug = Astro.url.pathname.replace(/^\/projects\//, '').replace(/\/$
 const currentIdx = projectOrder.findIndex(p => p.slug === currentSlug);
 const prev = currentIdx > 0 ? projectOrder[currentIdx - 1] : null;
 const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1] : null;
+
+// Slug -> minigame key (kept in sync with scripts/core/data.ts).
+// Renders a "play minigame" CTA only for projects that have one.
+const minigameMap: Record<string, string> = {
+  'eterna':         'guestbook',
+  'math-master':    'maze',
+  'spody':          'spody',
+  'ruby-adventure': 'ruby',
+  'nomads-planet':  'nomads',
+  'frenzy-circle':  'ninetosix',
+  'haul':           'haul',
+};
+const minigameKey = minigameMap[currentSlug];
 ---
 
 <BaseLayout title={`${title} - Pulppixel`} description={subtitle} ogImage={ogImage}>
@@ -59,10 +72,10 @@ const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1]
             <span class="info-value">{role}</span>
           </div>
           {team && (
-            <div class="info-item">
-              <span class="info-label">팀</span>
-              <span class="info-value">{team}</span>
-            </div>
+              <div class="info-item">
+                <span class="info-label">팀</span>
+                <span class="info-value">{team}</span>
+              </div>
           )}
           <div class="info-item">
             <span class="info-label">스택</span>
@@ -71,12 +84,22 @@ const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1]
             </div>
           </div>
           {links && links.length > 0 && (
-            <div class="info-item">
-              <span class="info-label">링크</span>
-              <div class="info-links">
-                {links.map(l => <a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+              <div class="info-item">
+                <span class="info-label">링크</span>
+                <div class="info-links">
+                  {links.map(l => <a href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+                </div>
               </div>
-            </div>
+          )}
+          {minigameKey && (
+              <div class="info-item">
+                <span class="info-label">체험</span>
+                <a class="minigame-cta" href={`/play/${minigameKey}/`}>
+                  <span class="cta-icon">🎮</span>
+                  <span class="cta-text">미니게임 하러 가기</span>
+                  <span class="cta-arrow">→</span>
+                </a>
+              </div>
           )}
         </div>
       </header>
@@ -89,16 +112,16 @@ const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1]
       <!-- PREV / NEXT -->
       <nav class="project-nav">
         {prev ? (
-          <a href={`/projects/${prev.slug}/`} class="nav-prev">
-            <span class="nav-dir">이전</span>
-            <span class="nav-title">{prev.title}</span>
-          </a>
+            <a href={`/projects/${prev.slug}/`} class="nav-prev">
+              <span class="nav-dir">이전</span>
+              <span class="nav-title">{prev.title}</span>
+            </a>
         ) : <div />}
         {next ? (
-          <a href={`/projects/${next.slug}/`} class="nav-next">
-            <span class="nav-dir">다음</span>
-            <span class="nav-title">{next.title}</span>
-          </a>
+            <a href={`/projects/${next.slug}/`} class="nav-next">
+              <span class="nav-dir">다음</span>
+              <span class="nav-title">{next.title}</span>
+            </a>
         ) : <div />}
       </nav>
 
@@ -207,6 +230,12 @@ const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1]
     transition: opacity 0.2s;
   }
   .info-links a:hover { opacity: 0.7; }
+
+  .minigame-cta { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.95rem; background: var(--accent-dim); border: 1px solid var(--accent-mid); border-radius: 6px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; text-decoration: none; transition: all 0.2s; }
+  .minigame-cta:hover { background: var(--accent-mid); transform: translateX(2px); box-shadow: 0 0 16px var(--accent-dim); }
+  .minigame-cta .cta-icon { font-size: 0.95rem; }
+  .minigame-cta .cta-arrow { opacity: 0.6; transition: opacity 0.2s, transform 0.2s; }
+  .minigame-cta:hover .cta-arrow { opacity: 1; transform: translateX(2px); }
 
   /* CONTENT AREA */
   .detail-content {

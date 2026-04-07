@@ -1,0 +1,106 @@
+---
+// Standalone minigame page. One file → 7 prerendered routes via getStaticPaths.
+// Each minigame is mounted into #minigame-container with audio + an exit callback
+// that navigates back to the originating project detail page.
+
+export function getStaticPaths() {
+    return [
+        { params: { key: 'guestbook' }, props: { slug: 'eterna',         title: 'ETERNA Guestbook' } },
+        { params: { key: 'maze' },      props: { slug: 'math-master',    title: 'Math Master Maze' } },
+        { params: { key: 'spody' },     props: { slug: 'spody',          title: 'SPODY' } },
+        { params: { key: 'ruby' },      props: { slug: 'ruby-adventure', title: '루비의 모험' } },
+        { params: { key: 'nomads' },    props: { slug: 'nomads-planet',  title: 'Nomads Planet' } },
+        { params: { key: 'ninetosix' }, props: { slug: 'frenzy-circle',  title: 'Nine to Six' } },
+        { params: { key: 'haul' },      props: { slug: 'haul',           title: 'HAUL' } },
+    ];
+}
+
+const { key } = Astro.params;
+const { slug, title } = Astro.props;
+const projectUrl = `/projects/${slug}/`;
+---
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>{title} - Pulppixel</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0b; overflow: hidden; font-family: 'JetBrains Mono', 'Courier New', monospace; touch-action: none; -webkit-user-select: none; user-select: none; color: #e8e8ec; }
+        canvas { display: block; }
+
+        #minigame-container { position: fixed; inset: 0; z-index: 10; }
+
+        #close-btn { position: fixed; top: 16px; right: 20px; z-index: 30; font-size: 11px; color: #5a5a66; text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 12px; border: 1px solid #333; border-radius: 4px; background: rgba(10,10,11,0.6); backdrop-filter: blur(4px); transition: opacity 0.3s, color 0.2s, border-color 0.2s; font-family: inherit; }
+        #close-btn.hidden { opacity: 0; pointer-events: none; }
+        #close-btn:hover { color: #6ee7b7; border-color: #6ee7b7; }
+
+        #start-overlay { position: fixed; inset: 0; z-index: 25; background: #0a0a0b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; cursor: pointer; transition: opacity 0.4s ease; }
+        #start-overlay.hidden { opacity: 0; pointer-events: none; }
+        #start-overlay h1 { font-size: 20px; color: #6ee7b7; letter-spacing: 0.15em; text-transform: uppercase; text-shadow: 0 0 30px rgba(110,231,183,0.3); }
+        #start-overlay .hint { font-size: 11px; color: #5a5a66; letter-spacing: 0.08em; }
+        #start-overlay .play-btn { font-family: inherit; font-size: 14px; color: #6ee7b7; letter-spacing: 0.1em; padding: 14px 32px; border: 1px solid #6ee7b7; border-radius: 4px; background: transparent; cursor: pointer; transition: all 0.2s; }
+        #start-overlay .play-btn:hover { background: rgba(110,231,183,0.1); box-shadow: 0 0 20px rgba(110,231,183,0.2); }
+    </style>
+</head>
+<body>
+
+<a id="close-btn" href={projectUrl}>← 프로젝트로</a>
+
+<div id="minigame-container" data-key={key} data-project-url={projectUrl}></div>
+
+<div id="start-overlay">
+    <h1>{title}</h1>
+    <button class="play-btn" type="button">▶ START</button>
+    <div class="hint">클릭해서 시작하세요</div>
+</div>
+
+<script>
+    // NOTE: must be a Vite-processed module script (no define:vars), otherwise
+    // dynamic imports below won't be resolved at build time.
+    const container = document.getElementById('minigame-container')!;
+    const overlay = document.getElementById('start-overlay')!;
+    const key = container.dataset.key!;
+    const projectUrl = container.dataset.projectUrl!;
+
+    // ESC always exits to the project page (matches close-btn behavior).
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') location.href = projectUrl;
+    });
+
+    overlay.addEventListener('click', async () => {
+        // Web Audio context can only resume on a user gesture; this click is it.
+        const { createAudio } = await import('../../scripts/system/audio');
+        const audio = createAudio();
+        audio.init();
+
+        // exit callback navigates back to the project detail page.
+        const onExit = () => { location.href = projectUrl; };
+
+        let game: { start(): void; stop(): void };
+        switch (key) {
+            case 'guestbook': game = (await import('../../scripts/minigames/guestbook')).createGuestbookGame(container, onExit, audio); break;
+            case 'maze':      game = (await import('../../scripts/minigames/maze')).createMazeGame(container, onExit, audio); break;
+            case 'spody':     game = (await import('../../scripts/minigames/spody')).createSpodyGame(container, onExit, audio); break;
+            case 'ruby':      game = (await import('../../scripts/minigames/ruby')).createRubyGame(container, onExit, audio); break;
+            case 'nomads':    game = (await import('../../scripts/minigames/nomads')).createNomadsGame(container, onExit, audio); break;
+            case 'ninetosix': game = (await import('../../scripts/minigames/circles')).createNineToSixGame(container, onExit, audio); break;
+            case 'haul':      game = (await import('../../scripts/minigames/haul')).createHaulGame(container, onExit, audio); break;
+            default: location.href = projectUrl; return;
+        }
+
+        overlay.classList.add('hidden');
+        document.getElementById('close-btn')!.classList.add('hidden');
+        // Wait for fade-out before starting so the canvas pops in cleanly.
+        setTimeout(() => { overlay.remove(); game.start(); }, 400);
+    }, { once: true });
+</script>
+
+</body>
+</html>

@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import Testimonials from '../components/Testimonials.astro';
 import Footer from '../components/Footer.astro';
 
 const projects = [
@@ -163,7 +164,7 @@ const awards = [
 ];
 ---
 
-<BaseLayout title="Pulppixel Portfolio">
+<BaseLayout title="pulppixel.">
   <Nav />
   <Hero />
 
@@ -279,6 +280,9 @@ const awards = [
       </div>
     </div>
   </section>
+
+  <!-- TESTIMONIALS -->
+  <Testimonials />
 
   <!-- CONTACT -->
   <section id="contact" class="contact-section fade-in">

@@ -1,0 +1,375 @@
+---
+interface Testimonial {
+    quote: string;
+    role: string;
+    context?: string;
+}
+
+const testimonials: Testimonial[] = [
+    {
+        quote: '우리 회사에 꼭 필요한 개발자',
+        role: '전 직장 팀장님',
+        context: '세 번째 붙잡으며',
+    },
+    {
+        quote: '여기 이 친구가 에이스야. 하는 거 잘 보고 따라하면 돼',
+        role: '오락실 게임기 제작팀 과장님',
+        context: '신입 알바들에게 나를 소개하며',
+    },
+    {
+        quote: '카메라 워킹이 예술이다.',
+        role: '지도교수님',
+        context: '졸업 심사 이후, 면담 자리',
+    },
+    {
+        quote: '이런 개발자가 있으니 사업에도 업무에도 큰 가능성이 보인다.',
+        role: '스타트업 대표님',
+        context: '신규 프로젝트를 구상하며',
+    },
+    {
+        quote: '이 매장에서 원하는 거 다 골라봐. 그리고 전부 공짜로 가져가.',
+        role: '편의점 사장님',
+        context: '알바 마지막 날에',
+    },
+    {
+        quote: '덕분에 즐겁고 든든하게 일할 수 있었습니다.',
+        role: '전 직장 실장님',
+        context: '함께한 시간을 돌아보며',
+    },
+];
+
+// 앞뒤로 clone 1개씩 추가 (무한 loop용)
+const looped: Array<Testimonial & { isClone: boolean }> = [
+    { ...testimonials[testimonials.length - 1], isClone: true },
+    ...testimonials.map(t => ({ ...t, isClone: false })),
+    { ...testimonials[0], isClone: true },
+];
+---
+
+<section id="testimonials" class="fade-in">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-label">Testimonials</div>
+            <h2 class="section-title">평가</h2>
+        </div>
+
+        <div class="carousel" data-testimonials data-total={testimonials.length}>
+            <div class="carousel-viewport">
+                <div class="carousel-track">
+                    {looped.map(t => (
+                            <div class="carousel-slide" aria-hidden={t.isClone ? 'true' : 'false'}>
+                                <div class="testimonial-card">
+                                    <div class="quote-mark quote-open">&ldquo;</div>
+                                    <p class="quote-body">{t.quote}</p>
+                                    <div class="quote-close-wrap">
+                                        <div class="quote-mark">&rdquo;</div>
+                                    </div>
+                                    <div class="quote-attr">
+                                        <div class="quote-role">{t.role}</div>
+                                        {t.context && <div class="quote-context">- {t.context}</div>}
+                                    </div>
+                                </div>
+                            </div>
+                    ))}
+                </div>
+            </div>
+
+            <div class="carousel-dots">
+                {testimonials.map((_, i) => (
+                        <button class="dot" data-index={i} aria-label={`${i + 1}번째 인용으로 이동`}></button>
+                ))}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .carousel { position: relative; }
+
+    .carousel-viewport {
+        overflow: hidden;
+        touch-action: pan-y;
+        cursor: grab;
+        user-select: none;
+    }
+    .carousel-viewport.dragging { cursor: grabbing; }
+
+    .carousel-track {
+        display: flex;
+        transition: transform 0.55s cubic-bezier(0.7, 0, 0.3, 1);
+        will-change: transform;
+    }
+    .carousel-track.no-transition { transition: none; }
+
+    .carousel-slide {
+        flex: 0 0 65%;
+        display: flex;
+        justify-content: center;
+        padding: 1rem 0.75rem;
+        box-sizing: border-box;
+        opacity: 0.3;
+        transform: scale(0.88);
+        filter: blur(2px);
+        transition: opacity 0.55s ease, transform 0.55s ease, filter 0.55s ease;
+    }
+    .carousel-slide.slide-active {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+    .carousel-slide.no-transition { transition: none; }
+
+    .testimonial-card {
+        width: 100%;
+        max-width: 520px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2.25rem 2.25rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        min-height: 240px;
+        pointer-events: none;
+    }
+
+    .quote-mark {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 4.5rem;
+        line-height: 0.7;
+        color: var(--accent);
+        opacity: 0.35;
+        font-weight: 400;
+    }
+    .quote-open { height: 1.5rem; }
+
+    .quote-close-wrap {
+        display: flex;
+        justify-content: flex-end;
+        height: 1.2rem;
+        margin-top: -0.5rem;
+    }
+
+    .quote-body {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        font-weight: 400;
+        margin: 0;
+        flex-grow: 1;
+        text-align: center;
+        padding: 0 0.5rem;
+    }
+
+    .quote-attr {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        line-height: 1.6;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        text-align: right;
+    }
+    .quote-role { color: var(--text-tertiary); }
+    .quote-context { color: var(--text-secondary); }
+
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+    .dot:hover { background: var(--border-hover); }
+    .dot.active {
+        width: 24px;
+        border-radius: 4px;
+        background: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+        .carousel-slide {
+            flex: 0 0 85%;
+            padding: 0.75rem 0.5rem;
+        }
+        .testimonial-card {
+            padding: 1.75rem 1.5rem 1.25rem;
+            min-height: 220px;
+        }
+        .quote-body { font-size: 0.98rem; }
+        .quote-mark { font-size: 3.75rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .carousel-track { transition: none; }
+        .carousel-slide { transition: opacity 0.2s; }
+    }
+</style>
+
+<script>
+    type CarouselState = {
+        physical: number;
+        timer: number | null;
+        isDragging: boolean;
+        startX: number;
+        delta: number;
+    };
+
+    const AUTO_PLAY_MS = 6000;
+    const DRAG_THRESHOLD_RATIO = 0.2;
+
+    document.querySelectorAll<HTMLElement>('[data-testimonials]').forEach(root => {
+        const viewport = root.querySelector<HTMLElement>('.carousel-viewport');
+        const track = root.querySelector<HTMLElement>('.carousel-track');
+        const dots = root.querySelectorAll<HTMLButtonElement>('.dot');
+        if (!viewport || !track) return;
+
+        const slides = track.children;
+        const total = parseInt(root.dataset.total ?? '0', 10);
+        if (total === 0) return;
+        const totalPhysical = slides.length;
+
+        const state: CarouselState = {
+            physical: 1,
+            timer: null,
+            isDragging: false,
+            startX: 0,
+            delta: 0,
+        };
+
+        function getLogical(): number {
+            return (state.physical - 1 + total) % total;
+        }
+
+        function getSlideWidth(): number {
+            return (slides[0] as HTMLElement).offsetWidth;
+        }
+
+        function getOffset(idx: number): number {
+            if (!viewport) return 0;
+            const slideWidth = getSlideWidth();
+            return (viewport.offsetWidth - slideWidth) / 2 - idx * slideWidth;
+        }
+
+        function applyTransform(offsetPx: number, smooth: boolean) {
+            if (!track) return;
+            track.classList.toggle('no-transition', !smooth);
+            track.style.transform = `translateX(${offsetPx}px)`;
+        }
+
+        function updateActive() {
+            const logical = getLogical();
+            Array.from(slides).forEach((s, i) => s.classList.toggle('slide-active', i === state.physical));
+            dots.forEach((d, i) => d.classList.toggle('active', i === logical));
+        }
+
+        function render(smooth = true) {
+            applyTransform(getOffset(state.physical), smooth);
+            updateActive();
+        }
+
+        function next() {
+            state.physical++;
+            render(true);
+        }
+        function prev() {
+            state.physical--;
+            render(true);
+        }
+
+        // Clone 도달 시 track + slide 모두 transition 끄고 실제 slide로 순간이동.
+        // 다음 frame에 transition 복원 (double rAF로 reflow 보장).
+        track.addEventListener('transitionend', e => {
+            if (e.target !== track) return;
+            if (state.physical !== 0 && state.physical !== totalPhysical - 1) return;
+
+            state.physical = state.physical === 0 ? total : 1;
+
+            const slideEls = Array.from(slides) as HTMLElement[];
+            slideEls.forEach(s => s.classList.add('no-transition'));
+            render(false);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    slideEls.forEach(s => s.classList.remove('no-transition'));
+                });
+            });
+        });
+
+        function startAuto() {
+            stopAuto();
+            state.timer = window.setInterval(next, AUTO_PLAY_MS);
+        }
+        function stopAuto() {
+            if (state.timer !== null) {
+                clearInterval(state.timer);
+                state.timer = null;
+            }
+        }
+
+        dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => {
+                state.physical = i + 1;
+                render(true);
+                startAuto();
+            });
+        });
+
+        viewport.addEventListener('pointerdown', e => {
+            state.isDragging = true;
+            state.startX = e.clientX;
+            state.delta = 0;
+            stopAuto();
+            viewport.classList.add('dragging');
+            viewport.setPointerCapture(e.pointerId);
+        });
+
+        viewport.addEventListener('pointermove', e => {
+            if (!state.isDragging) return;
+            state.delta = e.clientX - state.startX;
+            applyTransform(getOffset(state.physical) + state.delta, false);
+        });
+
+        function endDrag() {
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            viewport!.classList.remove('dragging');
+
+            const threshold = getSlideWidth() * DRAG_THRESHOLD_RATIO;
+            if (state.delta < -threshold) {
+                next();
+            } else if (state.delta > threshold) {
+                prev();
+            } else {
+                render(true);
+            }
+            startAuto();
+        }
+
+        viewport.addEventListener('pointerup', endDrag);
+        viewport.addEventListener('pointercancel', endDrag);
+
+        window.addEventListener('resize', () => render(false));
+
+        root.addEventListener('mouseenter', stopAuto);
+        root.addEventListener('mouseleave', () => {
+            if (!state.isDragging) startAuto();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopAuto();
+            else if (!state.isDragging) startAuto();
+        });
+
+        render(false);
+        startAuto();
+    });
+</script>

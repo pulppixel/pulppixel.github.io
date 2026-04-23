@@ -11,8 +11,8 @@ const projects = [
     slug: 'eterna',
     title: 'ETERNA - 아고라 시스템',
     period: '2025.11 - 2026.04',
-    description: '확장 가능한 커뮤니티 아키텍처 설계 및 구현 전담. (3-Tier Service/Repository/State 패턴 적용)',
-    tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers'],
+    description: '디스코드형 아고라 시스템. Service / Repository / State 3계층 설계. 소프트런칭 소셜 기능 전체 단독 구현.',
+    tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers', 'Whisper', 'UaaL'],
     badge: 'ARCHITECT',
     badgeColor: 'green' as const,
   },
@@ -20,22 +20,22 @@ const projects = [
     slug: 'reiw',
     title: 'REIW - 3D 메타버스',
     period: '2025.06 - 2025.11',
-    description: 'Tencent IM 기반 채팅/친구 시스템 재설계, 하우징 프로토타입, NPC 퀘스트 구현. 채팅 및 소셜 시스템의 구조적 개선 및 재설계 (차세대 아키텍처의 프로토타이핑 수행)',
-    tags: ['Unity', 'C#', 'R3', 'UniTask', 'DOTween'],
+    description: 'Tencent IM 채팅을 메타버스 규모로 재구성. 6면 스냅 하우징 프로토타입, NPC 퀘스트, DataTable 통합 에디터 툴.',
+    tags: ['Unity', 'C#', 'R3', 'UniTask', 'VContainer', 'FlatBuffers'],
   },
   {
     slug: 'iw-zombie',
     title: 'IW Zombie - 팀 서바이벌',
     period: '2025.02 - 2025.06',
-    description: '5단계 게임 루프 전반과 Tencent IM 채팅 첫 도입. 3D 사운드 풀링, 전투 로직, AI NPC, 범용 디버그 치트 시스템.',
-    tags: ['Unity', 'C#', 'Tencent IM', 'DOTween'],
+    description: '5단계 게임 루프를 Server FSM + BT 기반 AI로 구현. Tencent IM 첫 도입, NetworkObjectPool, enum 기반 치트 시스템.',
+    tags: ['Unity', 'C#', 'Netcode (NGO)', 'Tencent IM', 'Behavior Tree'],
   },
   {
     slug: 'stelsi-wallet',
     title: 'STELSI Wallet',
     period: '2023.02 - 2023.08',
-    description: 'Unity -> Flutter 스택 전환을 주도하고 1인 개발. Web3.js + 스마트 컨트랙트 연동, App Store / Google Play 출시.',
-    tags: ['Flutter', 'Dart', 'Web3.js', 'ABI'],
+    description: 'Unity → Flutter 스택 전환을 MVP 비교로 제안. web3dart + ABI로 ERC-20 / NFT 연동. App Store / Google Play 출시.',
+    tags: ['Flutter', 'Dart', 'web3dart', 'BIP39 / BIP44', 'SecureStorage'],
     badge: 'SOLO',
     badgeColor: 'green' as const,
   },
@@ -43,21 +43,21 @@ const projects = [
     slug: 'stelsi',
     title: 'STELSI - UE5 메타버스',
     period: '2023.08 - 2024.12',
-    description: 'UE5 메타버스 프로젝트 중간 투입. Bink2 영상 재생, 360도 촬영 툴, UI, 외주 관리. SM그룹, 정림건축 MOU 기여.',
+    description: 'UE5 메타버스 중간 투입. Bink2 영상 재생, SceneCapture2D 6면 큐브맵 → equirectangular 360 파노라마 툴, 외주 관리.',
     tags: ['Unreal Engine 5', 'C++', 'Bink2'],
   },
   {
     slug: 'frenzy-circle',
     title: 'Nine to Six - 텔레그램 미니 게임',
     period: '2024.06 - 2024.10',
-    description: 'TON 생태계 텔레그램 환경(WebGL) 미니 게임. 텔레그램 API 로그인, 코인 밈 테마, 랭킹 시스템.',
+    description: 'TON 생태계 기반 텔레그램 WebGL 미니 게임. .jslib JS interop 로그인, 데이터 기반 코인 밈 테마, 월·주·일 랭킹.',
     tags: ['Unity', 'C#', 'WebGL', 'RESTful API'],
   },
   {
     slug: 'haul',
     title: 'HAUL - 2D PvPvE Extraction',
     period: '2025.10 - Present',
-    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계/구현.',
+    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계 / 구현.',
     tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],
     badge: 'IN PROGRESS',
     badgeColor: 'yellow' as const,
@@ -66,8 +66,8 @@ const projects = [
     slug: 'nomads-planet',
     title: 'Nomads Planet',
     period: '2023.06 - 2023.09',
-    description: 'Unity Netcode + Vivox 기반 멀티플레이어 메타버스. K-메타버스 경진대회 장려상 수상.',
-    tags: ['Unity', 'C#', 'Netcode', 'Vivox'],
+    description: 'Unity Netcode + Vivox 기반 차량 메타버스. 3-Singleton 아키텍처, Matchmaker / Backfiller / Multiplay 전 단계 1인 구현.',
+    tags: ['Unity', 'C#', 'Netcode', 'Vivox', 'Matchmaker'],
     badge: '수상',
     badgeColor: 'purple' as const,
   },
@@ -75,8 +75,8 @@ const projects = [
     slug: 'math-master',
     title: 'Math Master (일프로연산)',
     period: '2021.06 - 2022.06',
-    description: '초등 수학 라이브 서비스. 분수 도메인 타입 설계, Recursive Backtracker + A* 알고리즘, 자체 Tween 라이브러리.',
-    tags: ['Unity', 'C#', 'UGUI', 'DOTween', 'UniRx'],
+    description: '초등 연산 라이브 서비스. Fraction struct 도메인 타입, Recursive Backtracker + A* 미로, 자체 Tween 라이브러리(BTweener).',
+    tags: ['Unity', 'C#', 'UGUI', 'UniRx'],
     badge: 'SKT ZEM',
     badgeColor: 'green' as const,
   },
@@ -84,17 +84,17 @@ const projects = [
     slug: 'spody',
     title: 'SPODY - XR 유아 교육',
     period: '2020.01 - 2021.06',
-    description: 'Kinect/ASTRA 센서 + OpenCV 캘리브레이션 기반 XR 교육 콘텐츠. 유일한 개발자로 시작, 양산 체계 구축. 공공기관 납품.',
+    description: 'XR 양산 템플릿 구축. OpenCV 자동 캘리브레이션으로 현장 세팅을 비개발자가 직접 가능하게. 25+ 콘텐츠 납품.',
     tags: ['Unity', 'C#', 'OpenCV', 'Kinect', 'ASTRA'],
-    badge: 'SOLO -> LEAD',
+    badge: 'SOLO',
     badgeColor: 'green' as const,
   },
   {
     slug: 'ruby-adventure',
     title: '루비의 모험',
     period: '2019.09 - 2019.11',
-    description: '1인 개발 3D 액션 RPG. 콤보/스킬 전투, BT 기반 몬스터 AI, 2페이즈 보스, Timeline 연출. 졸업전시 우수상.',
-    tags: ['Unity', 'C#', 'NavMesh', 'Timeline'],
+    description: '1인 개발 3D 액션 RPG. state / nextState 이중 변수 FSM + 9개 SMB, 4종 스킬, NavMesh 기반 AI. 71개 스크립트.',
+    tags: ['Unity', 'C#', 'NavMesh', 'Timeline', 'StateMachineBehaviour'],
     badge: '우수상',
     badgeColor: 'purple' as const,
   },
@@ -103,23 +103,23 @@ const projects = [
 const timeline = [
   {
     company: 'VOYAGER',
-    role: 'Game Client Engineer / 서브 리드',
+    role: 'Unity Client Engineer / 서브 리드',
     period: '2025.02 - 2026.04 / 1년 3개월',
     projects: [
       'ETERNA - 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
-      'REIW - 3D 메타버스 (채팅 재설계, 하우징)',
-      'IW Zombie - 팀 서바이벌 (게임 루프 전반)',
+      'REIW - 3D 메타버스 (채팅 재설계, 하우징, NPC 퀘스트)',
+      'IW Zombie - 팀 서바이벌 (게임 루프 전반, 일본 출시 예정)',
     ],
     current: true,
   },
   {
     company: 'VERS.',
-    role: 'Unity Client Developer',
+    role: 'Unity / Flutter / UE5 Client Developer',
     period: '2022.06 - 2024.12 / 2년 7개월',
     projects: [
-      'STELSI Wallet - 이더리움 지갑 앱 (Flutter)',
-      'Nine to Six - 텔레그램 미니 게임 (WebGL)',
-      'STELSI - UE5 메타버스 (Bink2 영상, 360도 촬영 툴, 외주 관리)',
+      'STELSI Wallet - 이더리움 지갑 앱 (Flutter 1인 개발, App Store / Google Play 출시)',
+      'STELSI - UE5 메타버스 (Bink2 영상, 360 파노라마 툴, 외주 관리)',
+      'Nine to Six - 텔레그램 미니 게임 (TON 생태계, WebGL)',
     ],
   },
   {
@@ -127,19 +127,17 @@ const timeline = [
     role: 'Unity Client Developer',
     period: '2021.06 - 2022.06 / 1년 1개월',
     projects: [
-      '일프로연산 - 초등 수학 라이브 서비스 (SKT ZEM 선정)',
-      '분수 도메인 타입 설계 (연산자 오버로딩, GCD/LCM, 약분/채점 로직)',
-      '미로 생성(Recursive Backtracker) + 탐색(A*) 알고리즘 구현',
-      '자체 Tween 라이브러리 (Ease/Loop/Coroutine 기반, DOTween 대체)',
+      '일프로연산 - 초등 연산 라이브 서비스 (SKT ZEM 기본앱 / 구글 창구 선정)',
+      'Fraction struct 도메인 타입 + 미로 알고리즘 + 자체 Tween 라이브러리',
     ],
   },
   {
     company: 'VVR',
-    role: 'Unity Client Developer / 초기 1인',
+    role: 'Unity Client Developer (XR) / 초기 1인',
     period: '2020.01 - 2021.06 / 1년 6개월',
     projects: [
-      '스포디 - XR 유아 교육 콘텐츠 (양산 체계 구축, 공공기관 납품)',
-      'Kinect/ASTRA 센서 파이프라인 + OpenCV 자동 캘리브레이션 설계',
+      '스포디 - XR 유아 교육 콘텐츠 (25+ 콘텐츠 납품, 인도네시아 수출)',
+      'XR 양산 템플릿 구축 + OpenCV 자동 캘리브레이션',
     ],
   },
 ];
@@ -214,20 +212,19 @@ const awards = [
         <div class="skill-group">
           <h4>Engine & Language</h4>
           <ul>
-            <li>Unity (C#)</li>
+            <li>Unity (C#) — 6년</li>
             <li>Unreal Engine 5 (C++)</li>
             <li>Godot 4 (.NET / GDScript)</li>
-            <li>Flutter (Dart)</li>
+            <li>Flutter (Dart) — 출시 경험</li>
           </ul>
         </div>
         <div class="skill-group">
           <h4>Architecture & Network</h4>
           <ul>
             <li>Service / Repository / State</li>
-            <li>R3 / UniRx Reactive</li>
-            <li>Unity Netcode, Tencent IM SDK</li>
-            <li>FlatBuffers, gRPC (MagicOnion)</li>
-            <li>LiteNetLib (UDP)</li>
+            <li>VContainer, R3 / UniRx, UniTask</li>
+            <li>Unity Netcode (NGO), Tencent IM SDK</li>
+            <li>FlatBuffers, gRPC (MagicOnion), LiteNetLib</li>
           </ul>
         </div>
         <div class="skill-group">

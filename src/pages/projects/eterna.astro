@@ -5,7 +5,7 @@ import YouTube from '../../components/YouTube.astro';
 
 <ProjectLayout
     title="ETERNA - 아고라 시스템"
-    subtitle="확장 가능한 커뮤니티 아키텍처 설계 및 구현 전담. (3-Tier Service/Repository/State 패턴 적용). 소프트런칭에 필수적인 핵심 소셜 기능 전반을 설계 및 구현하여 서비스 안정성을 확보했습니다."
+    subtitle="디스코드형 아고라 시스템. Service / Repository / State 3계층으로 설계하고, 소프트런칭 소셜 기능 전체를 6개월에 단독 구현했습니다."
     ogImage="/images/et_scene1.png"
     period="2025.11 - 2026.04"
     role="아키텍처 설계, 구현 전담"
@@ -26,23 +26,22 @@ import YouTube from '../../components/YouTube.astro';
 
   <img src="/images/et_scene1.png" alt="ETERNA 인게임 - 아고라 채널 내부 필드에서 다수 캐릭터가 활동하는 모습" />
 
-  <h2>설계</h2>
+  <h2>설계 - Service / Repository / State 3계층</h2>
   <p>
-    DI/MVVM 등 여러 접근을 비교한 끝에, Unity 환경에서의 복잡도와 팀 러닝커브를 고려해
-    Service/Repository/State 3계층 아키텍처로 설계했습니다.
+    REIW에서 VContainer 기반 DI + MVVM을 실제로 적용해봤지만, Unity 환경에서의 DI 컨테이너 학습 비용과
+    의존 그래프의 가독성 문제를 경험했습니다. 같은 문제를 더 얇은 레이어로 풀기 위해 3계층으로 재설계했습니다.
   </p>
 
   <ul>
-    <li><code>Repository</code> - 네트워크 I/O 추상화. 인터페이스로 분리. Observable(서버 Push) + Request 메서드</li>
-    <li><code>Service</code> - 비즈니스 로직, 알림 생성, IM 콜백 구독, Repository 이벤트 -> State 반영</li>
-    <li><code>State</code> - 순수 상태 보관. ReactiveProperty/Subject로 UI 바인딩. 로직 없음</li>
-    <li><code>ServiceProvider</code> - static lazy singleton. 인스턴스 생성, 초기화, Dispose 관리</li>
+    <li><strong>Repository</strong> - Tencent IM SDK 같은 외부 의존성을 이 계층에서만 참조. 콜백 기반 SDK 호출을 <code>UniTask</code>와 <code>R3.Subject&lt;T&gt;</code>로 래핑해서, 바깥에서는 async / Observable로만 다룸. ACK 핸들러 등록/해제도 Repository 라이프사이클에 묶음</li>
+    <li><strong>Service</strong> - 비즈니스 로직 + Repository 이벤트 → State 반영을 조율. UI는 이쪽의 Observable만 구독, Repository는 직접 참조하지 않음</li>
+    <li><strong>State</strong> - 로직 없는 순수 저장소. ReactiveProperty, 리스트, 플래그만 들고 있고 Service만 조작. 외부에는 <code>ReadOnlyReactiveProperty</code>로 읽기 전용 프록시 노출</li>
+    <li><strong>ServiceProvider</strong> - static lazy singleton. 인스턴스 생성, 초기화, Dispose 관리</li>
   </ul>
 
   <p>
-    외부 SDK(Tencent IM) 의존성을 낮추기 위해 Repository 패턴으로 추상화 계층을 분리했습니다.
-    콜백 기반의 비동기 로직을 Observable 및 async/await 기반으로 래핑하여,
-    비즈니스 로직에서의 코드 가독성과 유지보수성을 극대화했습니다.
+    SDK를 Repository에 가둔 덕분에, 이후 SDK 버전 업데이트나 다른 IM 솔루션으로 교체하는 시나리오가 와도
+    수정 범위가 Repository 한 곳으로 제한됩니다.
   </p>
 
   <img src="/images/et_agora2.png" alt="아고라 채널 기록 UI - 다수 아고라 가입, 채널 히스토리 조회 화면" />
@@ -79,9 +78,18 @@ import YouTube from '../../components/YouTube.astro';
 
   <h2>UaaL 양방향 통신 검증</h2>
   <p>
-    앱의 주요 UI를 Android Jetpack Compose로 구성하고, 특정 씬에만 Unity를 임베드하는 구조를 검증했습니다.
-    전체 앱을 Unity로 개발하는 방식이 비효율적이라고 판단하여, 네이티브 앱에 Unity를 라이브러리로 삽입하는 UaaL 방식의 적용 가능성을 POC로 확인했습니다.
+    Android Kotlin + Jetpack Compose 호스트 앱을 만들어 <code>AndroidView</code>로 Unity Player를 임베드,
+    호스트 앱과 Unity 사이를 실제 메시지가 오가도록 연결했습니다.
+    전체 앱을 Unity로 개발하는 방식이 비효율적이라고 판단해, 네이티브 앱에 Unity를 라이브러리로 삽입하는 UaaL 구조의 적용 가능성을 POC로 확인했습니다.
   </p>
+
+  <ul>
+    <li><strong>Compose → Unity</strong> - <code>UnityPlayer.UnitySendMessage(gameObject, method, message)</code>로 캐릭터 애니메이션 트리거 등 호출</li>
+    <li><strong>Unity → Compose</strong> - <code>AndroidJavaClass("com.eterna.kee.UnityBridge").CallStatic("receiveFromUnity", ...)</code>로 Kotlin 쪽 <code>@JvmStatic</code> 메서드 직접 호출 → Compose 쪽 람다로 전달</li>
+    <li><strong>하이브리드 구조</strong> - Unity는 3D 캐릭터/아바타 렌더링만 담당, 채팅 UI / Tencent IM / 미디어 선택은 네이티브(Compose + Kotlin)에서 직접 구현</li>
+    <li><strong>라이프사이클/메모리</strong> - <code>UnityPlayerForActivityOrService</code> + <code>IUnityPlayerLifecycleEvents</code>로 resume / pause / destroy 관리, View는 <code>WeakReference</code>로 캐싱</li>
+  </ul>
+
   <YouTube id="DW-QP3Gskfw" title="UaaL(Unity as a Library) 양방향 통신 POC" />
 
   <h2>문서화</h2>

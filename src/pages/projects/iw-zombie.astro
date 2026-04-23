@@ -9,7 +9,7 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
     period="2025.02 - 2025.06"
     role="게임 루프, 채팅, AI NPC, UI"
     team="약 20명 (클라팀, 아트팀, 기획팀, QA팀)"
-    tags={['Unity', 'C#', 'Tencent IM SDK', 'DOTween']}
+    tags={['Unity', 'C#', 'Unity Netcode (NGO)', 'Tencent IM SDK', 'Behavior Tree', 'DOTween']}
 >
 
   <h2>배경</h2>
@@ -23,20 +23,48 @@ import ProjectLayout from '../../layouts/ProjectLayout.astro';
 
   <h2>주요 작업</h2>
   <ul>
-    <li>5단계 게임 루프(탐색->방어->식사->논의->생존판정) 전반 구현</li>
+    <li>5단계 게임 루프(탐색 → 방어 → 식사 → 논의 → 생존 판정) 전반 구현</li>
     <li>Tencent IM 기반 채팅 시스템 첫 도입 및 구현</li>
+    <li>AI NPC Behavior Tree 구성 및 Aggro 시스템 설계</li>
+    <li>NetworkObjectPool 별도 구현</li>
     <li>3D 사운드 풀링 시스템 설계</li>
-    <li>전투 로직 및 AI NPC 구현</li>
-    <li>UI 전반 - 인벤토리, 채팅, 논의 팝업</li>
-    <li>범용 디버그 치트 시스템 설계 - 누구나 명령어 추가 가능한 구조</li>
+    <li>전투 로직 및 UI 전반 (인벤토리, 채팅, 논의 팝업)</li>
+    <li>범용 디버그 치트 시스템 설계 - enum 중앙 열거 + scope prefix + ServerRpc 실행</li>
     <li>서브모듈 병합 작업 팀과 함께 완료 (약 1개월)</li>
   </ul>
+
+  <h2>5단계 게임 루프 - Server-side FSM</h2>
+  <p>
+    <code>BaseZombieState</code>를 베이스로 Exploration / Defense / HaveMeal / Discussion / SurvivalResult 5개 상태 + CutScene / GameEnd 2개 상태로 분기.
+    Dedicated Server 환경에서 상태 전이를 일관되게 관리하도록 설계해, 클라이언트는 상태 브로드캐스트를 받아 렌더링만 담당하는 구조로 분리했습니다.
+  </p>
+
+  <h2>AI NPC - Behavior Tree</h2>
+  <p>
+    Enemy 행동을 <code>EnemyFinding</code> / <code>EnemyPatrol</code> / <code>EnemySearchTarget</code> / <code>EnemyBeginAttack</code> Task로 쪼개고,
+    Aggro 시스템은 <code>EnemyLowestHpAggroIncrease</code> Task로 분리(최저 HP 타겟 가중치 상승).
+    디자이너가 트리 형태로 행동 조합을 튜닝할 수 있게 했습니다.
+  </p>
+
+  <h2>NetworkObjectPool</h2>
+  <p>
+    좀비 스폰/소멸 빈도가 높아 GC와 네트워크 오버헤드가 체감될 수 있는 환경이라,
+    Netcode 풀 핸들러를 만들어 오브젝트를 재사용했습니다.
+  </p>
+
+  <h2>범용 디버그 치트 시스템</h2>
+  <p>
+    모든 치트 명령을 <code>e_ZombieShortCutCommand</code> enum 하나로 모아 IDE 자동완성과 타입 안전성을 확보하고,
+    문자열 prefix로 적용 범위를 분리(<code>/t</code>는 팀, <code>/a</code>는 모두, 기본은 본인)했습니다.
+    <code>hp++5</code>, <code>weapon--3</code> 같은 parameterized 명령은 일반 명령보다 먼저 파싱하고,
+    실제 실행은 ServerRpc로 돌려서 치팅을 구조적으로 막았습니다.
+  </p>
 
   <h2>3D 사운드 풀링</h2>
   <img src="/images/iw_sfxpool.png" alt="IW Zombie - 3D 사운드 풀링. ZombieSfxItem이 풀링되어 AudioSource 범위가 시각적으로 표시된 에디터 화면" />
 
   <h2>채팅 시스템 - 멀티클라이언트 테스트</h2>
-  <p>4개 클라이언트에서 World/Team/Attraction 채팅이 동시에 동작하는 모습입니다.</p>
+  <p>4개 클라이언트에서 World / Team / Attraction 채팅이 동시에 동작하는 모습입니다.</p>
   <img src="/images/iw_chat7.png" alt="IW Zombie - 4개 클라이언트에서 World, Team, Attraction 채팅이 동시에 동기화되는 화면" />
 
   <h2>컷씬 디테일</h2>

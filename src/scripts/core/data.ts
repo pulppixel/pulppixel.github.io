@@ -32,11 +32,13 @@ export interface Platform {
 
 // --- Zones ---
 
+// 존 시그니처 컬러 = pillar light + ring + UI 라벨 + zone 주변 pointLight에 전파
+// 각 존의 바이옴 아이덴티티에 맞춤 (palette.ts의 signature와 일치해야 함)
 export const COMPANIES: CompanyData[] = [
-  { name: 'Overworld (19-22)', color: 0xff6b9d, position: { x: 0, z: -18 } },
-  { name: 'Treasure Isle (23)', color: 0x6ee7b7, position: { x: 28, z: -40 } },
-  { name: 'The Nether (25-26)', color: 0xa78bfa, position: { x: -28, z: -40 } },
-  { name: 'Beacon Peak (26)', color: 0xfbbf24, position: { x: 0, z: -58 } },
+  { name: 'Overworld (19-22)',  color: 0x7fb852, position: { x: 0,   z: -18 } },  // 잔디 초록
+  { name: 'Treasure Isle (23)', color: 0xfbbf24, position: { x: 28,  z: -40 } },  // 보물 금색
+  { name: 'The Nether (25-26)', color: 0xff5a3a, position: { x: -28, z: -40 } },  // 용암 오렌지
+  { name: 'Beacon Peak (26)',   color: 0x8ef7d6, position: { x: 0,   z: -58 } },  // 비콘 청록
 ];
 
 // --- Platforms ---

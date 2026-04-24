@@ -1,5 +1,6 @@
 // Shared mesh/material utilities
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // --- Position ---
 
@@ -95,4 +96,143 @@ export function textSprite(text: string, color: string): THREE.Sprite {
   );
   sprite.scale.set(5.5, 0.7, 1);
   return sprite;
+}
+
+// ===========================================================================
+// Voxel Pattern Builder
+// ===========================================================================
+//
+// 2D/3D 문자 패턴을 voxel (큐브 블록) 구조로 변환.
+// 같은 색 voxel은 mergeGeometries로 병합되어 draw call 1개로 처리됨.
+//
+// ------ 패턴 형식 ------
+//
+// pattern: string[][]  - [y][z] 배열, 각 원소는 x 방향 문자열
+//
+//   y축 = 높이 (배열 인덱스 0 = 바닥, 위로 쌓임)
+//   z축 = 깊이 (레이어 내 행)
+//   x축 = 너비 (행 내 문자 위치)
+//
+// 예시: 2x2x2 작은 빨간 큐브
+//   [
+//     ["RR", "RR"],   // y=0 (바닥 레이어)
+//     ["RR", "RR"],   // y=1 (위 레이어)
+//   ]
+//
+// 빈 공간은 '.' 또는 ' '. colorMap에 없는 문자도 무시됨.
+//
+// ------ colorMap ------
+//
+// 단순: { 'R': 0xff0000 }  -> 불투명 standard
+// 발광: { 'G': { color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.8 } }
+// 반투명: { 'P': { color: 0xa855f7, transparent: true, opacity: 0.7 } }
+//
+// ------ 반환 ------
+//
+// THREE.Group. 자식 = 색별 병합된 Mesh 하나씩.
+// 그룹 전체를 position/rotation/scale하면 애니메이션 가능 (큐브 개별은 아님).
+// 기본적으로 XZ 중앙 정렬, Y는 0부터 위로 쌓임 (바닥면이 y=0에 붙음).
+
+export interface VoxelColorDef {
+  color: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  transparent?: boolean;
+  opacity?: number;
+  roughness?: number;
+}
+
+export type VoxelColorMap = Record<string, number | VoxelColorDef>;
+
+export interface VoxelOpts {
+  /** 블록 한 변 크기 (world unit). 기본 0.5. */
+  scale?: number;
+  /** XZ 중앙 정렬. 기본 true. false면 (0,0,0)부터 +x/+z로 쌓임. */
+  center?: boolean;
+  /** 그림자 관련. 기본 true. */
+  castShadow?: boolean;
+  receiveShadow?: boolean;
+}
+
+export function buildVoxel(
+    pattern: string[][],
+    colorMap: VoxelColorMap,
+    opts: VoxelOpts = {},
+): THREE.Group {
+  const scale = opts.scale ?? 0.5;
+  const center = opts.center ?? true;
+  const castShadow = opts.castShadow ?? true;
+  const receiveShadow = opts.receiveShadow ?? true;
+
+  // --- Pass 1: 크기 파악 & 색별 좌표 수집 ---
+
+  let xMax = 0, zMax = 0;
+  const yMax = pattern.length;
+  for (const layer of pattern) {
+    zMax = Math.max(zMax, layer.length);
+    for (const row of layer) xMax = Math.max(xMax, row.length);
+  }
+
+  const byColor = new Map<string, { x: number; y: number; z: number }[]>();
+
+  for (let y = 0; y < yMax; y++) {
+    const layer = pattern[y];
+    for (let z = 0; z < layer.length; z++) {
+      const row = layer[z];
+      for (let x = 0; x < row.length; x++) {
+        const ch = row[x];
+        if (ch === '.' || ch === ' ') continue;
+        if (colorMap[ch] === undefined) continue;
+        if (!byColor.has(ch)) byColor.set(ch, []);
+        byColor.get(ch)!.push({ x, y, z });
+      }
+    }
+  }
+
+  // --- Pass 2: 색별 merged geometry 생성 ---
+
+  const ox = center ? -(xMax - 1) / 2 : 0;
+  const oz = center ? -(zMax - 1) / 2 : 0;
+  const unitGeo = new THREE.BoxGeometry(scale, scale, scale);
+
+  const group = new THREE.Group();
+
+  byColor.forEach((positions, ch) => {
+    const geoms: THREE.BufferGeometry[] = [];
+    for (const p of positions) {
+      const g = unitGeo.clone();
+      g.translate(
+          (p.x + ox) * scale,
+          p.y * scale + scale / 2,   // 바닥면 y=0에 붙도록
+          (p.z + oz) * scale,
+      );
+      geoms.push(g);
+    }
+    const merged = mergeGeometries(geoms);
+    geoms.forEach((g) => g.dispose());
+
+    const def = colorMap[ch];
+    let material: THREE.Material;
+    if (typeof def === 'number') {
+      material = stdMat(def);
+    } else {
+      material = new THREE.MeshStandardMaterial({
+        color: def.color,
+        emissive: def.emissive ?? 0x000000,
+        emissiveIntensity: def.emissiveIntensity ?? 0,
+        transparent: def.transparent ?? false,
+        opacity: def.opacity ?? 1,
+        roughness: def.roughness ?? 0.85,
+        metalness: 0.05,
+      });
+    }
+
+    const mesh = new THREE.Mesh(merged, material);
+    mesh.castShadow = castShadow;
+    mesh.receiveShadow = receiveShadow;
+    group.add(mesh);
+  });
+
+  unitGeo.dispose();
+  return group;
 }

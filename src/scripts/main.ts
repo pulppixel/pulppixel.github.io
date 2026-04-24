@@ -1,6 +1,7 @@
 // Entry point + game loop
 import * as THREE from 'three';
 import { getGroundHeight, getSurface } from './core/data';
+import { isBlocked } from './core/obstacles';
 import { initPerf, perf, startFpsMonitor } from './core/performance';
 import { createScene, updateEnvironment } from './world/scene';
 import { createCharacter, type SkinPalette } from './entity/character';
@@ -383,14 +384,14 @@ export function init(): void {
       const nz = Math.max(BOUND_Z_MIN, Math.min(BOUND_Z_MAX, character.group.position.z + _mv.z * speed * dt));
 
       const ghBoth = getGroundHeight(nx, nz);
-      if (ghBoth <= curY + STEP_H) {
+      if (ghBoth <= curY + STEP_H && !isBlocked(nx, nz)) {
         character.group.position.x = nx;
         character.group.position.z = nz;
       } else {
         const ghX = getGroundHeight(nx, character.group.position.z);
-        if (ghX <= curY + STEP_H) character.group.position.x = nx;
+        if (ghX <= curY + STEP_H && !isBlocked(nx, character.group.position.z)) character.group.position.x = nx;
         const ghZ = getGroundHeight(character.group.position.x, nz);
-        if (ghZ <= curY + STEP_H) character.group.position.z = nz;
+        if (ghZ <= curY + STEP_H && !isBlocked(character.group.position.x, nz)) character.group.position.z = nz;
       }
 
       const tr = Math.atan2(_mv.x, _mv.z);

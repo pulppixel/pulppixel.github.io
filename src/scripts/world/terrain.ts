@@ -170,8 +170,8 @@ export function buildTrees(scene: THREE.Scene): void {
   const trees: [number, number, number, LeafType][] = [
     // Spawn: 1 작은 나무 (탁 트인 초원)
     [5, 3, 2.5, 'green'],
-    // Hub: 밀도 높은 숲 (갈림길 분위기)
-    [-7, -14, 5, 'green'], [7, -15, 4.5, 'green'], [-5, -23, 4, 'green'], [6, -22, 3.5, 'green'],
+    // Hub: 오두막 주변 탁 트인 배치 (랜드마크 가독성 위해 3그루로 감축)
+    [-7, -14, 5, 'green'], [7, -15, 4.5, 'green'], [6, -22, 3.5, 'green'],
     // Treasure: 2그루만 (해안 절벽, 탁 트인 뷰)
     [24, -36, 3.5, 'green'], [33, -43, 3, 'green'],
     // Nether: 주황/붉은 나무 (어둡고 신비)

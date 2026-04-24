@@ -1,6 +1,7 @@
 // Shared mesh/material utilities
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { perf } from './performance';
 
 // --- Position ---
 
@@ -149,9 +150,36 @@ export interface VoxelOpts {
   scale?: number;
   /** XZ 중앙 정렬. 기본 true. false면 (0,0,0)부터 +x/+z로 쌓임. */
   center?: boolean;
-  /** 그림자 관련. 기본 true. */
+  /** 그림자. 기본값은 perf.shadows 연동 (저사양 기기 자동 off). */
   castShadow?: boolean;
   receiveShadow?: boolean;
+}
+
+// --- Emissive material cache (포털/비콘/크리스털 등 반복 발광 요소) ---
+const _emissiveMatCache = new Map<string, THREE.MeshStandardMaterial>();
+
+function getVoxelMat(def: number | VoxelColorDef): THREE.Material {
+  if (typeof def === 'number') return stdMat(def);
+  const em = def.emissive ?? 0;
+  const ei = def.emissiveIntensity ?? 0;
+  const tr = def.transparent ? 1 : 0;
+  const op = def.opacity ?? 1;
+  const ro = def.roughness ?? 0.85;
+  const key = `${def.color}|${em}|${ei}|${tr}|${op}|${ro}`;
+  let m = _emissiveMatCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({
+      color: def.color,
+      emissive: em,
+      emissiveIntensity: ei,
+      transparent: def.transparent ?? false,
+      opacity: op,
+      roughness: ro,
+      metalness: 0.05,
+    });
+    _emissiveMatCache.set(key, m);
+  }
+  return m;
 }
 
 export function buildVoxel(
@@ -161,8 +189,9 @@ export function buildVoxel(
 ): THREE.Group {
   const scale = opts.scale ?? 0.5;
   const center = opts.center ?? true;
-  const castShadow = opts.castShadow ?? true;
-  const receiveShadow = opts.receiveShadow ?? true;
+  // 모바일 저사양 자동 연동
+  const castShadow = opts.castShadow ?? perf.shadows;
+  const receiveShadow = opts.receiveShadow ?? perf.shadows;
 
   // --- Pass 1: 크기 파악 & 색별 좌표 수집 ---
 
@@ -212,20 +241,7 @@ export function buildVoxel(
     geoms.forEach((g) => g.dispose());
 
     const def = colorMap[ch];
-    let material: THREE.Material;
-    if (typeof def === 'number') {
-      material = stdMat(def);
-    } else {
-      material = new THREE.MeshStandardMaterial({
-        color: def.color,
-        emissive: def.emissive ?? 0x000000,
-        emissiveIntensity: def.emissiveIntensity ?? 0,
-        transparent: def.transparent ?? false,
-        opacity: def.opacity ?? 1,
-        roughness: def.roughness ?? 0.85,
-        metalness: 0.05,
-      });
-    }
+    const material = getVoxelMat(def);
 
     const mesh = new THREE.Mesh(merged, material);
     mesh.castShadow = castShadow;
@@ -235,4 +251,29 @@ export function buildVoxel(
 
   unitGeo.dispose();
   return group;
+}
+
+/**
+ * buildVoxel이 생성할 group의 XZ bound와 높이를 계산.
+ * 랜드마크 생성 후 obstacle(collider) 등록 시 크기 계산용.
+ *
+ * center: true (buildVoxel 기본값) 기준이라, 반환값 hw/hd는 중심 기준 half-extent.
+ * 즉 그대로 addObstacle({ x, z, hw, hd })에 사용 가능.
+ */
+export function getVoxelBounds(pattern: string[][], scale: number): {
+  hw: number;
+  hd: number;
+  height: number;
+} {
+  let xMax = 0, zMax = 0;
+  const yMax = pattern.length;
+  for (const layer of pattern) {
+    zMax = Math.max(zMax, layer.length);
+    for (const row of layer) xMax = Math.max(xMax, row.length);
+  }
+  return {
+    hw: (xMax * scale) / 2,
+    hd: (zMax * scale) / 2,
+    height: yMax * scale,
+  };
 }

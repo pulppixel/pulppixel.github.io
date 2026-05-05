@@ -254,7 +254,7 @@ export function createZones(scene: THREE.Scene): ZonesContext {
     const mast = stdBox(0.2, 4.0, 0.2, WOOD); mast.position.set(cx, ph + 2.0, cz - 4.5); scene.add(mast);
     const flag = glowBox(1.2, 0.8, 0.05, 0x6ee7b7, 0.3);
     flag.position.set(cx + 0.7, ph + 3.5, cz - 4.5); scene.add(flag);
-    za({ mesh: flag, type: 'float', baseY: ph + 3.5, range: 0.06, speed: 1.5, phase: 0 });
+    za({ mesh: flag, type: 'flag', baseY: ph + 3.5, range: 0.06, speed: 1.5, phase: 0 });
 
     const chestBody = stdBox(1.2, 0.7, 0.8, WOOD); chestBody.position.set(cx, ph + 0.35, cz - 3.5); scene.add(chestBody);
     const lid = stdBox(1.25, 0.2, 0.85, WOOD_LT); lid.position.set(cx, ph + 0.8, cz - 3.5); lid.rotation.x = -0.25; scene.add(lid);
@@ -431,6 +431,13 @@ export function createZones(scene: THREE.Scene): ZonesContext {
       const s = Math.max(0, (p - 0.1) / 0.9);
       if (a.type === 'float') {
         m.position.y = a.baseY! + Math.sin(t * a.speed! + (a.phase || 0)) * a.range! * s;
+      } else if (a.type === 'flag') {
+        // 깃발: bob + wind wave (rotation.y 펄럭임 + rotation.z 약한 처짐)
+        // 근접 활성화에 의존하지 않고 항상 펄럭이도록 s 대신 1 사용
+        m.position.y = a.baseY! + Math.sin(t * a.speed! + (a.phase || 0)) * a.range!;
+        m.rotation.y = Math.sin(t * 1.8 + (a.phase || 0)) * 0.28
+                     + Math.sin(t * 3.1) * 0.06;
+        m.rotation.z = Math.sin(t * 1.2) * 0.05;
       } else if (a.type === 'spin') {
         if (a.axis === 'y') m.rotation.y = t * a.speed! * s;
         else m.rotation.x = t * a.speed! * s;

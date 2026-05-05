@@ -20,6 +20,7 @@ import { createCollectibles } from './system/collectibles';
 import { createNPCs } from './entity/npcs';
 import { createZoneParticles } from './world/zoneparticles';
 import { createEnvironmentEffects } from './world/environment';
+import { createLiveness } from './world/liveness';
 
 const _mv = new THREE.Vector3();
 const _camOffset = new THREE.Vector3();
@@ -145,6 +146,7 @@ export function init(): void {
   const wind = createWindSystem(scene);
   const particleFx = createParticleEffects(scene);
   const envFx = createEnvironmentEffects(scene);
+  const liveness = createLiveness(scene);
   const zoneParticles = createZoneParticles(scene);
   const input = createInput(renderer.domElement, isMobile, () => false);
   const hud = createHUD();
@@ -570,6 +572,7 @@ export function init(): void {
     updateEnvironment(t, particles, stars, clouds, water);
     wind.update(t);
     envFx.update(dt, t);
+    liveness.update(dt, t);
     audio.update(dt);
     tw.update(dt, camera.position);
     audio.setBGMMood(tw.getTimeLabel());

@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import type { SeasonName } from './seasons';
 import { perf } from '../core/performance';
+import { CAMPFIRE, FIREFLY_HOMES, getGroundHeight } from '../core/data';
 
 // =============================================
 // Shared particle shader
@@ -100,23 +101,17 @@ function createFireflies(scene: THREE.Scene, count: number) {
     // 반딧불 색: 따뜻한 황록색
     const glowR = 0.85, glowG = 1.0, glowB = 0.45;
 
-    // 플랫폼 근처 spawn 위치
-    const ZONES: [number, number, number][] = [
-        [-3, 1.8, 2], [4, 1.8, -2],           // Spawn (h=1.0)
-        [-6, 4.8, -16], [5, 4.8, -20], [0, 4.8, -14],  // Zone 0 (h=4.0)
-        [26, 9.8, -38], [32, 9.8, -42],       // Zone 1 (h=9.0)
-        [-30, 8.8, -38], [-24, 8.8, -42],     // Zone 2 (h=8.0)
-        [-4, 12.8, -56], [5, 12.8, -60], [0, 12.8, -54],  // Zone 3 (h=12.0)
-        [14, 6.8, -28], [-14, 5.8, -28], [0, 7.5, -35],   // Stepping stones
-    ];
+    // 스폰 위치는 data.ts FIREFLY_HOMES에서 가져옴, Y는 지형에서 자동 계산
+    const FLY_Y_OFFSET = 0.8;
 
     const flies: Firefly[] = [];
     for (let i = 0; i < count; i++) {
-        const zone = ZONES[i % ZONES.length];
+        const home = FIREFLY_HOMES[i % FIREFLY_HOMES.length];
+        const groundY = getGroundHeight(home.x, home.z);
         flies.push({
-            homeX: zone[0] + (Math.random() - 0.5) * 6,
-            homeY: zone[1] + 0.5 + Math.random() * 2,
-            homeZ: zone[2] + (Math.random() - 0.5) * 6,
+            homeX: home.x + (Math.random() - 0.5) * 6,
+            homeY: groundY + FLY_Y_OFFSET + 0.5 + Math.random() * 2,
+            homeZ: home.z + (Math.random() - 0.5) * 6,
             phase: Math.random() * Math.PI * 2,
             speed: 0.3 + Math.random() * 0.5,
             radius: 1.5 + Math.random() * 2.5,
@@ -173,7 +168,10 @@ interface SmokeP {
     baseSize: number;
 }
 
-const FIRE_X = 0, FIRE_Y = 13.5, FIRE_Z = -60;
+// 연기는 캠프파이어 불꽃 위 1유닛에서 스폰 (CAMPFIRE는 zones.ts의 fire mesh와 동기화)
+const FIRE_X = CAMPFIRE.x;
+const FIRE_Y = CAMPFIRE.y + 1.0;
+const FIRE_Z = CAMPFIRE.z;
 
 function createSmoke(scene: THREE.Scene, count: number) {
     const buf = createBuf(count);

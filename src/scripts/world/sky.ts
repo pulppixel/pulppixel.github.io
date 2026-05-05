@@ -1,5 +1,6 @@
 // Sky dome (gradient shader) + Minecraft-style block clouds
 import * as THREE from 'three';
+import { CLOUD_DEFS } from '../core/data';
 
 export function buildSkyDome(scene: THREE.Scene): Record<string, { value: any }> {
   const mat = new THREE.ShaderMaterial({
@@ -41,12 +42,6 @@ export function buildClouds(scene: THREE.Scene): THREE.Group[] {
   });
   const clouds: THREE.Group[] = [];
 
-  const defs: [number, number, number, number][] = [
-    [-25, 18, -15, 1.2], [20, 20, -35, 1.0], [-10, 22, -55, 0.9],
-    [35, 19, -20, 1.1], [-35, 21, -45, 0.8], [15, 23, -60, 1.0],
-    [40, 17, -50, 0.7], [-20, 24, -30, 1.3],
-  ];
-
   // Block offsets for fluffy cloud shape
   const blocks: [number, number, number, number, number, number][] = [
     [3, 0.8, 2, 0, 0, 0],
@@ -55,15 +50,15 @@ export function buildClouds(scene: THREE.Scene): THREE.Group[] {
     [1.5, 0.5, 1.2, 0.2, 0.4, 0.5],
   ];
 
-  for (const [cx, cy, cz, s] of defs) {
+  for (const def of CLOUD_DEFS) {
     const g = new THREE.Group();
     for (const [bw, bh, bd, bx, by, bz] of blocks) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), mat);
       m.position.set(bx, by, bz);
       g.add(m);
     }
-    g.position.set(cx, cy, cz);
-    g.scale.setScalar(s);
+    g.position.set(def.x, def.y, def.z);
+    g.scale.setScalar(def.scale);
     scene.add(g);
     clouds.push(g);
   }

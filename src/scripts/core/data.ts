@@ -107,6 +107,65 @@ export function getGroundHeight(x: number, z: number): number {
   return maxH;
 }
 
+// --- World landmark positions ---
+//
+// Single source of truth for systems that need to anchor effects/particles
+// to world locations. If a landmark mesh moves in zones.ts/zonedetails.ts,
+// update the constant here once instead of hunting through particles/environment/etc.
+
+/** Beacon Peak sacred-tree campfire flame position. zones.ts builds the fire mesh here. */
+export const CAMPFIRE = { x: 0, y: 12.5, z: -60 };
+
+/** Beacon Peak waterfall (Overworld decor). zonedetails.ts puts the curtain here. */
+export const WATERFALL = {
+  x: -9, z: -58,
+  top: 12.0, bottom: -1.0,
+  width: 2.5,
+};
+
+/** Firefly hover spots. Y is derived (getGroundHeight + 0.8) at runtime. */
+export const FIREFLY_HOMES: { x: number; z: number }[] = [
+  // Spawn
+  { x: -3, z: 2 }, { x: 4, z: -2 },
+  // Hub
+  { x: -6, z: -16 }, { x: 5, z: -20 }, { x: 0, z: -14 },
+  // Treasure
+  { x: 26, z: -38 }, { x: 32, z: -42 },
+  // Nether
+  { x: -30, z: -38 }, { x: -24, z: -42 },
+  // Beacon Peak
+  { x: -4, z: -56 }, { x: 5, z: -60 }, { x: 0, z: -54 },
+  // Stepping stones
+  { x: 14, z: -28 }, { x: -14, z: -28 }, { x: 0, z: -35 },
+];
+
+export interface CloudDef { x: number; y: number; z: number; scale: number; }
+
+/** Sky cloud blocks. environment.ts cloud-shadows mirror these (xz + scale only). */
+export const CLOUD_DEFS: CloudDef[] = [
+  { x: -25, y: 18, z: -15, scale: 1.2 },
+  { x:  20, y: 20, z: -35, scale: 1.0 },
+  { x: -10, y: 22, z: -55, scale: 0.9 },
+  { x:  35, y: 19, z: -20, scale: 1.1 },
+  { x: -35, y: 21, z: -45, scale: 0.8 },
+  { x:  15, y: 23, z: -60, scale: 1.0 },
+  { x:  40, y: 17, z: -50, scale: 0.7 },
+  { x: -20, y: 24, z: -30, scale: 1.3 },
+];
+
+/**
+ * Adjacency between COMPANIES (not full n²). Bridges with stepping-stone
+ * platforms exist for exactly these pairs — Treasure↔Nether has no bridge,
+ * so a connection line/path between them would float in air.
+ */
+export const ZONE_LINKS: [number, number][] = [
+  [0, 1], // Hub → Treasure
+  [0, 2], // Hub → Nether
+  [0, 3], // Hub → Peak (center)
+  [1, 3], // Treasure → Peak
+  [2, 3], // Nether → Peak
+];
+
 /** Surface material for footstep sound selection. */
 export function getSurface(x: number, z: number): 'grass' | 'stone' | 'wood' {
   let bestH = -1;

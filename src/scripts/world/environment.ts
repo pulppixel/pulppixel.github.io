@@ -3,6 +3,7 @@
 // 3. Cloud shadows — 구름 아래 이동하는 그림자
 import * as THREE from 'three';
 import { perf } from '../core/performance';
+import { CLOUD_DEFS, WATERFALL } from '../core/data';
 
 // =============================================
 // Shared particle shader (particles.ts와 동일 구조)
@@ -44,12 +45,13 @@ function makeWaterMat(): THREE.ShaderMaterial {
 // =============================================
 // 1. Waterfall
 // =============================================
+// 좌표는 data.ts WATERFALL 한 곳에서 관리. zonedetails.ts의 waterCurtain mesh와 동기화.
 
-const FALL_X = -9;       // 섬 왼쪽 가장자리
-const FALL_Z = -58;      // 섬 Z 중앙
-const FALL_TOP = 12.0;   // 절벽 꼭대기
-const FALL_BOT = -1.0;   // 수면 근처
-const FALL_WIDTH = 2.5;  // 폭포 폭
+const FALL_X = WATERFALL.x;
+const FALL_Z = WATERFALL.z;
+const FALL_TOP = WATERFALL.top;
+const FALL_BOT = WATERFALL.bottom;
+const FALL_WIDTH = WATERFALL.width;
 
 interface WaterfallP {
     x: number; y: number; z: number;
@@ -261,13 +263,6 @@ function createCloudShadows(scene: THREE.Scene) {
         depthWrite: false,
     });
 
-    // sky.ts의 구름 정의와 동일한 초기 위치
-    const cloudDefs: [number, number, number][] = [
-        [-25, -15, 1.2], [20, -35, 1.0], [-10, -55, 0.9],
-        [35, -20, 1.1], [-35, -45, 0.8], [15, -60, 1.0],
-        [40, -50, 0.7], [-20, -30, 1.3],
-    ];
-
     interface Shadow {
         mesh: THREE.Mesh;
         x: number; // current X (drifts with cloud)
@@ -278,20 +273,21 @@ function createCloudShadows(scene: THREE.Scene) {
 
     const shadows: Shadow[] = [];
 
-    cloudDefs.forEach(([cx, cz, s], i) => {
-        const w = 3.5 * s + Math.random() * 2;
-        const d = 2 * s + Math.random() * 1.5;
+    // sky.ts와 같은 CLOUD_DEFS 사용 (xz + scale, y는 무시)
+    CLOUD_DEFS.forEach((def, i) => {
+        const w = 3.5 * def.scale + Math.random() * 2;
+        const d = 2 * def.scale + Math.random() * 1.5;
         const mesh = new THREE.Mesh(
             new THREE.PlaneGeometry(w, d),
             shadowMat,
         );
         mesh.rotation.x = -Math.PI / 2;
-        mesh.position.set(cx, 0.03, cz); // 지면 바로 위
+        mesh.position.set(def.x, 0.03, def.z); // 지면 바로 위
         mesh.renderOrder = -1;
         scene.add(mesh);
 
         shadows.push({
-            mesh, x: cx, baseZ: cz, scale: s,
+            mesh, x: def.x, baseZ: def.z, scale: def.scale,
             speed: 0.15 * (0.5 + (i % 3) * 0.2), // sky.ts와 동일한 속도
         });
     });

@@ -2,7 +2,7 @@
 // v3: Performance tier system (replaces isMobile boolean)
 import * as THREE from 'three';
 import { perf } from '../core/performance';
-import { COMPANIES } from '../core/data';
+import { COMPANIES, ZONE_LINKS } from '../core/data';
 import { buildPlatforms, buildTrees, buildFlowers, buildMushrooms, buildRocks, buildFences, buildLanterns, buildZonePatches, buildPathDots, flushInstances } from './terrain';
 import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';
@@ -76,9 +76,11 @@ export function createScene(): SceneContext {
     sun.castShadow = true;
     sun.shadow.mapSize.set(perf.shadowMapSize, perf.shadowMapSize);
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 80;
+    sun.shadow.camera.far = 120;
     const c = sun.shadow.camera;
-    c.left = -50; c.right = 50; c.top = 50; c.bottom = -50;
+    // 월드 범위: x=[-50,50], z=[-68,10] → ±70 으로 잡아 z=-65 영역 그림자 잘림 방지
+    c.left = -70; c.right = 70; c.top = 70; c.bottom = -70;
+    c.updateProjectionMatrix();
   }
   scene.add(sun);
 
@@ -140,18 +142,16 @@ export function createScene(): SceneContext {
   });
   scene.add(new THREE.Points(starGeo, starMat));
 
-  // --- Zone connection lines ---
+  // --- Zone connection lines (실제 디딤돌 다리가 있는 페어만) ---
 
   const lineMat = new THREE.LineBasicMaterial({ color: 0x90b090, transparent: true, opacity: 0.06 });
-  for (let i = 0; i < COMPANIES.length; i++) {
-    for (let j = i + 1; j < COMPANIES.length; j++) {
-      const a = COMPANIES[i].position, b = COMPANIES[j].position;
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(a.x, 0.02, a.z),
-        new THREE.Vector3((a.x + b.x) / 2, 0.02, (a.z + b.z) / 2),
-        new THREE.Vector3(b.x, 0.02, b.z),
-      ]), lineMat));
-    }
+  for (const [i, j] of ZONE_LINKS) {
+    const a = COMPANIES[i].position, b = COMPANIES[j].position;
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(a.x, 0.02, a.z),
+      new THREE.Vector3((a.x + b.x) / 2, 0.02, (a.z + b.z) / 2),
+      new THREE.Vector3(b.x, 0.02, b.z),
+    ]), lineMat));
   }
 
   window.addEventListener('resize', () => {

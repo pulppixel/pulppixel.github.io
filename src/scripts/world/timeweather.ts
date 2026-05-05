@@ -18,7 +18,7 @@ export interface EnvironmentRefs {
 }
 
 export interface TimeWeather {
-  update(dt: number): void;
+  update(dt: number, camPos?: THREE.Vector3): void;
   setTime(name: TimeName): void;
   setWeather(name: WeatherName): void;
   getTime(): TimeName;
@@ -145,7 +145,8 @@ function setC(c: THREE.Color, v: C3): void { c.setRGB(v[0], v[1], v[2]); }
 // --- Rain/Snow particle systems ---
 
 function createRainSystem(scene: THREE.Scene, count: number) {
-  const SPREAD = 80, HEIGHT = 30;
+  const SPREAD = 60, HEIGHT = 30;
+  // 카메라 따라가므로 SPREAD를 좁게(60) 잡아도 충분 — GPU 부하 감소
   const pos = new Float32Array(count * 6);
   const vel = new Float32Array(count);
   for (let i = 0; i < count; i++) {
@@ -161,11 +162,11 @@ function createRainSystem(scene: THREE.Scene, count: number) {
   group.visible = false; group.frustumCulled = false; scene.add(group);
   return {
     group, pos, vel,
-    update(dt: number) {
+    update(dt: number, cx: number, cz: number) {
       for (let i = 0; i < count; i++) {
         const drop = vel[i]*dt; pos[i*6+1]-=drop; pos[i*6+4]-=drop;
         if (pos[i*6+4] < -2) {
-          const x=(Math.random()-0.5)*SPREAD, z=-29+(Math.random()-0.5)*SPREAD, y=HEIGHT+Math.random()*5, len=0.3+Math.random()*0.4;
+          const x=cx+(Math.random()-0.5)*SPREAD, z=cz+(Math.random()-0.5)*SPREAD, y=HEIGHT+Math.random()*5, len=0.3+Math.random()*0.4;
           pos[i*6]=x; pos[i*6+1]=y; pos[i*6+2]=z; pos[i*6+3]=x-0.05; pos[i*6+4]=y-len; pos[i*6+5]=z;
           vel[i]=18+Math.random()*10;
         }
@@ -176,7 +177,7 @@ function createRainSystem(scene: THREE.Scene, count: number) {
 }
 
 function createSnowSystem(scene: THREE.Scene, count: number) {
-  const SPREAD = 80, HEIGHT = 25;
+  const SPREAD = 60, HEIGHT = 25;
   const pos = new Float32Array(count*3);
   const drift = new Float32Array(count*2);
   for (let i = 0; i < count; i++) {
@@ -189,12 +190,12 @@ function createSnowSystem(scene: THREE.Scene, count: number) {
   group.visible = false; group.frustumCulled = false; scene.add(group);
   return {
     group, pos, drift,
-    update(dt: number, t: number) {
+    update(dt: number, t: number, cx: number, cz: number) {
       for (let i = 0; i < count; i++) {
         pos[i*3]+=(drift[i*2]+Math.sin(t*0.8+i)*0.8)*dt;
         pos[i*3+1]-=(1.5+Math.sin(i*0.3)*0.5)*dt;
         pos[i*3+2]+=(drift[i*2+1]+Math.cos(t*0.6+i*0.5)*0.5)*dt;
-        if (pos[i*3+1] < -1) { pos[i*3]=(Math.random()-0.5)*SPREAD; pos[i*3+1]=HEIGHT+Math.random()*3; pos[i*3+2]=-29+(Math.random()-0.5)*SPREAD; }
+        if (pos[i*3+1] < -1) { pos[i*3]=cx+(Math.random()-0.5)*SPREAD; pos[i*3+1]=HEIGHT+Math.random()*3; pos[i*3+2]=cz+(Math.random()-0.5)*SPREAD; }
       }
       geo.attributes.position.needsUpdate = true;
     },
@@ -252,7 +253,7 @@ export function createTimeWeather(refs: EnvironmentRefs): TimeWeather {
   }
 
   return {
-    update(dt) {
+    update(dt, camPos) {
       elapsed += dt;
       if (timeMode === 'auto') targetP = computeTarget();
       currentP = blendP(currentP, targetP, Math.min(1, (transitionSpeed > 0 ? transitionSpeed : 3.0) * dt));
@@ -261,8 +262,12 @@ export function createTimeWeather(refs: EnvironmentRefs): TimeWeather {
       rain.group.visible = weather === 'rain';
       snow.group.visible = weather === 'snow';
 
+      // 카메라 따라가기 (없으면 기본 중심)
+      const cx = camPos ? camPos.x : 0;
+      const cz = camPos ? camPos.z : -29;
+
       if (weather === 'rain') {
-        rain.update(dt);
+        rain.update(dt, cx, cz);
         lightningTimer -= dt;
         if (lightningTimer <= 0) { lightningTimer = 8 + Math.random() * 18; if (Math.random() < 0.6) lightningFlash = 0.15; }
         if (lightningFlash > 0) {
@@ -273,7 +278,7 @@ export function createTimeWeather(refs: EnvironmentRefs): TimeWeather {
         }
         (rain.group.material as THREE.LineBasicMaterial).opacity = 0.3 + Math.sin(elapsed * 0.5) * 0.08;
       }
-      if (weather === 'snow') snow.update(dt, elapsed);
+      if (weather === 'snow') snow.update(dt, elapsed, cx, cz);
     },
     setTime(name) {
       timeMode = name;

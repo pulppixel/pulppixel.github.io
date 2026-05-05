@@ -571,7 +571,7 @@ export function init(): void {
     wind.update(t);
     envFx.update(dt, t);
     audio.update(dt);
-    tw.update(dt);
+    tw.update(dt, camera.position);
     audio.setBGMMood(tw.getTimeLabel());
     seasons.update(dt);
     particleFx.update(dt, t, tw.getTimeLabel(), seasons.getSeason());

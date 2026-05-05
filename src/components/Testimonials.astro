@@ -60,7 +60,11 @@ const looped: Array<Testimonial & { isClone: boolean }> = [
                             <div class="carousel-slide" aria-hidden={t.isClone ? 'true' : 'false'}>
                                 <div class="testimonial-card">
                                     <div class="quote-mark quote-open">&ldquo;</div>
-                                    <p class="quote-body">{t.quote}</p>
+                                    <div class="quote-body">
+                                        {t.quote.split(/(?<=[.!?])\s+/).map(s => (
+                                                <p class="quote-line">{s}</p>
+                                        ))}
+                                    </div>
                                     <div class="quote-close-wrap">
                                         <div class="quote-mark">&rdquo;</div>
                                     </div>
@@ -159,7 +163,11 @@ const looped: Array<Testimonial & { isClone: boolean }> = [
         flex-grow: 1;
         text-align: center;
         padding: 0 0.5rem;
+        word-break: keep-all;
+        overflow-wrap: break-word;
     }
+    .quote-line { margin: 0; }
+    .quote-line + .quote-line { margin-top: 0.45rem; text-indent: 0.6em; }
 
     .quote-attr {
         font-family: 'JetBrains Mono', monospace;

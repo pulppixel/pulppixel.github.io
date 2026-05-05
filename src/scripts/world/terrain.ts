@@ -2,7 +2,7 @@
 // v3: InstancedMesh batching for static repeated elements
 //     ~250 draw calls -> ~15 for batched categories
 import * as THREE from 'three';
-import { COMPANIES, PLATFORMS } from '../core/data';
+import { COMPANIES, PLATFORMS, ZONE_LINKS } from '../core/data';
 import { stdMat, stdBox } from '../core/helpers';
 import { perf } from '../core/performance';
 import { isEdgeConnected } from '../core/collision';
@@ -535,20 +535,19 @@ export function buildZonePatches(scene: THREE.Scene): void {
 export function buildPathDots(): void {
   const dotGeo = new THREE.BoxGeometry(0.3, 0.06, 0.3);
 
-  for (let i = 0; i < COMPANIES.length; i++) {
-    for (let j = i + 1; j < COMPANIES.length; j++) {
-      const a = COMPANIES[i].position, b = COMPANIES[j].position;
-      const total = Math.max(10, Math.round(Math.hypot(b.x - a.x, b.z - a.z) / 5));
-      for (let s = 0; s < total; s += 2) {
-        const t = s / total;
-        const px = a.x + (b.x - a.x) * t;
-        const pz = a.z + (b.z - a.z) * t;
-        const ph = getH(px, pz);
-        if (ph < 0) continue;
+  // 실제 디딤돌 다리가 있는 zone 페어만 (data.ts ZONE_LINKS)
+  for (const [i, j] of ZONE_LINKS) {
+    const a = COMPANIES[i].position, b = COMPANIES[j].position;
+    const total = Math.max(10, Math.round(Math.hypot(b.x - a.x, b.z - a.z) / 5));
+    for (let s = 0; s < total; s += 2) {
+      const t = s / total;
+      const px = a.x + (b.x - a.x) * t;
+      const pz = a.z + (b.z - a.z) * t;
+      const ph = getH(px, pz);
+      if (ph < 0) continue;
 
-        const pal = getZonePalette(px, pz);
-        ib(`dot-${pal.rockAccent}`, dotGeo, stdMat(pal.rockAccent), px, ph + 0.03, pz);
-      }
+      const pal = getZonePalette(px, pz);
+      ib(`dot-${pal.rockAccent}`, dotGeo, stdMat(pal.rockAccent), px, ph + 0.03, pz);
     }
   }
 }

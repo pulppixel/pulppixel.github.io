@@ -184,13 +184,17 @@ const ZONE_BOUNDS: { key: ZoneKey; cx: number; cz: number; r: number }[] = [
     { key: 'beacon',    cx: 0,   cz: -58, r: 14 },
 ];
 
-/** Nearest zone palette at world (x,z). Spawn < 10 from origin, else bridge fallback. */
-export function paletteAt(x: number, z: number): ZonePalette {
-    if (Math.hypot(x, z) < 10) return ZONE_PALETTE.spawn;
+/** Nearest zone key at world (x,z). Spawn < 10 from origin, else bridge fallback. */
+export function zoneKeyAt(x: number, z: number): ZoneKey {
+    if (Math.hypot(x, z) < 10) return 'spawn';
     for (const b of ZONE_BOUNDS) {
-        if (Math.hypot(x - b.cx, z - b.cz) < b.r) return ZONE_PALETTE[b.key];
+        if (Math.hypot(x - b.cx, z - b.cz) < b.r) return b.key;
     }
-    return ZONE_PALETTE.bridge;
+    return 'bridge';
+}
+
+export function paletteAt(x: number, z: number): ZonePalette {
+    return ZONE_PALETTE[zoneKeyAt(x, z)];
 }
 
 export function paletteOf(key: ZoneKey): ZonePalette {

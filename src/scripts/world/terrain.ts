@@ -6,6 +6,7 @@ import { COMPANIES, PLATFORMS, ZONE_LINKS } from '../core/data';
 import { stdMat, stdBox } from '../core/helpers';
 import { perf } from '../core/performance';
 import { isEdgeConnected } from '../core/collision';
+import { paletteAt, zoneKeyAt, type ZoneKey } from '../core/palette';
 
 // =============================================
 // Instance Batcher
@@ -45,42 +46,10 @@ export function flushInstances(scene: THREE.Scene): void {
 }
 
 // =============================================
-// Zone Palette (unchanged)
+// Zone palette: single source = core/palette.ts
+// terrain.ts는 terrainTop/terrainSide/terrainAccent 만 소비.
+// 식별 분기는 zoneKeyAt() 의 ZoneKey 문자열로 비교.
 // =============================================
-
-interface ZonePalette {
-  grass: number; grassEdge: number;
-  stone: number; stoneDark: number;
-  dirt: number; rockAccent: number;
-}
-
-const PALETTES: Record<string, ZonePalette> = {
-  spawn:     { grass: 0xa89060, grassEdge: 0x887048, stone: 0x8a8598, stoneDark: 0x6a6578, dirt: 0xa08860, rockAccent: 0x9a9088 },
-  nether:    { grass: 0x5a8870, grassEdge: 0x487860, stone: 0x706080, stoneDark: 0x504068, dirt: 0x686058, rockAccent: 0x7a6890 },
-  treasure:  { grass: 0x78d868, grassEdge: 0x60c050, stone: 0xb8a880, stoneDark: 0x988868, dirt: 0xc8b070, rockAccent: 0xd0c090 },
-  beacon:    { grass: 0xa8b850, grassEdge: 0x90a040, stone: 0x988868, stoneDark: 0x787050, dirt: 0xa89058, rockAccent: 0xb8a060 },
-  overworld: { grass: 0x90c888, grassEdge: 0x78b070, stone: 0x908898, stoneDark: 0x706878, dirt: 0x987868, rockAccent: 0xa08890 },
-  bridge:    { grass: 0x70b870, grassEdge: 0x58a058, stone: 0x8a8598, stoneDark: 0x6a6578, dirt: 0xa08860, rockAccent: 0x9a9088 },
-};
-
-const ZONE_CENTERS: { x: number; z: number; key: string }[] = [
-  { x: 0, z: 0, key: 'spawn' },
-  { x: 0, z: -18, key: 'nether' },
-  { x: 28, z: -40, key: 'treasure' },
-  { x: -28, z: -40, key: 'beacon' },
-  { x: 0, z: -58, key: 'overworld' },
-];
-
-function getZonePalette(px: number, pz: number): ZonePalette {
-  let bestKey = 'bridge';
-  let bestDist = Infinity;
-  for (const zc of ZONE_CENTERS) {
-    const d = Math.hypot(px - zc.x, pz - zc.z);
-    if (d < bestDist) { bestDist = d; bestKey = zc.key; }
-  }
-  if (bestDist > 14) return PALETTES.bridge;
-  return PALETTES[bestKey];
-}
 
 type LeafType = 'green' | 'orange' | 'pink';
 const WOOD = 0x8a6540, WOOD_LT = 0xb09868, BARK = 0x6a4a2a;
@@ -114,21 +83,21 @@ function hash(a: number, b: number): number {
 export function buildPlatforms(scene: THREE.Scene): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
-    const pal = getZonePalette(p.x, p.z);
+    const pal = paletteAt(p.x, p.z);
 
     const stoneH = Math.max(0.1, p.h - 0.12);
-    const stone = stdBox(p.w, stoneH, p.d, pal.stone);
+    const stone = stdBox(p.w, stoneH, p.d, pal.terrainSide);
     stone.position.set(p.x, stoneH / 2, p.z);
     scene.add(stone);
 
-    const grass = stdBox(p.w + 0.1, 0.12, p.d + 0.1, pal.grass);
+    const grass = stdBox(p.w + 0.1, 0.12, p.d + 0.1, pal.terrainTop);
     grass.position.set(p.x, p.h - 0.06, p.z);
     scene.add(grass);
 
     if (perf.edgeWireframes) {
       const edge = new THREE.LineSegments(
           new THREE.EdgesGeometry(new THREE.BoxGeometry(p.w + 0.1, 0.12, p.d + 0.1)),
-          new THREE.LineBasicMaterial({ color: pal.grassEdge, transparent: true, opacity: 0.15 }),
+          new THREE.LineBasicMaterial({ color: pal.terrainAccent, transparent: true, opacity: 0.15 }),
       );
       edge.position.copy(grass.position);
       scene.add(edge);
@@ -210,12 +179,17 @@ export function buildFlowers(scene: THREE.Scene): void {
   const tuftMat = stdMat(0x58b858);
   const stemMat = stdMat(0x48a048);
 
-  const zoneFlowerColors: Record<string, number[]> = {
+  // 이전엔 옛 키(잘못 라벨링)로 좌표가 어긋나 Hub에 보라·Peak에 핑크가 칠해졌었음.
+  // 정리하며 ZoneKey 별 디자인 의도에 맞춰 정렬:
+  //   Hub(overworld)=일반 초원 → 핑크/파스텔
+  //   Peak(beacon)=엔드 → 보라/청록 (palette.foliage 와 같은 라인)
+  //   Nether=용암 → 주황/노랑/금
+  const zoneFlowerColors: Record<ZoneKey, number[]> = {
     spawn:     [FL_PK, FL_YL, FL_BL, 0xf5c8e0],
-    nether:    [0xa78bfa, 0x8080c0, FL_BL, 0xb098d0],
+    overworld: [FL_PK, 0xf5c8e0, 0xf0b0c8, FL_BL],     // Hub: 핑크/파스텔 야생화
     treasure:  [FL_YL, 0xf0d060, FL_PK, 0xf8e878],
-    beacon:    [0xf0c040, 0xe8a830, FL_PK, 0xf8d050],
-    overworld: [FL_PK, 0xf5c8e0, 0xf0b0c8, FL_BL],
+    nether:    [0xf0c040, 0xe8a830, FL_PK, 0xf8d050],  // 척박 + 주황 글로 톤
+    beacon:    [0xa78bfa, 0x8080c0, FL_BL, 0xb098d0],  // 엔드 보라/청록 톤
     bridge:    [FL_PK, FL_YL, FL_BL, 0xf5c8e0],
   };
 
@@ -224,9 +198,7 @@ export function buildFlowers(scene: THREE.Scene): void {
     const base = getH(sx, sz);
     if (base < 0) return;
 
-    const pal = getZonePalette(sx, sz);
-    const palKey = Object.entries(PALETTES).find(([, v]) => v === pal)?.[0] || 'bridge';
-    const colors = zoneFlowerColors[palKey] || zoneFlowerColors.bridge;
+    const colors = zoneFlowerColors[zoneKeyAt(sx, sz)];
 
     // Grass tufts -> BATCHED
     for (let j = 0; j < 2 + (i % 2); j++) {
@@ -279,16 +251,17 @@ export function buildMushrooms(): void {
 export function buildRocks(scene: THREE.Scene): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0 || p.w < 10) continue;
-    const pal = getZonePalette(p.x, p.z);
+    const pal = paletteAt(p.x, p.z);
+    const zk = zoneKeyAt(p.x, p.z);
     const isMain = p.w >= 14;
 
     // 존별 밀도 조절
     let count: number;
     if (!isMain) { count = 1; }
-    else if (pal === PALETTES.spawn) { count = 2; }       // 초원: 적게
-    else if (pal === PALETTES.beacon) { count = 8; }      // Nether: 많이 (척박)
-    else if (pal === PALETTES.overworld) { count = 3; }   // Peak: 정돈된 돌
-    else { count = 5; }                                    // Hub, Treasure: 보통
+    else if (zk === 'spawn')  { count = 2; }   // 초원: 적게
+    else if (zk === 'nether') { count = 8; }   // 척박, 많이
+    else if (zk === 'beacon') { count = 3; }   // Peak: 정돈된 돌
+    else { count = 5; }                         // Hub, Treasure
     const margin = isMain ? 2.0 : 1.0;
 
     for (let i = 0; i < count; i++) {
@@ -299,14 +272,14 @@ export function buildRocks(scene: THREE.Scene): void {
       if (nearZone(rx, rz, 4)) continue;
 
       const sz = 0.2 + seed * 0.25;
-      const rock = stdBox(sz, sz * 0.65, sz * (0.8 + seed2 * 0.4), pal.rockAccent);
+      const rock = stdBox(sz, sz * 0.65, sz * (0.8 + seed2 * 0.4), pal.terrainAccent);
       rock.position.set(rx, p.h + sz * 0.32, rz);
       rock.rotation.y = seed * Math.PI * 2;
       rock.castShadow = true;
       scene.add(rock);
 
       if (seed > 0.6) {
-        const peb = stdBox(sz * 0.4, sz * 0.3, sz * 0.4, pal.stone);
+        const peb = stdBox(sz * 0.4, sz * 0.3, sz * 0.4, pal.terrainSide);
         peb.position.set(rx + sz * 0.6, p.h + sz * 0.15, rz + sz * 0.3);
         scene.add(peb);
       }
@@ -347,10 +320,10 @@ export function buildFences(scene: THREE.Scene): void {
     if (p.h <= 0 || p.w < 10) continue;
     const hw = p.w / 2, hd = p.d / 2;
     const isMain = p.w >= 14;
-    const zk = getZonePalette(p.x, p.z);
+    const zk: ZoneKey = zoneKeyAt(p.x, p.z);
 
     // Spawn: 펜스 없음 (탁 트인 초원)
-    if (isMain && zk === PALETTES.spawn) continue;
+    if (isMain && zk === 'spawn') continue;
 
     const edges: { axis: 'x' | 'z'; dir: number; from: number; to: number }[] = [
       { axis: 'x', dir: 1, from: p.z - hd + 0.4, to: p.z + hd - 0.4 },
@@ -384,17 +357,17 @@ export function buildFences(scene: THREE.Scene): void {
         const ry = runsZ ? Math.PI / 2 : 0;
 
         if (isMain) {
-          if (zk === PALETTES.treasure) {
+          if (zk === 'treasure') {
             // Treasure: 나무 기둥만 (해안/부두 느낌)
             if (i % 2 === 0) ib('fp', postGeo, postMat, fx, p.h + 0.35, fz);
-          } else if (zk === PALETTES.beacon) {
+          } else if (zk === 'nether') {
             // Nether: 돌벽만 (어둡고 무거움), hedge 없음
             ib(h > 0.5 ? 'fw' : 'fwl', wallGeo, h > 0.5 ? wallMat : wallLtMat, fx, p.h + 0.15, fz, ry);
-          } else if (zk === PALETTES.overworld) {
+          } else if (zk === 'beacon') {
             // Peak: 낮은 돌 보더 듬성듬성 (젠 가든, 미니멀)
             if (i % 3 === 0) ib('fwl', wallGeo, wallLtMat, fx, p.h + 0.15, fz, ry);
           } else {
-            // Hub: 돌벽 + hedge (기존 스타일 유지)
+            // Hub(overworld) / bridge: 돌벽 + hedge (기존 스타일 유지)
             ib(h > 0.5 ? 'fw' : 'fwl', wallGeo, h > 0.5 ? wallMat : wallLtMat, fx, p.h + 0.15, fz, ry);
             if (h > 0.30) {
               const hedge = new THREE.Mesh(hedgeGeo, h > 0.7 ? hedgeDkMat : h > 0.5 ? hedgeMat : hedgeLtMat);
@@ -450,17 +423,17 @@ export function buildFences(scene: THREE.Scene): void {
       if (connX && connZ) continue;
 
       if (isMain) {
-        if (zk === PALETTES.treasure) {
+        if (zk === 'treasure') {
           // Treasure: 나무 기둥
           ib('fp', postGeo, postMat, cx, p.h + 0.35, cz);
-        } else if (zk === PALETTES.beacon) {
+        } else if (zk === 'nether') {
           // Nether: 코너 돌만
           ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
-        } else if (zk === PALETTES.overworld) {
+        } else if (zk === 'beacon') {
           // Peak: 코너 돌만 (미니멀)
           ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
         } else {
-          // Hub: 코너 돌 + hedge ball
+          // Hub(overworld) / bridge: 코너 돌 + hedge ball
           ib('fc', cornerGeo, cornerMat, cx, p.h + 0.21, cz);
           const ball = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.30, 0.32), hedgeMat);
           ball.position.set(cx, p.h + 0.57, cz);
@@ -546,8 +519,8 @@ export function buildPathDots(): void {
       const ph = getH(px, pz);
       if (ph < 0) continue;
 
-      const pal = getZonePalette(px, pz);
-      ib(`dot-${pal.rockAccent}`, dotGeo, stdMat(pal.rockAccent), px, ph + 0.03, pz);
+      const pal = paletteAt(px, pz);
+      ib(`dot-${pal.terrainAccent}`, dotGeo, stdMat(pal.terrainAccent), px, ph + 0.03, pz);
     }
   }
 }

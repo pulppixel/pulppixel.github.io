@@ -119,10 +119,10 @@ function buildSpawnDecor(scene: THREE.Scene): void {
     }
 }
 
-// --- Nether (0, -18, h=1.0) - Mystical ruins ---
+// --- Nether (-28, -40, h=8.0) - Mystical ruins ---
 
 function buildNetherDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -18, h = 4.0;
+    const cx = -28, cz = -40, h = 8.0;
     const PURPLE_DK = 0x504068, PURPLE_LT = 0x706088;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -184,7 +184,7 @@ function buildNetherDecor(scene: THREE.Scene): void {
     scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.8, 0.08), vineMat), cx - 3, h + 1.4, cz + 4.02));
 }
 
-// --- Treasure Isle (28, -40, h=2.5) - Tropical dock ---
+// --- Treasure Isle (28, -40, h=9.0) - Tropical dock ---
 
 function buildTreasureDecor(scene: THREE.Scene): void {
     const cx = 28, cz = -40, h = 9.0;
@@ -260,10 +260,10 @@ function buildTreasureDecor(scene: THREE.Scene): void {
     scene.add(setPos(stdBox(0.28, 0.06, 0.28, 0xa09060), cx - 6, h + 0.42, cz + 5));
 }
 
-// --- Beacon Peak (-28, -40, h=2.0) - Highland lookout ---
+// --- Beacon Peak (0, -58, h=12.0) - Highland lookout ---
 
 function buildBeaconDecor(scene: THREE.Scene): void {
-    const cx = -28, cz = -40, h = 8.0;
+    const cx = 0, cz = -58, h = 12.0;
     const AMBER = 0xa09060, STONE_A = 0x908070;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -365,10 +365,10 @@ function buildBeaconDecor(scene: THREE.Scene): void {
     archBar.position.set(cx + 5, h + 2.6, cz - 1); archBar.rotation.z = -0.08; scene.add(archBar);
 }
 
-// --- Overworld (0, -58, h=3.2) - Sacred garden ---
+// --- Overworld (0, -18, h=4.0) - Sacred garden ---
 
 function buildOverworldDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -58, h = 12.0;
+    const cx = 0, cz = -18, h = 4.0;
     const GARDEN_STONE = 0xa09898;
 
     // Phase 1: 기본 장식 (모바일 포함)

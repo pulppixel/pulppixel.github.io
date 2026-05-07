@@ -55,6 +55,8 @@ export interface GlowMatOpts {
   roughness?: number;            // 기본 0.5
   transparent?: boolean;         // 기본 false
   opacity?: number;              // 기본 1
+  doubleSide?: boolean;          // 기본 false (waterCurtain 같은 평면용)
+  depthWrite?: boolean;          // 기본 true (반투명 z-fighting 방지용 false 옵션)
 }
 
 export function glowMat(opts: GlowMatOpts): THREE.MeshStandardMaterial {
@@ -64,13 +66,17 @@ export function glowMat(opts: GlowMatOpts): THREE.MeshStandardMaterial {
   const ro = opts.roughness ?? 0.5;
   const tr = opts.transparent ? 1 : 0;
   const op = opts.opacity ?? 1;
-  const key = `${opts.color}|${em}|${ei}|${me}|${ro}|${tr}|${op}`;
+  const ds = opts.doubleSide ? 1 : 0;
+  const dw = opts.depthWrite === false ? 0 : 1;
+  const key = `${opts.color}|${em}|${ei}|${me}|${ro}|${tr}|${op}|${ds}|${dw}`;
   let m = _glowMatCache.get(key);
   if (!m) {
     m = new THREE.MeshStandardMaterial({
       color: opts.color, emissive: em, emissiveIntensity: ei,
       metalness: me, roughness: ro,
       transparent: opts.transparent ?? false, opacity: op,
+      side: opts.doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+      depthWrite: opts.depthWrite ?? true,
     });
     _glowMatCache.set(key, m);
   }

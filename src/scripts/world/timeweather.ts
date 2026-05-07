@@ -1,6 +1,7 @@
 // Time-of-day + weather: real-time clock auto mode + manual override + rain/snow particles
 import * as THREE from 'three';
 import { perf } from '../core/performance';
+import { ZONE_PALETTE, zoneKeyAt } from '../core/palette';
 
 export type TimeName = 'auto' | 'dawn' | 'day' | 'sunset' | 'night';
 export type WeatherName = 'clear' | 'rain' | 'snow';
@@ -252,12 +253,23 @@ export function createTimeWeather(refs: EnvironmentRefs): TimeWeather {
     if (wMat.uniforms) { setC(wMat.uniforms.uDeep.value, p.waterDeep); setC(wMat.uniforms.uShallow.value, p.waterShallow); }
   }
 
+  // Zone ambient tint: applyPreset이 fog 색을 매 프레임 reset한 직후 살짝 zone 톤으로 lerp.
+  // overworld/spawn처럼 neutral 톤 zone에선 거의 변화 없고, nether(붉은)/beacon(시안)에서 분위기.
+  const _zoneTint = new THREE.Color();
+  function applyZoneTint(camPos: THREE.Vector3): void {
+    const k = zoneKeyAt(camPos.x, camPos.z);
+    _zoneTint.setHex(ZONE_PALETTE[k].ambientTint);
+    const fog = refs.scene.fog as THREE.FogExp2;
+    if (fog) fog.color.lerp(_zoneTint, 0.15);
+  }
+
   return {
     update(dt, camPos) {
       elapsed += dt;
       if (timeMode === 'auto') targetP = computeTarget();
       currentP = blendP(currentP, targetP, Math.min(1, (transitionSpeed > 0 ? transitionSpeed : 3.0) * dt));
       applyPreset(currentP);
+      if (camPos) applyZoneTint(camPos);
 
       rain.group.visible = weather === 'rain';
       snow.group.visible = weather === 'snow';

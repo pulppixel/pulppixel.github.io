@@ -134,8 +134,8 @@ function buildNetherDecor(scene: THREE.Scene): void {
     stonePillar(scene, cx - 8, h, cz - 3, 1.8, PURPLE_DK);
     stonePillar(scene, cx + 8, h, cz - 3, 1.2, PURPLE_DK);
 
-    const runeMat = new THREE.MeshStandardMaterial({
-        color: 0xa78bfa, emissive: 0xa78bfa, emissiveIntensity: 0.15,
+    const runeMat = glowMat({
+        color: 0xa78bfa, emissiveIntensity: 0.15,
         metalness: 0.1, roughness: 0.8, transparent: true, opacity: 0.4,
     });
     const runeGeo = new THREE.BoxGeometry(4.0, 0.02, 0.12);
@@ -234,7 +234,7 @@ function buildTreasureDecor(scene: THREE.Scene): void {
 
     scene.add(setPos(stdBox(1.8, 0.4, 1.8, LH_S), cx + 6, h + 0.2, cz - 4));
     const t1 = stdBox(1.4, 2.5, 1.4, LH_S); t1.position.set(cx + 6, h + 1.65, cz - 4); t1.castShadow = true; scene.add(t1);
-    const slitMat = new THREE.MeshStandardMaterial({ color: 0x6ee7b7, emissive: 0x6ee7b7, emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.6, transparent: true, opacity: 0.4 });
+    const slitMat = glowMat({ color: 0x6ee7b7, emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.6, transparent: true, opacity: 0.4 });
     scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.5, 1.42), slitMat), cx + 6, h + 2.0, cz - 4));
     scene.add(setPos(new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.5, 0.12), slitMat), cx + 6, h + 2.0, cz - 4));
     const t2 = stdBox(1.1, 2.0, 1.1, LH_S); t2.position.set(cx + 6, h + 3.9, cz - 4); t2.castShadow = true; scene.add(t2);
@@ -249,7 +249,7 @@ function buildTreasureDecor(scene: THREE.Scene): void {
     const spire = stdBox(0.12, 0.7, 0.12, LH_W); spire.position.set(cx + 6, h + 7.72, cz - 4); spire.castShadow = true; scene.add(spire);
     scene.add(setPos(new THREE.PointLight(0x6ee7b7, 0.8, 16), cx + 6, h + 7.5, cz - 4));
 
-    const coinMat = new THREE.MeshStandardMaterial({ color: 0xf5c870, emissive: 0xf5c870, emissiveIntensity: 0.12, metalness: 0.4, roughness: 0.5 });
+    const coinMat = glowMat({ color: 0xf5c870, emissiveIntensity: 0.12, metalness: 0.4, roughness: 0.5 });
     const coinGeo = new THREE.BoxGeometry(0.22, 0.04, 0.22);
     for (const [gx, gz] of [[-3, -2], [4, 1], [-5, -5], [2, -3], [6, 2], [-2, 3]] as [number, number][]) {
         scene.add(setPos(new THREE.Mesh(coinGeo, coinMat), cx + gx, h + 0.02, cz + gz));
@@ -324,8 +324,8 @@ function buildBeaconDecor(scene: THREE.Scene): void {
     spGem.position.set(cx + 5, h + 7.8, cz - 4); spGem.rotation.y = Math.PI / 4; scene.add(spGem);
     scene.add(setPos(new THREE.PointLight(CRYS, 0.8, 16), cx + 5, h + 8.2, cz - 4));
 
-    const fragMat = new THREE.MeshStandardMaterial({
-        color: CRYS, emissive: CRYS, emissiveIntensity: 0.35,
+    const fragMat = glowMat({
+        color: CRYS, emissiveIntensity: 0.35,
         metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.8,
     });
     const fragGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
@@ -342,8 +342,8 @@ function buildBeaconDecor(scene: THREE.Scene): void {
         f.position.set(fx, fy, fz); f.rotation.set(fx * 0.7, fy * 0.3, fz * 0.5); scene.add(f);
     }
 
-    const darkTileMat = new THREE.MeshStandardMaterial({
-        color: CRYS, emissive: CRYS, emissiveIntensity: 0.04,
+    const darkTileMat = glowMat({
+        color: CRYS, emissiveIntensity: 0.04,
         metalness: 0.2, roughness: 0.7, transparent: true, opacity: 0.1,
     });
     const darkTileGeo = new THREE.BoxGeometry(2.0, 0.02, 2.0);
@@ -394,8 +394,8 @@ function buildOverworldDecor(scene: THREE.Scene): void {
     woodBeam(scene, benchX - 0.55, h + 0.12, benchZ, 0.1, 0.25, 0.1);
     woodBeam(scene, benchX + 0.55, h + 0.12, benchZ, 0.1, 0.25, 0.1);
 
-    const petalMat = new THREE.MeshStandardMaterial({
-        color: 0xf5a8c0, emissive: 0xf5a8c0, emissiveIntensity: 0.05,
+    const petalMat = glowMat({
+        color: 0xf5a8c0, emissiveIntensity: 0.05,
         metalness: 0.05, roughness: 0.9, transparent: true, opacity: 0.5,
     });
     const petalGeo = new THREE.BoxGeometry(0.12, 0.01, 0.08);
@@ -450,7 +450,7 @@ function buildOverworldDecor(scene: THREE.Scene): void {
     basin.position.set(cx - 6, h + 0.22, cz + 1); scene.add(basin);
     const basinWater = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 0.04, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x4090c0, emissive: 0x4090c0, emissiveIntensity: 0.1, metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.6 }),
+        glowMat({ color: 0x4090c0, emissiveIntensity: 0.1, metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.6 }),
     );
     basinWater.position.set(cx - 6, h + 0.46, cz + 1); scene.add(basinWater);
     scene.add(setPos(stdBox(0.06, 0.5, 0.06, 0x6a8a4a), cx - 6.5, h + 0.55, cz + 1));
@@ -470,8 +470,8 @@ function buildOverworldDecor(scene: THREE.Scene): void {
         b.position.set(bx, by, bz); b.castShadow = true; scene.add(b);
     }
 
-    const gravelMat = new THREE.MeshStandardMaterial({
-        color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.03,
+    const gravelMat = glowMat({
+        color: 0xfbbf24, emissiveIntensity: 0.03,
         metalness: 0.05, roughness: 0.9, transparent: true, opacity: 0.08,
     });
     const gravelGeo = new THREE.BoxGeometry(8.0, 0.015, 0.08);
@@ -483,9 +483,9 @@ function buildOverworldDecor(scene: THREE.Scene): void {
     const fX = cx - 9, fZ = cz;
     const waterCurtain = new THREE.Mesh(
         new THREE.PlaneGeometry(2.5, h),
-        new THREE.MeshStandardMaterial({
+        glowMat({
             color: 0x4898c0, emissive: 0x2a6080, emissiveIntensity: 0.08,
-            transparent: true, opacity: 0.18, side: THREE.DoubleSide,
+            transparent: true, opacity: 0.18, doubleSide: true,
             depthWrite: false, metalness: 0.1, roughness: 0.3,
         }),
     );

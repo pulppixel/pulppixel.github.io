@@ -4,6 +4,8 @@
 // 새 prop 만들 때: ZONE_PALETTE.nether.landmarkPrimary 같이 참조.
 // 새 존 추가하려면: ZONE_PALETTE에 키 하나 추가.
 
+import { ZONE_CENTERS } from './data';
+
 export interface ZonePalette {
     // --- Terrain (플랫폼 상단/측면/잡블록) ---
     terrainTop: number;      // 상단 주 색 (잔디/모래/네더랙/엔드스톤)
@@ -177,12 +179,10 @@ export type ZoneKey = keyof typeof ZONE_PALETTE;
 // 기존 terrain.ts의 getZonePalette(sx, sz) 대체 가능. 단 기존 PALETTES 참조
 // 코드가 있을 수 있으므로 마이그레이션 때 한 번에 정리 (Phase 1).
 
-const ZONE_BOUNDS: { key: ZoneKey; cx: number; cz: number; r: number }[] = [
-    { key: 'overworld', cx: 0,   cz: -18, r: 14 },
-    { key: 'treasure',  cx: 28,  cz: -40, r: 14 },
-    { key: 'nether',    cx: -28, cz: -40, r: 14 },
-    { key: 'beacon',    cx: 0,   cz: -58, r: 14 },
-];
+const ZONE_RADIUS = 14;
+const ZONE_BOUNDS: { key: ZoneKey; cx: number; cz: number; r: number }[] = (
+    ['overworld', 'treasure', 'nether', 'beacon'] as const
+).map(k => ({ key: k, cx: ZONE_CENTERS[k].x, cz: ZONE_CENTERS[k].z, r: ZONE_RADIUS }));
 
 /** Nearest zone key at world (x,z). Spawn < 10 from origin, else bridge fallback. */
 export function zoneKeyAt(x: number, z: number): ZoneKey {

@@ -30,15 +30,32 @@ export interface Platform {
   h: number;
 }
 
+// --- Zone centers (canonical) ---
+//
+// 모든 zone-aware 시스템(zonedetails / zoneparticles / palette.ZONE_BOUNDS / COMPANIES /
+// CAMPFIRE / WATERFALL / FIREFLY_HOMES)이 여기를 참조. 좌표/높이 변경 시 한 곳만 고치면 전파됨.
+// h = PLATFORMS의 메인 아일랜드 윗면 (데코 베이스).
+
+export const ZONE_CENTERS = {
+  spawn:     { x: 0,   z: 0,   h: 1.0 },
+  overworld: { x: 0,   z: -18, h: 4.0 },
+  treasure:  { x: 28,  z: -40, h: 9.0 },
+  nether:    { x: -28, z: -40, h: 8.0 },
+  beacon:    { x: 0,   z: -58, h: 12.0 },
+} as const;
+
+export type ZoneCenterKey = keyof typeof ZONE_CENTERS;
+
 // --- Zones ---
 
 // 존 시그니처 컬러 = pillar light + ring + UI 라벨 + zone 주변 pointLight에 전파
-// 각 존의 바이옴 아이덴티티에 맞춤 (palette.ts의 signature와 일치해야 함)
+// 각 존의 바이옴 아이덴티티에 맞춤 (palette.ts의 signature와 일치해야 함).
+// position은 ZONE_CENTERS에서 derive — zone 위치는 거기 한 곳에서 관리.
 export const COMPANIES: CompanyData[] = [
-  { name: 'Overworld (19-22)',  color: 0x7fb852, position: { x: 0,   z: -18 } },  // 잔디 초록
-  { name: 'Treasure Isle (23)', color: 0xfbbf24, position: { x: 28,  z: -40 } },  // 보물 금색
-  { name: 'The Nether (25-26)', color: 0xff5a3a, position: { x: -28, z: -40 } },  // 용암 오렌지
-  { name: 'Beacon Peak (26)',   color: 0x8ef7d6, position: { x: 0,   z: -58 } },  // 비콘 청록
+  { name: 'Overworld (19-22)',  color: 0x7fb852, position: { x: ZONE_CENTERS.overworld.x, z: ZONE_CENTERS.overworld.z } },  // 잔디 초록
+  { name: 'Treasure Isle (23)', color: 0xfbbf24, position: { x: ZONE_CENTERS.treasure.x,  z: ZONE_CENTERS.treasure.z  } },  // 보물 금색
+  { name: 'The Nether (25-26)', color: 0xff5a3a, position: { x: ZONE_CENTERS.nether.x,    z: ZONE_CENTERS.nether.z    } },  // 용암 오렌지
+  { name: 'Beacon Peak (26)',   color: 0x8ef7d6, position: { x: ZONE_CENTERS.beacon.x,    z: ZONE_CENTERS.beacon.z    } },  // 비콘 청록
 ];
 
 // --- Platforms ---
@@ -109,34 +126,39 @@ export function getGroundHeight(x: number, z: number): number {
 
 // --- World landmark positions ---
 //
-// Single source of truth for systems that need to anchor effects/particles
-// to world locations. If a landmark mesh moves in zones.ts/zonedetails.ts,
-// update the constant here once instead of hunting through particles/environment/etc.
+// 모든 zone-tied 좌표는 ZONE_CENTERS + offset으로 표현. zone 위치 바뀌면 자동 따라옴.
 
-/** Beacon Peak sacred-tree campfire flame position. zones.ts builds the fire mesh here. */
-export const CAMPFIRE = { x: 0, y: 12.5, z: -60 };
+const _be = ZONE_CENTERS.beacon;
+const _ow = ZONE_CENTERS.overworld;
+const _tr = ZONE_CENTERS.treasure;
+const _ne = ZONE_CENTERS.nether;
 
-/** Beacon Peak waterfall (Overworld decor). zonedetails.ts puts the curtain here. */
+/** Beacon Peak sacred-tree campfire flame. zones.ts buildBeaconLandmark 의 fire mesh와 동기화 (cz - 2 offset). */
+export const CAMPFIRE = { x: _be.x, y: _be.h + 0.5, z: _be.z - 2 };
+
+/** Overworld sacred-garden waterfall. zonedetails.ts buildOverworldDecor의 waterCurtain mesh와 동기화 (cx - 9, cz). */
 export const WATERFALL = {
-  x: -9, z: -58,
-  top: 12.0, bottom: -1.0,
+  x: _ow.x - 9, z: _ow.z,
+  top: _ow.h, bottom: -1.0,
   width: 2.5,
 };
 
-/** Firefly hover spots. Y is derived (getGroundHeight + 0.8) at runtime. */
+/** Firefly hover spots. Y는 getGroundHeight + 0.8로 런타임 계산. spawn 외 zone offset 기반. */
 export const FIREFLY_HOMES: { x: number; z: number }[] = [
-  // Spawn
+  // Spawn (고정)
   { x: -3, z: 2 }, { x: 4, z: -2 },
-  // Hub
-  { x: -6, z: -16 }, { x: 5, z: -20 }, { x: 0, z: -14 },
+  // Hub (overworld)
+  { x: _ow.x - 6, z: _ow.z + 2 }, { x: _ow.x + 5, z: _ow.z - 2 }, { x: _ow.x, z: _ow.z + 4 },
   // Treasure
-  { x: 26, z: -38 }, { x: 32, z: -42 },
+  { x: _tr.x - 2, z: _tr.z + 2 }, { x: _tr.x + 4, z: _tr.z - 2 },
   // Nether
-  { x: -30, z: -38 }, { x: -24, z: -42 },
+  { x: _ne.x - 2, z: _ne.z + 2 }, { x: _ne.x + 4, z: _ne.z - 2 },
   // Beacon Peak
-  { x: -4, z: -56 }, { x: 5, z: -60 }, { x: 0, z: -54 },
-  // Stepping stones
-  { x: 14, z: -28 }, { x: -14, z: -28 }, { x: 0, z: -35 },
+  { x: _be.x - 4, z: _be.z + 2 }, { x: _be.x + 5, z: _be.z - 2 }, { x: _be.x, z: _be.z + 4 },
+  // Bridge midpoints (overworld → other zones 중간)
+  { x: (_ow.x + _tr.x) / 2, z: (_ow.z + _tr.z) / 2 },
+  { x: (_ow.x + _ne.x) / 2, z: (_ow.z + _ne.z) / 2 },
+  { x: (_ow.x + _be.x) / 2, z: (_ow.z + _be.z) / 2 },
 ];
 
 export interface CloudDef { x: number; y: number; z: number; scale: number; }

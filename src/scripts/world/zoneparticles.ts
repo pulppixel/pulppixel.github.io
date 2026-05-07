@@ -1,6 +1,8 @@
 // Per-zone ambient particles: wisp, firefly, orbit, petal
 // Proximity-based activation — 가까이 가면 파티클이 나타남
 import * as THREE from 'three';
+import { ZONE_CENTERS } from '../core/data';
+import { ZONE_PALETTE } from '../core/palette';
 import { perf } from '../core/performance';
 
 export interface ZoneParticles {
@@ -21,15 +23,17 @@ interface ZoneCloud {
 }
 
 export function createZoneParticles(scene: THREE.Scene): ZoneParticles {
+    // Type-zone 매핑은 테마에 묶임:
+    //   petal  → Overworld (sacred garden 벚꽃잎)
+    //   firefly→ Treasure  (동전 반짝임)
+    //   orbit  → Nether    (크리스탈 첨탑 공전, orbitOff로 첨탑 위치 보정)
+    //   wisp   → Beacon    (천상의 빛 상승)
+    // 색은 palette의 zone 토큰에서 가져옴 → palette 바꾸면 자동 전파.
     const DEFS = [
-        // Pink Hub — slowly rising wisps (핑크빛 부유 입자)
-        { cx: 0, cz: -18, h: 4.0, color: 0xff6b9d, type: 'wisp' as const, count: Math.round(35 * perf.particleMul), size: 0.07, orbitOff: [0, 0] },
-        // Green Treasure — fireflies (반딧불이 랜덤 워크)
-        { cx: 28, cz: -40, h: 9.0, color: 0x6ee7b7, type: 'firefly' as const, count: Math.round(30 * perf.particleMul), size: 0.06, orbitOff: [0, 0] },
-        // Purple Nether — orbiting wisps around crystal spire (크리스탈 첨탑 주변 공전)
-        { cx: -28, cz: -40, h: 8.0, color: 0xa78bfa, type: 'orbit' as const, count: Math.round(35 * perf.particleMul), size: 0.065, orbitOff: [5, -4] },
-        // Yellow Beacon — falling cherry blossom petals (벚꽃잎 낙하)
-        { cx: 0, cz: -58, h: 12.0, color: 0xfbbf24, type: 'petal' as const, count: Math.round(40 * perf.particleMul), size: 0.1, orbitOff: [0, 0] },
+        { ...ZONE_CENTERS.overworld, color: ZONE_PALETTE.overworld.foliageAlt,    type: 'petal'   as const, count: Math.round(40 * perf.particleMul), size: 0.1,   orbitOff: [0, 0]  as const },
+        { ...ZONE_CENTERS.treasure,  color: ZONE_PALETTE.treasure.signature,      type: 'firefly' as const, count: Math.round(30 * perf.particleMul), size: 0.06,  orbitOff: [0, 0]  as const },
+        { ...ZONE_CENTERS.nether,    color: ZONE_PALETTE.nether.landmarkGlow,     type: 'orbit'   as const, count: Math.round(35 * perf.particleMul), size: 0.065, orbitOff: [5, -4] as const },
+        { ...ZONE_CENTERS.beacon,    color: ZONE_PALETTE.beacon.signature,        type: 'wisp'    as const, count: Math.round(35 * perf.particleMul), size: 0.07,  orbitOff: [0, 0]  as const },
     ];
 
     const clouds: ZoneCloud[] = [];
@@ -41,9 +45,9 @@ export function createZoneParticles(scene: THREE.Scene): ZoneParticles {
 
         for (let i = 0; i < n; i++) {
             const i3 = i * 3;
-            pos[i3] = d.cx + (Math.random() - 0.5) * 14;
+            pos[i3] = d.x + (Math.random() - 0.5) * 14;
             pos[i3 + 1] = d.h + 0.5 + Math.random() * 5;
-            pos[i3 + 2] = d.cz + (Math.random() - 0.5) * 10;
+            pos[i3 + 2] = d.z + (Math.random() - 0.5) * 10;
 
             switch (d.type) {
                 case 'wisp':
@@ -71,7 +75,7 @@ export function createZoneParticles(scene: THREE.Scene): ZoneParticles {
         geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
 
         const mat = new THREE.PointsMaterial({
-            color: d.type === 'petal' ? 0xf5b8c8 : d.color,
+            color: d.color,
             size: d.size,
             transparent: true,
             opacity: 0,
@@ -84,13 +88,13 @@ export function createZoneParticles(scene: THREE.Scene): ZoneParticles {
         scene.add(points);
 
         clouds.push({
-            cx: d.cx, cz: d.cz, h: d.h,
+            cx: d.x, cz: d.z, h: d.h,
             color: d.color,
             points, pos, vel, count: n,
             type: d.type,
             range: 14,
-            orbitCx: d.cx + d.orbitOff[0],
-            orbitCz: d.cz + d.orbitOff[1],
+            orbitCx: d.x + d.orbitOff[0],
+            orbitCz: d.z + d.orbitOff[1],
         });
     }
 

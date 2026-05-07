@@ -3,8 +3,9 @@
 // Purely visual (no collision changes). Add density and architectural interest.
 // v2: perf tier -> Phase 2 구조물 + PointLight 전부 스킵 (GPU 부하 제거)
 import * as THREE from 'three';
-import { PLATFORMS } from '../core/data';
-import { stdBox, glowBox, stdMat, setPos } from '../core/helpers';
+import { PLATFORMS, ZONE_CENTERS } from '../core/data';
+import { ZONE_PALETTE } from '../core/palette';
+import { stdBox, glowBox, glowMat, stdMat, setPos } from '../core/helpers';
 import { perf } from '../core/performance';
 
 // --- Water edge: reef ring + foam strips around each platform ---
@@ -122,7 +123,7 @@ function buildSpawnDecor(scene: THREE.Scene): void {
 // --- Nether (-28, -40, h=8.0) - Mystical ruins ---
 
 function buildNetherDecor(scene: THREE.Scene): void {
-    const cx = -28, cz = -40, h = 8.0;
+    const { x: cx, z: cz, h } = ZONE_CENTERS.nether;
     const PURPLE_DK = 0x504068, PURPLE_LT = 0x706088;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -187,7 +188,7 @@ function buildNetherDecor(scene: THREE.Scene): void {
 // --- Treasure Isle (28, -40, h=9.0) - Tropical dock ---
 
 function buildTreasureDecor(scene: THREE.Scene): void {
-    const cx = 28, cz = -40, h = 9.0;
+    const { x: cx, z: cz, h } = ZONE_CENTERS.treasure;
 
     // Phase 1: 기본 장식 (모바일 포함)
     const dockY = h + 0.02;
@@ -263,7 +264,7 @@ function buildTreasureDecor(scene: THREE.Scene): void {
 // --- Beacon Peak (0, -58, h=12.0) - Highland lookout ---
 
 function buildBeaconDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -58, h = 12.0;
+    const { x: cx, z: cz, h } = ZONE_CENTERS.beacon;
     const AMBER = 0xa09060, STONE_A = 0x908070;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -368,7 +369,7 @@ function buildBeaconDecor(scene: THREE.Scene): void {
 // --- Overworld (0, -18, h=4.0) - Sacred garden ---
 
 function buildOverworldDecor(scene: THREE.Scene): void {
-    const cx = 0, cz = -18, h = 4.0;
+    const { x: cx, z: cz, h } = ZONE_CENTERS.overworld;
     const GARDEN_STONE = 0xa09898;
 
     // Phase 1: 기본 장식 (모바일 포함)
@@ -503,12 +504,12 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
         color: number;
     }
 
-    const ZONES: ZDef[] = [
-        { x: 0, z: -18, w: 18, d: 14, h: 4.0, color: 0xff6b9d },
-        { x: 28, z: -40, w: 18, d: 14, h: 9.0, color: 0x6ee7b7 },
-        { x: -28, z: -40, w: 18, d: 14, h: 8.0, color: 0xa78bfa },
-        { x: 0, z: -58, w: 18, d: 14, h: 12.0, color: 0xfbbf24 },
-    ];
+    // Boundary gem/center 색은 zone signature (= pillar light + UI 라벨과 같은 브랜드 톤).
+    const ZONES: ZDef[] = (['overworld', 'treasure', 'nether', 'beacon'] as const).map(k => ({
+        x: ZONE_CENTERS[k].x, z: ZONE_CENTERS[k].z, h: ZONE_CENTERS[k].h,
+        w: 18, d: 14,
+        color: ZONE_PALETTE[k].signature,
+    }));
 
     const pillarBaseGeo = new THREE.BoxGeometry(0.5, 0.15, 0.5);
     const pillarBodyGeo = new THREE.BoxGeometry(0.28, 1.6, 0.28);
@@ -517,19 +518,22 @@ export function buildZoneBoundaries(scene: THREE.Scene): void {
     const stoneMat = stdMat(0x706868);
     const stoneCapMat = stdMat(0x808078);
 
+    // 모바일: pointLights 없어 emissive 보정 (0.5 → 0.8)
+    const gemEi = perf.pointLights ? 0.5 : 0.8;
+
     for (const z of ZONES) {
         const hw = z.w / 2, hd = z.d / 2;
 
-        const gemMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color,
-            emissiveIntensity: perf.pointLights ? 0.5 : 0.8, // 모바일: emissive 보정 (라이트 없으니)
-            metalness: 0.2, roughness: 0.5, transparent: true, opacity: 0.9,
+        const gemMat = glowMat({
+            color: z.color, emissiveIntensity: gemEi,
+            transparent: true, opacity: 0.9,
         });
 
-        // 센터 메달리온
-        const centerMat = new THREE.MeshStandardMaterial({
-            color: z.color, emissive: z.color, emissiveIntensity: 0.08,
-            metalness: 0.15, roughness: 0.7, transparent: true, opacity: 0.2,
+        // 센터 메달리온 — 옅게 깔리는 시그니처 컬러 패치
+        const centerMat = glowMat({
+            color: z.color, emissiveIntensity: 0.08,
+            metalness: 0.15, roughness: 0.7,
+            transparent: true, opacity: 0.2,
         });
         const med = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.03, 2.2), centerMat);
         med.position.set(z.x, z.h + 0.02, z.z); med.rotation.y = Math.PI / 4; scene.add(med);

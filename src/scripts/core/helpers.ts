@@ -36,12 +36,45 @@ export function stdBox(w: number, h: number, d: number, color: number): THREE.Me
 export function glowBox(w: number, h: number, d: number, color: number, ei = 0.3): THREE.Mesh {
   return new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshStandardMaterial({
-        color, emissive: color, emissiveIntensity: ei,
-        metalness: 0.2, roughness: 0.5,
-        transparent: true, opacity: 0.9,
-      }),
+      glowMat({ color, emissiveIntensity: ei, transparent: true, opacity: 0.9 }),
   );
+}
+
+// --- glowMat: cached emissive material ---
+//
+// boundary gem / Phase-2 발광 디테일에서 `new MeshStandardMaterial` 직접 생성 금지.
+// 같은 color+settings 조합은 한 인스턴스를 공유 → draw call 합쳐짐 + GC 부담 감소.
+
+const _glowMatCache = new Map<string, THREE.MeshStandardMaterial>();
+
+export interface GlowMatOpts {
+  color: number;
+  emissive?: number;             // 기본: color
+  emissiveIntensity?: number;    // 기본 0.3
+  metalness?: number;            // 기본 0.2
+  roughness?: number;            // 기본 0.5
+  transparent?: boolean;         // 기본 false
+  opacity?: number;              // 기본 1
+}
+
+export function glowMat(opts: GlowMatOpts): THREE.MeshStandardMaterial {
+  const em = opts.emissive ?? opts.color;
+  const ei = opts.emissiveIntensity ?? 0.3;
+  const me = opts.metalness ?? 0.2;
+  const ro = opts.roughness ?? 0.5;
+  const tr = opts.transparent ? 1 : 0;
+  const op = opts.opacity ?? 1;
+  const key = `${opts.color}|${em}|${ei}|${me}|${ro}|${tr}|${op}`;
+  let m = _glowMatCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({
+      color: opts.color, emissive: em, emissiveIntensity: ei,
+      metalness: me, roughness: ro,
+      transparent: opts.transparent ?? false, opacity: op,
+    });
+    _glowMatCache.set(key, m);
+  }
+  return m;
 }
 
 export function facePlane(w: number, h: number, color: number, opacity = 1): THREE.Mesh {

@@ -1,471 +1,99 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import Testimonials from '../components/Testimonials.astro';
-import Footer from '../components/Footer.astro';
-
-const projects = [
-  {
-    slug: 'eterna',
-    title: 'ETERNA - 아고라 시스템',
-    period: '2025.11 - 2026.04',
-    description: '디스코드형 아고라 시스템. Service / Repository / State 3계층 설계. 소프트런칭 소셜 기능 전체 단독 구현.',
-    tags: ['Unity', 'C#', 'R3', 'UniTask', 'Tencent IM', 'FlatBuffers', 'Whisper', 'UaaL'],
-    badge: 'ARCHITECT',
-    badgeColor: 'green' as const,
-  },
-  {
-    slug: 'reiw',
-    title: 'REIW - 3D 메타버스',
-    period: '2025.06 - 2025.11',
-    description: 'Tencent IM 채팅을 메타버스 규모로 재구성. 6면 스냅 하우징 프로토타입, NPC 퀘스트, DataTable 통합 에디터 툴.',
-    tags: ['Unity', 'C#', 'R3', 'UniTask', 'VContainer', 'FlatBuffers'],
-  },
-  {
-    slug: 'iw-zombie',
-    title: 'IW Zombie - 팀 서바이벌',
-    period: '2025.02 - 2025.06',
-    description: '5단계 게임 루프를 Server FSM + BT 기반 AI로 구현. Tencent IM 첫 도입, NetworkObjectPool, enum 기반 치트 시스템.',
-    tags: ['Unity', 'C#', 'Netcode (NGO)', 'Tencent IM', 'Behavior Tree'],
-  },
-  {
-    slug: 'stelsi-wallet',
-    title: 'STELSI Wallet',
-    period: '2023.02 - 2023.08',
-    description: 'Unity → Flutter 스택 전환을 MVP 비교로 제안. web3dart + ABI로 ERC-20 / NFT 연동. App Store / Google Play 출시.',
-    tags: ['Flutter', 'Dart', 'web3dart', 'BIP39 / BIP44', 'SecureStorage'],
-    badge: 'SOLO',
-    badgeColor: 'green' as const,
-  },
-  {
-    slug: 'stelsi',
-    title: 'STELSI - UE5 메타버스',
-    period: '2023.08 - 2024.12',
-    description: 'UE5 메타버스 중간 투입. Bink2 영상 재생, SceneCapture2D 6면 큐브맵 → equirectangular 360 파노라마 툴, 외주 관리.',
-    tags: ['Unreal Engine 5', 'C++', 'Bink2'],
-  },
-  {
-    slug: 'frenzy-circle',
-    title: 'Nine to Six - 텔레그램 미니 게임',
-    period: '2024.06 - 2024.10',
-    description: 'TON 생태계 기반 텔레그램 WebGL 미니 게임. .jslib JS interop 로그인, 데이터 기반 코인 밈 테마, 월·주·일 랭킹.',
-    tags: ['Unity', 'C#', 'WebGL', 'RESTful API'],
-  },
-  {
-    slug: 'haul',
-    title: 'HAUL - 2D PvPvE Extraction',
-    period: '2025.10 - Present',
-    description: 'Server-authoritative 멀티플레이어 게임. Client-side prediction, Server reconciliation, NPC AI를 1인 설계 / 구현.',
-    tags: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],
-    badge: 'IN PROGRESS',
-    badgeColor: 'yellow' as const,
-  },
-  {
-    slug: 'nomads-planet',
-    title: 'Nomads Planet',
-    period: '2023.06 - 2023.09',
-    description: 'Unity Netcode + Vivox 기반 차량 메타버스. 3-Singleton 아키텍처, Matchmaker / Backfiller / Multiplay 전 단계 1인 구현.',
-    tags: ['Unity', 'C#', 'Netcode', 'Vivox', 'Matchmaker'],
-    badge: '수상',
-    badgeColor: 'purple' as const,
-  },
-  {
-    slug: 'math-master',
-    title: 'Math Master (일프로연산)',
-    period: '2021.06 - 2022.06',
-    description: '초등 연산 라이브 서비스. Fraction struct 도메인 타입, Recursive Backtracker + A* 미로, 자체 Tween 라이브러리(BTweener).',
-    tags: ['Unity', 'C#', 'UGUI', 'UniRx'],
-    badge: 'SKT ZEM',
-    badgeColor: 'green' as const,
-  },
-  {
-    slug: 'spody',
-    title: 'SPODY - XR 유아 교육',
-    period: '2020.01 - 2021.06',
-    description: 'XR 양산 템플릿 구축. OpenCV 자동 캘리브레이션으로 현장 세팅을 비개발자가 직접 가능하게. 25+ 콘텐츠 납품.',
-    tags: ['Unity', 'C#', 'OpenCV', 'Kinect', 'ASTRA'],
-    badge: 'SOLO',
-    badgeColor: 'green' as const,
-  },
-  {
-    slug: 'ruby-adventure',
-    title: '루비의 모험',
-    period: '2019.09 - 2019.11',
-    description: '1인 개발 3D 액션 RPG. state / nextState 이중 변수 FSM + 9개 SMB, 4종 스킬, NavMesh 기반 AI. 71개 스크립트.',
-    tags: ['Unity', 'C#', 'NavMesh', 'Timeline', 'StateMachineBehaviour'],
-    badge: '우수상',
-    badgeColor: 'purple' as const,
-  },
-];
-
-const timeline = [
-  {
-    company: 'VOYAGER',
-    role: 'Unity Client Engineer / 서브 리드',
-    period: '2025.02 - 2026.04 / 1년 3개월',
-    projects: [
-      'ETERNA - 실시간 커뮤니티 플랫폼 (아고라 시스템 전담)',
-      'REIW - 3D 메타버스 (채팅 재설계, 하우징, NPC 퀘스트)',
-      'IW Zombie - 팀 서바이벌 (게임 루프 전반, 일본 출시 예정)',
-    ],
-    current: true,
-  },
-  {
-    company: 'VERS.',
-    role: 'Unity / Flutter / UE5 Client Developer',
-    period: '2022.06 - 2024.12 / 2년 7개월',
-    projects: [
-      'STELSI Wallet - 이더리움 지갑 앱 (Flutter 1인 개발, App Store / Google Play 출시)',
-      'STELSI - UE5 메타버스 (Bink2 영상, 360 파노라마 툴, 외주 관리)',
-      'Nine to Six - 텔레그램 미니 게임 (TON 생태계, WebGL)',
-    ],
-  },
-  {
-    company: 'Math Master',
-    role: 'Unity Client Developer',
-    period: '2021.06 - 2022.06 / 1년 1개월',
-    projects: [
-      '일프로연산 - 초등 연산 라이브 서비스 (SKT ZEM 기본앱 / 구글 창구 선정)',
-      'Fraction struct 도메인 타입 + 미로 알고리즘 + 자체 Tween 라이브러리',
-    ],
-  },
-  {
-    company: 'VVR',
-    role: 'Unity Client Developer (XR) / 초기 1인',
-    period: '2020.01 - 2021.06 / 1년 6개월',
-    projects: [
-      '스포디 - XR 유아 교육 콘텐츠 (25+ 콘텐츠 납품, 인도네시아 수출)',
-      'XR 양산 템플릿 구축 + OpenCV 자동 캘리브레이션',
-    ],
-  },
-];
-
-const education = [
-  {
-    school: '홍익대학교',
-    major: '게임학부 게임소프트웨어전공',
-    period: '2014 - 2020',
-  },
-  {
-    school: '백신고등학교',
-    major: '인문계 (이과)',
-    period: '2010 - 2013',
-  },
-];
-
-const awards = [
-  { title: 'K-메타버스 경진대회 장려상', org: '과학기술정보통신부', year: '2023' },
-  { title: '정보처리기사', org: '한국산업인력공단', year: '2022' },
-  { title: '졸업작품전시 우수상', org: '홍익대학교 게임학부', year: '2019' },
-];
+// 터미널 스타일 홈. claude.ai/design "Pulppixel LazyGit" 안을 바닐라로 포팅(src/scripts/terminal/).
+// 풀스크린 자기완결형이라 BaseLayout 미사용 (explore.astro 와 동일 패턴).
+const title = 'pulppixel — Hwankee Baik';
+const description = '백환기(Hwankee Baik) · Software Engineer · 1인 스튜디오 Dongle Lab. 터미널 스타일 포트폴리오.';
+const og = 'https://pulppixel.github.io/og.png';
 ---
 
-<BaseLayout title="pulppixel.">
-  <Nav />
-  <Hero />
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="author" content="Hwankee Baik" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://pulppixel.github.io/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pulppixel.github.io/" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={og} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="Pulppixel" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={og} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/d2coding@1.3.2/d2coding-full.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/400.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/700.css" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #13111c; height: 100%; }
+    a { color: inherit; text-decoration: none; }
+    ::selection { background: #c4a7e7; color: #191724; }
+    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pop { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
+    .cur::after { content: "\2585"; color: #c4a7e7; animation: blink 1.05s steps(1) infinite; }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: #403d52; border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background: #524f67; background-clip: padding-box; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    #app {
+      min-height: 100vh; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: clamp(0px, 4vw, 52px);
+      font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'D2Coding', 'Nanum Gothic Coding', 'JetBrains Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(60% 50% at 80% 8%, rgba(196,167,231,.32) 0%, rgba(196,167,231,0) 60%),
+        radial-gradient(55% 48% at 14% 90%, rgba(122,162,247,.20) 0%, rgba(122,162,247,0) 58%),
+        radial-gradient(46% 42% at 92% 95%, rgba(235,188,186,.13) 0%, rgba(235,188,186,0) 62%),
+        linear-gradient(150deg, #241d3a 0%, #1a1626 46%, #100e18 100%);
+    }
+    /* no-JS 폴백 */
+    .noscript-fallback { max-width: 720px; margin: 0 auto; padding: 48px 24px; color: #cdc9de; font-family: 'JetBrains Mono', monospace; line-height: 1.8; }
+    .noscript-fallback h1 { color: #e0def4; font-size: 1.8rem; margin-bottom: 8px; }
+    .noscript-fallback a { color: #9ccfd8; }
+    .noscript-fallback .muted { color: #6e6a86; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
 
-  <!-- PROJECTS -->
-  <section id="projects" class="fade-in">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-label">Selected Projects</div>
-        <h2 class="section-title">프로젝트</h2>
-      </div>
-      <div class="project-grid">
-        {projects.map(p => <ProjectCard {...p} />)}
-      </div>
+  <noscript>
+    <div class="noscript-fallback">
+      <h1>백환기 / Hwankee Baik</h1>
+      <p class="muted">Software Engineer · 1인 스튜디오 Dongle Lab</p>
+      <p>게임 클라이언트부터 모바일·웹·실시간 네트워크까지. 작명소(이음작명소), WebAR(PEEKAR) 등 여러 서비스를 직접 만들고 운영합니다.</p>
+      <p>
+        <a href="/projects/eterna/">ETERNA</a> · <a href="/projects/haul/">HAUL</a> ·
+        <a href="/projects/reiw/">REIW</a> · <a href="/projects/stelsi-wallet/">STELSI Wallet</a> ·
+        <a href="/explore/">3D 월드</a>
+      </p>
+      <p class="muted">
+        <a href="mailto:devenvy100@gmail.com">Email</a> ·
+        <a href="https://github.com/pulppixel">GitHub</a> ·
+        <a href="https://www.linkedin.com/in/hwankee-baik-272948266/">LinkedIn</a>
+      </p>
     </div>
-  </section>
+  </noscript>
 
-  <!-- CAREER -->
-  <section id="career" class="fade-in">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-label">Career</div>
-        <h2 class="section-title">경력</h2>
-      </div>
-      <div class="timeline">
-        {timeline.map((item, i) => (
-            <div class={`timeline-item ${i === 0 ? 'current' : ''}`}>
-              <div class="timeline-company">{item.company}</div>
-              <div class="timeline-role">{item.role}</div>
-              <div class="timeline-period">{item.period}</div>
-              <div class="timeline-projects">
-                {item.projects.map(p => <span>{p}</span>)}
-              </div>
-            </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- SKILLS -->
-  <section id="skills" class="fade-in">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-label">Tech Stack</div>
-        <h2 class="section-title">기술</h2>
-      </div>
-      <div class="skills-grid">
-        <div class="skill-group">
-          <h4>Engine & Language</h4>
-          <ul>
-            <li>Unity (C#) — 6년</li>
-            <li>Unreal Engine 5 (C++)</li>
-            <li>Godot 4 (.NET / GDScript)</li>
-            <li>Flutter (Dart) — 출시 경험</li>
-          </ul>
-        </div>
-        <div class="skill-group">
-          <h4>Architecture & Network</h4>
-          <ul>
-            <li>Service / Repository / State</li>
-            <li>VContainer, R3 / UniRx, UniTask</li>
-            <li>Unity Netcode (NGO), Tencent IM SDK</li>
-            <li>FlatBuffers, gRPC (MagicOnion), LiteNetLib</li>
-          </ul>
-        </div>
-        <div class="skill-group">
-          <h4>Tools & Workflow</h4>
-          <ul>
-            <li>Git (Flow, Submodule)</li>
-            <li>Jira, Confluence, Notion</li>
-            <li>Android / iOS Native Bridge</li>
-            <li>WebGL, UaaL</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- EDUCATION & AWARDS -->
-  <section id="education" class="fade-in">
-    <div class="container">
-      <div class="two-col">
-        <div>
-          <div class="section-header">
-            <div class="section-label">Education</div>
-            <h2 class="section-title">학력</h2>
-          </div>
-          {education.map(e => (
-              <div class="edu-item">
-                <div class="edu-school">{e.school}</div>
-                <div class="edu-major">{e.major}</div>
-                <div class="edu-period">{e.period}</div>
-              </div>
-          ))}
-        </div>
-        <div>
-          <div class="section-header">
-            <div class="section-label">Awards & Cert</div>
-            <h2 class="section-title">수상 / 자격</h2>
-          </div>
-          <div class="awards-list">
-            {awards.map(a => (
-                <div class="award-item">
-                  <span class="award-year">{a.year}</span>
-                  <div>
-                    <div class="award-title">{a.title}</div>
-                    <div class="award-org">{a.org}</div>
-                  </div>
-                </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TESTIMONIALS -->
-  <Testimonials />
-
-  <!-- CONTACT -->
-  <section id="contact" class="contact-section fade-in">
-    <div class="container">
-      <div class="contact-row">
-        <div class="contact-left">
-          <div class="section-label">Contact</div>
-          <div class="contact-comment">// open to new connections</div>
-        </div>
-        <div class="contact-right">
-          <div class="contact-group">
-            <a href="mailto:devenvy100@gmail.com">Email</a>
-            <a href="https://github.com/pulppixel" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://www.linkedin.com/in/hwankee-baik-272948266/" target="_blank" rel="noopener">LinkedIn</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <Footer />
-</BaseLayout>
-
-<style>
-  /* PROJECT GRID */
-  .project-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  /* TIMELINE */
-  .timeline {
-    position: relative;
-    padding-left: 2rem;
-  }
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 3px; top: 8px; bottom: 8px;
-    width: 1px;
-    background: var(--border);
-  }
-  .timeline-item {
-    position: relative;
-    padding-bottom: 2.5rem;
-  }
-  .timeline-item:last-child { padding-bottom: 0; }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -2rem; top: 8px;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--border-hover);
-    border: 2px solid var(--bg-primary);
-  }
-  .timeline-item.current::before { background: var(--accent); }
-  .timeline-company {
-    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 0.15rem;
-  }
-  .timeline-role {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.1rem;
-  }
-  .timeline-period {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    margin-bottom: 0.75rem;
-  }
-  .timeline-projects {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-  .timeline-projects span {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    font-weight: 300;
-  }
-  .timeline-projects span::before {
-    content: '-> ';
-    color: var(--text-tertiary);
-  }
-
-  /* SKILLS */
-  .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-  }
-  .skill-group h4 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--accent);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-  }
-  .skill-group ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .skill-group li {
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    font-weight: 300;
-  }
-
-  /* EDUCATION & AWARDS */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-  }
-  .edu-item { margin-bottom: 1rem; }
-  .edu-school {
-    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-  }
-  .edu-major {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 300;
-  }
-  .edu-period {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    margin-top: 0.2rem;
-  }
-  .awards-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .award-item {
-    display: flex;
-    gap: 1rem;
-    align-items: baseline;
-  }
-  .award-year {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    flex-shrink: 0;
-    min-width: 2.5rem;
-  }
-  .award-title {
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-  .award-org {
-    font-size: 0.78rem;
-    color: var(--text-tertiary);
-    font-weight: 300;
-  }
-
-  /* CONTACT */
-  .contact-section { padding: 4rem 0; border-top: 1px solid var(--border); }
-  .contact-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; }
-  .contact-left .section-label { margin-bottom: 0.5rem; }
-  .contact-comment { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-tertiary); }
-  .contact-right { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
-  .contact-group { display: flex; gap: 1.25rem; align-items: center; }
-  .contact-divider { width: 1px; height: 14px; background: var(--border); }
-  .contact-right a { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-tertiary); text-decoration: none; transition: color 0.2s; }
-  .contact-right a:hover { color: var(--accent); }
-  .contact-action { font-size: 0.7rem !important; color: var(--c) !important; padding: 0.4rem 0.85rem; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); border-radius: 4px; letter-spacing: 0.04em; transition: all 0.2s !important; }
-  .contact-action:hover { background: color-mix(in srgb, var(--c) 12%, transparent); border-color: var(--c); color: var(--c) !important; }
-
-  @media (max-width: 768px) {
-    .project-grid { grid-template-columns: 1fr; }
-    .skills-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-    .two-col { grid-template-columns: 1fr; gap: 2.5rem; }
-    .contact-row { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-    .contact-divider { display: none; }
-  }
-
-  .explore-contact-link { color: var(--accent) !important; }
-</style>
+  <script>
+    import { Terminal } from '../scripts/terminal/terminal';
+    const app = document.getElementById('app');
+    if (app) new Terminal(app).mount();
+  </script>
+</body>
+</html>

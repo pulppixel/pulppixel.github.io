@@ -433,6 +433,55 @@ function createSeasonalParticles(scene: THREE.Scene, count: number) {
 }
 
 // =============================================
+// 4. Dust motes — 햇빛 속 떠다니는 먼지 (낮/골든아워, Veloren 대기감)
+// =============================================
+
+function createDustMotes(scene: THREE.Scene, count: number) {
+    const buf = createBuf(count);
+    const mat = makeParticleMat(true); // additive glow
+    const points = new THREE.Points(buf.geo, mat);
+    points.frustumCulled = false;
+    points.visible = false;
+    scene.add(points);
+
+    const base = new Float32Array(count * 3);
+    const ph = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+        base[i * 3] = -45 + Math.random() * 90;
+        base[i * 3 + 1] = 0.5 + Math.random() * 9.5;
+        base[i * 3 + 2] = -65 + Math.random() * 70;
+        ph[i] = Math.random() * Math.PI * 2;
+        buf.size[i] = 0.8 + Math.random() * 1.7;
+    }
+
+    let cur = 0;
+    return {
+        update(dt: number, t: number, timeLabel: string) {
+            // 골든아워(dawn/sunset)에 가장 진하게, 낮은 은은, 밤은 거의 없음
+            const target = timeLabel === 'dawn' || timeLabel === 'sunset' ? 0.85
+                : timeLabel === 'night' ? 0.12 : 0.45;
+            cur += (target - cur) * Math.min(1, 1.5 * dt);
+            points.visible = cur > 0.01;
+            if (!points.visible) return;
+
+            const warm = timeLabel === 'dawn' || timeLabel === 'sunset';
+            const cr = warm ? 1.0 : 0.95, cg = warm ? 0.86 : 0.93, cb = warm ? 0.58 : 0.78;
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3, p = ph[i];
+                buf.pos[i3] = base[i3] + Math.sin(t * 0.15 + p) * 1.3;
+                buf.pos[i3 + 1] = base[i3 + 1] + Math.sin(t * 0.1 + p * 1.3) * 0.6;
+                buf.pos[i3 + 2] = base[i3 + 2] + Math.cos(t * 0.12 + p * 0.7) * 1.3;
+                const tw = 0.5 + 0.5 * Math.sin(t * 0.7 + p * 3.0);
+                buf.alpha[i] = cur * (0.22 + tw * 0.5);
+                buf.color[i3] = cr; buf.color[i3 + 1] = cg; buf.color[i3 + 2] = cb;
+            }
+            markDirty(buf);
+        },
+    };
+}
+
+// =============================================
 // Factory
 // =============================================
 
@@ -444,16 +493,19 @@ export function createParticleEffects(scene: THREE.Scene): ParticleEffects {
     const fireflyCount = Math.round(35 * perf.particleMul);
     const smokeCount = Math.round(20 * perf.particleMul);
     const seasonCount = Math.round(25 * perf.particleMul);
+    const dustCount = Math.round(120 * perf.particleMul);
 
     const fireflies = createFireflies(scene, fireflyCount);
     const smoke = createSmoke(scene, smokeCount);
     const seasonal = createSeasonalParticles(scene, seasonCount);
+    const dust = createDustMotes(scene, dustCount);
 
     return {
         update(dt, t, timeLabel, season) {
             fireflies.update(dt, t, timeLabel);
             smoke.update(dt, t);
             seasonal.update(dt, t, season);
+            dust.update(dt, t, timeLabel);
         },
     };
 }

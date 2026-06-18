@@ -210,13 +210,15 @@ export function buildDistantRange(scene: THREE.Scene): void {
 // =============================================
 
 const C_CONIFER = [new THREE.Color(0x466e3c), new THREE.Color(0x3c6236), new THREE.Color(0x547c44)];
+const C_BROAD = [new THREE.Color(0x6a9a4e), new THREE.Color(0x5c8a44), new THREE.Color(0x76a456)];
 const C_TRUNK = new THREE.Color(0x5a4530);
 const C_ROCK = [new THREE.Color(0x8a8278), new THREE.Color(0x767064)];
 const C_TUFT = new THREE.Color(0x6f9a52);
+const C_FLOWER = [new THREE.Color(0xf0a0c0), new THREE.Color(0xf0d35c), new THREE.Color(0xefe9d6)];
 
 export function buildLowlandScatter(scene: THREE.Scene): void {
   if (perf.tier === 'low') return; // 모바일/저사양: 스킵
-  const N = perf.tier === 'high' ? 110 : 60;
+  const N = perf.tier === 'high' ? 140 : 78;
 
   // 머티리얼별 geometry 수집 → 색별 1 draw call
   const buckets = new Map<string, { mat: THREE.Material; geoms: THREE.BufferGeometry[] }>();
@@ -245,7 +247,7 @@ export function buildLowlandScatter(scene: THREE.Scene): void {
     if (H < -0.7) continue;
 
     const kind = vhash(i, 31);
-    if (kind < 0.42) {
+    if (kind < 0.30) {
       // 침엽수 (2단 콘) — 언덕 위 숲
       const s = 0.8 + vhash(i, 41) * 0.9;
       const cidx = i % 3;
@@ -258,7 +260,20 @@ export function buildLowlandScatter(scene: THREE.Scene): void {
       c2.translate(wx, H + 1.6 * s, wz);
       push(`con${cidx}`, _scatterMat(`con${cidx}`, C_CONIFER[cidx]), colorGeo(c1, C_CONIFER[cidx]));
       push(`con${cidx}`, _scatterMat(`con${cidx}`, C_CONIFER[cidx]), colorGeo(c2, C_CONIFER[cidx]));
-    } else if (kind < 0.62) {
+    } else if (kind < 0.48) {
+      // 활엽수 (둥근 로우폴리 수관)
+      const s = 0.8 + vhash(i, 41) * 0.8;
+      const bidx = i % 3;
+      const trunk = new THREE.CylinderGeometry(0.13 * s, 0.18 * s, 0.9 * s, 5);
+      trunk.translate(wx, H + 0.45 * s, wz);
+      push('trunk', _scatterMat('trunk', C_TRUNK), colorGeo(trunk, C_TRUNK));
+      const f1 = new THREE.IcosahedronGeometry(0.78 * s, 0);
+      f1.translate(wx, H + 1.25 * s, wz);
+      const f2 = new THREE.IcosahedronGeometry(0.52 * s, 0);
+      f2.translate(wx + 0.3 * s, H + 1.55 * s, wz - 0.2 * s);
+      push(`broad${bidx}`, _scatterMat(`broad${bidx}`, C_BROAD[bidx]), colorGeo(f1, C_BROAD[bidx]));
+      push(`broad${bidx}`, _scatterMat(`broad${bidx}`, C_BROAD[bidx]), colorGeo(f2, C_BROAD[bidx]));
+    } else if (kind < 0.64) {
       // 바위
       const s = 0.4 + vhash(i, 43) * 0.7;
       const ridx = i % 2;
@@ -266,6 +281,20 @@ export function buildLowlandScatter(scene: THREE.Scene): void {
       rock.scale(1, 0.7, 1);
       rock.translate(wx, H + s * 0.4, wz);
       push(`rock${ridx}`, _scatterMat(`rock${ridx}`, C_ROCK[ridx]), colorGeo(rock, C_ROCK[ridx]));
+    } else if (kind < 0.78) {
+      // 꽃밭 (작은 컬러 도트 클러스터)
+      const fcnt = 3 + (i % 3);
+      for (let j = 0; j < fcnt; j++) {
+        const fi = (i + j) % 3;
+        const stem = new THREE.BoxGeometry(0.05, 0.22, 0.05);
+        const fx = wx + (vhash(i * 2 + j, 61) - 0.5) * 1.0;
+        const fz = wz + (vhash(i * 3 + j, 67) - 0.5) * 1.0;
+        stem.translate(fx, H + 0.11, fz);
+        push('tuft', _scatterMat('tuft', C_TUFT), colorGeo(stem, C_TUFT));
+        const head = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+        head.translate(fx, H + 0.28, fz);
+        push(`flower${fi}`, _scatterMat(`flower${fi}`, C_FLOWER[fi]), colorGeo(head, C_FLOWER[fi]));
+      }
     } else {
       // 풀 다발 (작은 박스 2~3개)
       const cnt = 2 + (i % 2);

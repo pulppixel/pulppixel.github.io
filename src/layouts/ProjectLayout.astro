@@ -92,7 +92,7 @@ const pageTitle = `${title} — Pulppixel`;
       <div class="tab">
         <span class="t-host">hwankee@pulppixel</span><span class="t-colon">:</span><span class="t-path">~/portfolio</span>
       </div>
-      <a href="/explore/" class="world-link" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world ↗</a>
+      <a href="/explore/" class="world-link" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world</a>
     </header>
 
     <!-- cat 헤더 (인앱 상세와 동일한 줄) -->
@@ -114,7 +114,7 @@ const pageTitle = `${title} — Pulppixel`;
         {role && <span class="chip"><span class="chip-k">역할</span> · {role}</span>}
         {team && <span class="chip"><span class="chip-k">팀</span> · {team}</span>}
         {links && links.map(l => (
-          <a class="chip chip-link" href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>
+          <a class="chip chip-link" href={l.url} target="_blank" rel="noopener">{l.label}</a>
         ))}
         {minigameKey && (
           <a class="cta-play" href={`/play/${minigameKey}/`}>▶ 미니게임 하러 가기 →</a>
@@ -144,7 +144,6 @@ const pageTitle = `${title} — Pulppixel`;
 
       <div class="foot">
         <a href="/" class="foot-back">← back to gui</a>
-        <span class="foot-sig">rosé pine ♥</span>
       </div>
     </article>
   </main>
@@ -335,7 +334,6 @@ const pageTitle = `${title} — Pulppixel`;
     border: 1px solid #403d52; color: #908caa; padding: 10px 20px; border-radius: 8px; transition: all .2s;
   }
   .foot-back:hover { border-color: #9ccfd8; color: #e0def4; }
-  .foot-sig { color: #c4a7e7; letter-spacing: .02em; }
 
   @media (max-width: 720px) {
     .world-link { display: none; }

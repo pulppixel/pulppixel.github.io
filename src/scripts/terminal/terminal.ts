@@ -3,6 +3,12 @@
 // 셸 입력은 키 입력마다 전체 리렌더하면 포커스가 날아가므로, 표시 span/입력 element 만 직접 갱신.
 
 import { DATA, BOOT, C, type Panel, type ProjectItem, type JobItem, type SkillItem, type ContactItem } from './data';
+import { renderMd } from './markdown';
+
+// 프로젝트 상세 본문(.md) — 빌드 시 raw 문자열로 번들. astro 상세 페이지의 본문과 같은 소스.
+const PROJECT_MD = import.meta.glob('../../content/projects/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const MD_BY_SLUG: Record<string, string> = {};
+for (const k in PROJECT_MD) { const slug = (k.split('/').pop() || '').replace(/\.md$/, ''); MD_BY_SLUG[slug] = PROJECT_MD[k]; }
 
 type Token = { t: string; c: string };
 type Block =
@@ -57,6 +63,9 @@ export class Terminal {
   private demoOn = false;
   private inputEl: HTMLInputElement | null = null;
   private dispEl: HTMLElement | null = null;
+  private shellEl: HTMLElement | null = null;
+  private lastPhase: State['phase'] | null = null;
+  private anim = false;
   private keyHandler!: (e: KeyboardEvent) => void;
   private resizeHandler!: () => void;
 
@@ -200,7 +209,7 @@ export class Terminal {
     const today = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' ' + d.toTimeString().slice(0, 5);
     const motd = this.state.isMobile
       ? rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  아래 ', C.dim), tk('실행 버튼', C.rose), tk(' 으로 GUI 진입.', C.dim)]])
-      : rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  type ', C.dim), tk("'help'", C.iris), tk(' for commands — or just press ', C.dim), tk('⏎', C.rose), tk(' to launch the gui.', C.dim)]]);
+      : rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  type ', C.dim), tk("'help'", C.iris), tk(' for commands — or just press ', C.dim), tk('Enter', C.rose), tk(' to launch the gui.', C.dim)]]);
     this.state.sys = sys;
     this.state.blocks = [rows([[tk('Last login: ' + today + ' on ttys006', C.dim)]]), { isNeofetch: true }, motd];
 
@@ -251,7 +260,7 @@ export class Terminal {
     this.history.push(text); this.histIdx = this.history.length;
     const parts = text.split(/\s+/); const c = parts[0].toLowerCase(); const arg = (parts[1] || '').toLowerCase();
     if (c === 'clear') { this.setState({ blocks: [], input: '' }, () => this.focusInput()); return; }
-    if (c === 'explore' || c === '3d') { this.setState({ blocks: blocks.concat([rows([[tk('opening 3d world ', C.dim), tk('~/explore', C.foam), tk(' ↗', C.dim)]])]), input: '' }); window.location.href = '/explore/'; return; }
+    if (c === 'explore' || c === '3d') { this.setState({ blocks: blocks.concat([rows([[tk('opening 3d world ', C.dim), tk('~/explore', C.foam)]])]), input: '' }); window.location.href = '/explore/'; return; }
     const doLaunch = ['pulppixel', 'lazygit', 'gui', 'start', 'run'].indexOf(c) >= 0;
     if (!doLaunch) { const out = this.command(c, arg, parts); if (out) blocks.push(out); }
     this.setState({ blocks, input: '' }, () => { if (doLaunch) this.launch(); else this.focusInput(); });
@@ -273,10 +282,10 @@ export class Terminal {
         [tk('  skills      ', C.iris), tk('tech stack', C.dim)],
         [tk('  about       ', C.iris), tk('about me', C.dim)],
         [tk('  contact     ', C.iris), tk('contact channels', C.dim)],
-        [tk('  explore     ', C.iris), tk('launch the 3d world ↗', C.dim)],
+        [tk('  explore     ', C.iris), tk('launch the 3d world', C.dim)],
         [tk('  clear       ', C.iris), tk('clear the screen  (ctrl+l)', C.dim)],
         [tk(' ')],
-        [tk('  pulppixel   ', C.foam), tk('launch the lazygit-style GUI  (or press ⏎)', C.rose)],
+        [tk('  pulppixel   ', C.foam), tk('launch the lazygit-style GUI  (or press Enter)', C.rose)],
       ]);
       case 'ls': {
         if (arg === 'projects' || arg === 'projects/') return this.cmdProjects();
@@ -383,7 +392,7 @@ export class Terminal {
     const proj = P.filter((x) => x.label === arg || x.label.indexOf(arg) === 0)[0];
     if (proj) { this.openPage(proj); return null; }
     const k = K.filter((x) => x.label === arg)[0];
-    if (k && k.url) { window.open(k.url, '_blank', 'noopener'); return rows([[tk('opening ', C.dim), tk(arg, C.foam), tk(' ↗', C.dim)]]); }
+    if (k && k.url) { window.open(k.url, '_blank', 'noopener'); return rows([[tk('opening ', C.dim), tk(arg, C.foam)]]); }
     return rows([[tk('open: ' + arg + ': not found', C.love)], [tk('try: ', C.dim), tk('eterna, ieum, peekar, github, linkedin, email', C.dim)]]);
   }
 
@@ -431,28 +440,35 @@ export class Terminal {
   // ================= VIEW =================
   private render(): void {
     const s = this.state;
+    // 진입 애니메이션(pop)은 페이즈가 바뀔 때만. 같은 페이즈 내 탐색(j/k 등)에선 재생 X → 깜빡임 제거.
+    this.anim = s.phase !== this.lastPhase;
+    this.lastPhase = s.phase;
+
     let body = '';
     if (s.phase === 'shell') body = this.viewShell();
     else if (s.phase === 'boot') body = this.viewBoot();
     else if (s.phase === 'tui') body = this.viewTui();
     else if (s.phase === 'page') body = this.viewPage();
 
-    this.root.innerHTML =
-      `<div style="position:relative;width:min(1340px,100%);height:min(900px, 100%);display:flex;flex-direction:column;background:rgba(25,23,36,0.88);backdrop-filter:blur(26px) saturate(1.25);-webkit-backdrop-filter:blur(26px) saturate(1.25);border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden">
-        ${this.viewTitleBar()}
-        ${body}
-      </div>`;
+    // 유리(backdrop-filter) 컨테이너는 한 번만 만들고 내부만 교체 — 매 렌더 재생성 시 블러 재합성으로 화면이 번쩍이던 문제 제거.
+    if (!this.shellEl) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:min(1340px,100%);height:min(900px,100%);display:flex;flex-direction:column;background:rgba(25,23,36,0.88);backdrop-filter:blur(26px) saturate(1.25);-webkit-backdrop-filter:blur(26px) saturate(1.25);border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden';
+      this.root.appendChild(wrap);
+      this.shellEl = wrap;
+    }
+    this.shellEl.innerHTML = this.viewTitleBar() + body;
 
     // shell: 입력 element 직접 바인딩 + 포커스/스크롤
-    this.inputEl = this.root.querySelector('#t-input');
-    this.dispEl = this.root.querySelector('#t-input-disp');
+    this.inputEl = this.shellEl.querySelector('#t-input');
+    this.dispEl = this.shellEl.querySelector('#t-input-disp');
     if (this.inputEl) {
       this.inputEl.addEventListener('input', this.onInput);
       this.inputEl.addEventListener('keydown', this.onKey);
       this.inputEl.value = s.input;
     }
     if (s.phase === 'shell') {
-      const term = this.root.querySelector('#t-term') as HTMLElement | null;
+      const term = this.shellEl.querySelector('#t-term') as HTMLElement | null;
       if (term) term.scrollTop = term.scrollHeight;
     }
   }
@@ -465,8 +481,8 @@ export class Terminal {
       : `<span style="color:#e0def4">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#9ccfd8">~/portfolio</span>`;
     // 3d-world 링크: 모바일은 아이콘만(공간 확보), 데스크탑은 라벨 포함.
     const worldLink = m
-      ? `<a href="/explore/" aria-label="3D 월드" style="flex:none;font-size:13px;color:#9ccfd8;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 10px" title="3D 월드">❯ ↗</a>`
-      : `<a href="/explore/" style="flex:none;font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 9px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world ↗</a>`;
+      ? `<a href="/explore/" aria-label="3D 월드" style="flex:none;font-size:13px;color:#9ccfd8;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 10px" title="3D 월드">❯</a>`
+      : `<a href="/explore/" style="flex:none;font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 9px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world</a>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:14px;padding:0 16px;height:42px;background:#1f1d2e;border-bottom:1px solid #16141f">
       <div style="display:flex;gap:8px;flex:none">
         <span style="width:12px;height:12px;border-radius:50%;background:#eb6f92"></span>
@@ -569,9 +585,9 @@ export class Terminal {
       </div>`;
     }).join('');
 
-    const leftDesktop = `<div style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0">
+    const leftDesktop = `<div style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
       ${desktopPanels}
-      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">↑↓ / j k &nbsp;navigate<br>1–5 &nbsp;jump · ⏎ open · q shell</div>
+      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">↑↓ / j k &nbsp;navigate<br>1–5 &nbsp;jump · enter open · q shell</div>
     </div>`;
 
     const mobileSel = `<div style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -581,7 +597,7 @@ export class Terminal {
         ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:9px 13px;font-size:12.5px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'};-webkit-tap-highlight-color:transparent">${esc(label)}</div>`; }).join('')}
       </div>`;
 
-    return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:pop .32s ease both">
+    return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .32s ease both' : 'none'}">
       ${s.isMobile ? mobileSel : ''}
       <div style="flex:1;min-height:0;display:flex;gap:11px;padding:12px">
         ${s.isMobile ? '' : leftDesktop}
@@ -628,8 +644,8 @@ export class Terminal {
       <div style="margin-top:30px;padding-top:18px;border-top:1px dashed #26233a;font-size:12.5px;color:#6e6a86;line-height:1.95">
         ${this.state.isMobile
           ? `<div><span style="color:#9ccfd8">→</span> 위쪽 <span style="color:#e0def4">탭</span> 으로 패널을, 항목을 <span style="color:#e0def4">탭</span> 해서 봅니다.</div>
-        <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯↗</span> 링크로.</div>`
-          : `<div><span style="color:#9ccfd8">→</span> 좌측 패널을 <span style="color:#e0def4">↑↓ / j k</span> 로 탐색하고 <span style="color:#e0def4">⏎</span> 로 엽니다.</div>
+        <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯</span> 링크로.</div>`
+          : `<div><span style="color:#9ccfd8">→</span> 좌측 패널을 <span style="color:#e0def4">↑↓ / j k</span> 로 탐색하고 <span style="color:#e0def4">enter</span> 로 엽니다.</div>
         <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로.</div>
         <div><span style="color:#9ccfd8">→</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>`}
       </div>`;
@@ -651,7 +667,7 @@ export class Terminal {
       <div style="margin-top:11px;font-size:13.5px;color:#cdc9de;line-height:1.55">
         ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#c4a7e7;flex:none">+</span><span>${esc(p)}</span></div>`).join('')}
       </div>
-      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:30px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">⏎ open detail</div>`;
+      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:30px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">open detail</div>`;
   }
 
   private viewMainJob(it: JobItem): string {
@@ -667,7 +683,6 @@ export class Terminal {
 
   private viewMainSkill(it: SkillItem): string {
     return `<h1 style="font-size:clamp(1.4rem,3vw,2rem);color:#e0def4;line-height:1.1">${esc(it.title)}</h1>
-      <div style="margin-top:6px;font-size:12px;color:#6e6a86">${esc(it.sub)}</div>
       <div style="margin-top:22px;display:flex;flex-direction:column;gap:0;border:1px solid #26233a;border-radius:7px;overflow:hidden">
         ${it.rows.map((r) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #21202e;font-size:13px"><span style="color:#e0def4">${esc(r.k)}</span><span style="color:#6e6a86;white-space:nowrap">${esc(r.v)}</span></div>`).join('')}
       </div>`;
@@ -677,13 +692,13 @@ export class Terminal {
     return `<h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);color:#e0def4;line-height:1.1">${esc(it.label)}</h1>
       <div style="margin-top:14px;font-size:14px;color:#9ccfd8;word-break:break-all">${esc(it.value)}</div>
       <p style="margin-top:18px;max-width:54ch;color:#cdc9de;line-height:1.9;font-size:13.5px">${esc(it.note)}</p>
-      <a href="${esc(it.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:26px;background:#9ccfd8;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">⏎ ${esc(it.cta)} ↗</a>`;
+      <a href="${esc(it.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:26px;background:#9ccfd8;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">${esc(it.cta)}</a>`;
   }
 
   private viewStatusBar(): string {
     const hints = this.state.isMobile
-      ? `<span style="color:#c4a7e7">rosé pine ♥</span>`
-      : `<span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">⏎</span> open</span><span><span style="color:#908caa">q</span> shell</span><span style="color:#c4a7e7">rosé pine ♥</span>`;
+      ? ''
+      : `<span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">enter</span> open</span><span><span style="color:#908caa">q</span> shell</span>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:11.5px;overflow:hidden">
       <span style="background:#c4a7e7;color:#191724;height:100%;display:flex;align-items:center;padding:0 12px;font-weight:700;white-space:nowrap"> main</span>
       <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span><span style="color:#9ccfd8">↑</span>4</span><span><span style="color:#c4a7e7">●</span> 13 projects</span><span>6y</span></span>
@@ -696,6 +711,8 @@ export class Terminal {
 
   private viewPage(): string {
     const pg = this.state.page; if (!pg) return '';
+    const slug = (pg.url || '').match(/\/projects\/([^/]+)\/?$/)?.[1] || '';
+    const md = MD_BY_SLUG[slug] || '';
     const L = pg.long;
     const hasLong = !!L;
     const overview = L ? L.overview : pg.desc;
@@ -720,11 +737,27 @@ export class Terminal {
       </div>` : '';
 
     const roleChip = role ? `<span style="font-size:12px;color:#908caa;border:1px solid #26233a;border-radius:6px;padding:6px 12px"><span style="color:#9ccfd8">역할</span> · ${esc(role)}</span>` : '';
-    const siteChip = (pg.url && /^https?:/.test(pg.url)) ? `<a href="${esc(pg.url)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#c4a7e7;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">사이트 방문 ↗</a>` : '';
+    const siteChip = (pg.url && /^https?:/.test(pg.url)) ? `<a href="${esc(pg.url)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#c4a7e7;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">사이트 방문</a>` : '';
     const playChip = playUrl ? `<a href="${esc(playUrl)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#9ccfd8;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">▶ 미니게임 하러 가기 →</a>` : '';
     const metaRow = (roleChip || siteChip || playChip) ? `<div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">${roleChip}${siteChip}${playChip}</div>` : '';
 
-    return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:pop .3s ease both">
+    const stackBlock = `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># STACK</div>
+          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;font-size:12.5px">
+            ${stack.map((sx) => `<span style="border:1px solid #26233a;border-radius:6px;padding:6px 13px;color:#908caa">${esc(sx)}</span>`).join('')}
+          </div>`;
+
+    // 상세 .md 가 있으면 그 본문(글·이미지·영상)을 렌더, 없으면(이음/PEEKAR 등) 기존 요약 뷰.
+    const bodyHtml = md
+      ? `${stackBlock}<div style="margin-top:40px">${renderMd(md)}</div>`
+      : `<div style="margin-top:30px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># OVERVIEW</div>
+          <p style="margin-top:14px;color:#cdc9de;line-height:2.05;font-size:15px">${esc(overview)}</p>
+          ${imageEl}
+          ${sections}
+          ${stackBlock}
+          ${progress}
+          ${highlights}`;
+
+    return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .3s ease both' : 'none'}">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 16px;background:#1f1d2e;border-bottom:1px solid #16141f;font-size:12px">
         <div style="color:#6e6a86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#9ccfd8">cat</span> ~/portfolio/projects/${esc(pg.label)}.md</div>
         <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">← back (esc)</div>
@@ -740,16 +773,7 @@ export class Terminal {
           <div style="margin-top:6px;color:#6e6a86;font-size:13px">${esc(pg.period)}</div>
           ${metaRow}
           <div style="margin-top:30px;height:1px;background:#26233a"></div>
-          <div style="margin-top:30px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># OVERVIEW</div>
-          <p style="margin-top:14px;color:#cdc9de;line-height:2.05;font-size:15px">${esc(overview)}</p>
-          ${imageEl}
-          ${sections}
-          <div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># STACK</div>
-          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;font-size:12.5px">
-            ${stack.map((sx) => `<span style="border:1px solid #26233a;border-radius:6px;padding:6px 13px;color:#908caa">${esc(sx)}</span>`).join('')}
-          </div>
-          ${progress}
-          ${highlights}
+          ${bodyHtml}
           <div style="margin-top:46px;display:flex;gap:12px;flex-wrap:wrap">
             <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">← back to gui</div>
           </div>

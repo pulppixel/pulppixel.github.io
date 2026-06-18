@@ -1,6 +1,7 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
-import YouTube from '../../components/YouTube.astro';
+import { renderMd } from '../../scripts/terminal/markdown';
+import body from '../../content/projects/frenzy-circle.md?raw';
 ---
 
 <ProjectLayout
@@ -13,30 +14,5 @@ import YouTube from '../../components/YouTube.astro';
     tags={['Unity', 'C#', 'WebGL', 'RESTful API', 'AWS']}
     badge="3인"
 >
-
-  <h2>배경</h2>
-  <p>
-    TON 생태계 레퍼런스에 맞춰 텔레그램 환경에서 구동되는 미니 게임을 처음부터 설계했습니다.
-    코인 P2E를 목적으로 한 프로젝트로, 텔레그램 웹앱(TWA) 환경에 최적화된 WebGL 기반 미니 게임을 설계했습니다. 랭킹 시스템과 연동된 보상 로직을 구현하여 사용자 리텐션을 확보했습니다.
-  </p>
-
-  <img src="/images/ninetosix.png" alt="Nine to Six - 회전하는 원에서 검정 부분을 피하며 점프하는 게임플레이. 페페 밈 테마 적용" />
-
-  <YouTube id="fYx2dJQ6uCs" title="Nine to Six - 게임플레이" />
-
-  <h2>구현</h2>
-  <ul>
-    <li>회전하는 원 오브젝트에서 검정 부분을 밟으면 게임 오버가 되는 시스템</li>
-    <li>텔레그램 로그인을 <code>.jslib</code> JS interop으로 구현 - 별도 회원가입 없이 텔레그램 계정으로 바로 로그인</li>
-    <li>코인 생태계 밈 관련 테마 시스템 적용</li>
-    <li>월간, 주간, 일간 랭킹 시스템 구현</li>
-    <li>WebGL 타겟으로 빌드</li>
-  </ul>
-
-  <h2>협업</h2>
-  <ul>
-    <li>디자이너의 Figma 자료를 토대로 게임 UI 및 테마 개발</li>
-    <li>서버 개발자와 함께 AWS를 통한 프로젝트 업데이트 적용 및 배포</li>
-  </ul>
-
+  <Fragment set:html={renderMd(body)} />
 </ProjectLayout>

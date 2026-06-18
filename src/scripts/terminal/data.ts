@@ -146,7 +146,7 @@ export const DATA: Panel[] = [
   ] },
 
   { key: '3', title: 'Experience', kind: 'job', items: [
-    { icon: '⎇', label: 'Dongle Lab', meta: '24–', company: 'Dongle Lab (동글랩)', role: '1인 스튜디오 · 개인사업자', period: '2024.05 — 현재', dur: 'now',
+    { icon: '⎇', label: 'Dongle Lab', meta: '26–', company: 'Dongle Lab (동글랩)', role: '1인 스튜디오 · 개인사업자', period: '2026.03 — 현재', dur: 'now',
       desc: '직접 기획·개발·운영하는 1인 스튜디오. 아이디어를 실서비스로 끝까지 가져가는 일에 집중합니다.',
       points: ['이음작명소 — 신생아 작명 웹서비스', 'PEEKAR — WebAR 갤러리 플랫폼 (B2B)'] },
     { icon: '⎇', label: 'VOYAGER', meta: '25–26', company: 'VOYAGER', role: 'Unity Client Engineer · 서브 리드', period: '2025.02 — 2026.04', dur: '1Y 3M',

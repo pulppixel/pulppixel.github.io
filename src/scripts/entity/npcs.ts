@@ -5,7 +5,7 @@
 // - 3D -> screen projection with hysteresis
 import * as THREE from 'three';
 import {getGroundHeight} from '../core/data';
-import {facePlane, stdMat} from '../core/helpers';
+import {facePlane, setPos, stdMat} from '../core/helpers';
 
 // NPC Definitions
 

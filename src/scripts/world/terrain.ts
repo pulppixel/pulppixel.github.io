@@ -80,11 +80,134 @@ function hash(a: number, b: number): number {
 
 // Platforms
 
+// 정점 컬러용 공유 머티리얼 (vertexColors) — 잔디/절벽 각각 1개씩만 생성해 draw call 영향 없음
+let _grassVCMat: THREE.MeshStandardMaterial | null = null;
+let _cliffVCMat: THREE.MeshStandardMaterial | null = null;
+function grassVCMat(): THREE.MeshStandardMaterial {
+  if (!_grassVCMat) _grassVCMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.0, roughness: 0.92 });
+  return _grassVCMat;
+}
+function cliffVCMat(): THREE.MeshStandardMaterial {
+  if (!_cliffVCMat) _cliffVCMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.0, roughness: 0.96, flatShading: true });
+  return _cliffVCMat;
+}
+
+const _c = new THREE.Color();
+const _c2 = new THREE.Color();
+
+/** value-noise 비슷한 얼룩 (페인터리 변주용), 0..1 */
+function vnoise2(x: number, z: number): number {
+  const x0 = Math.floor(x), z0 = Math.floor(z);
+  const fx = x - x0, fz = z - z0;
+  const u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz);
+  const a = hash(x0, z0), b = hash(x0 + 1, z0), cc = hash(x0, z0 + 1), d = hash(x0 + 1, z0 + 1);
+  return (a * (1 - u) + b * u) * (1 - v) + (cc * (1 - u) + d * u) * v;
+}
+
+/** 메인 아일랜드: 바이옴-블렌딩 + 미세 기복 잔디 상단 (정점 컬러) */
+function addRichGrassTop(scene: THREE.Scene, p: { x: number; z: number; w: number; d: number; h: number }, pal: ReturnType<typeof paletteAt>): void {
+  const sx = Math.min(16, Math.max(4, Math.round(p.w / 1.6)));
+  const sz = Math.min(16, Math.max(4, Math.round(p.d / 1.6)));
+  const geo = new THREE.BoxGeometry(p.w + 0.1, 0.14, p.d + 0.1, sx, 1, sz);
+  const pos = geo.attributes.position as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 3);
+
+  const top = new THREE.Color(pal.terrainTop);
+  const accent = new THREE.Color(pal.terrainAccent);
+  const dark = new THREE.Color(pal.terrainDark);
+  const hw = (p.w + 0.1) / 2, hd = (p.d + 0.1) / 2;
+
+  for (let i = 0; i < pos.count; i++) {
+    const lx = pos.getX(i), ly = pos.getY(i), lz = pos.getZ(i);
+    const wx = p.x + lx, wz = p.z + lz;
+    const isTop = ly > 0;
+
+    // 미세 기복: 상단 정점만, 진폭 ±0.09 (충돌 평면 p.h엔 영향 없음). 가장자리는 핀.
+    if (isTop) {
+      const edgeFade = Math.min(1, Math.min(hw - Math.abs(lx), hd - Math.abs(lz)) / 1.5);
+      const n = vnoise2(wx * 0.55 + 9, wz * 0.55 - 4) - 0.5;
+      const n2 = Math.sin(wx * 0.9) * Math.cos(wz * 0.8) * 0.5;
+      pos.setY(i, ly + (n + n2) * 0.18 * edgeFade);
+    }
+
+    // 컬러: 베이스 잔디 + 페인터리 노이즈, 가장자리는 살짝 어둡게(rim)
+    const np = vnoise2(wx * 0.7, wz * 0.7);
+    _c.copy(top).lerp(accent, np * 0.35);
+    if (isTop) {
+      const rim = 1 - Math.min(1, Math.min(hw - Math.abs(lx), hd - Math.abs(lz)) / 2.2);
+      _c.lerp(dark, rim * 0.25);
+      _c.offsetHSL(0, 0, (np - 0.5) * 0.06);
+    } else {
+      _c.lerp(dark, 0.35); // 측면 그린 림은 약간 그늘
+    }
+    colors[i * 3] = _c.r; colors[i * 3 + 1] = _c.g; colors[i * 3 + 2] = _c.b;
+  }
+  pos.needsUpdate = true;
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+
+  const mesh = new THREE.Mesh(geo, grassVCMat());
+  mesh.position.set(p.x, p.h - 0.07, p.z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+}
+
+/** 메인 아일랜드: 배터(아래로 벌어지는) 절벽 + 수직 그라데이션 (정점 컬러) */
+function addRichCliff(scene: THREE.Scene, p: { x: number; z: number; w: number; d: number; h: number }, pal: ReturnType<typeof paletteAt>): void {
+  // 바닥을 lowland 아래까지 살짝 더 내려 자연스럽게 박히게
+  const stoneH = Math.max(0.1, p.h - 0.12) + 0.8;
+  const segY = Math.max(4, Math.round(stoneH / 1.2));
+  const geo = new THREE.BoxGeometry(p.w, stoneH, p.d, 2, segY, 2);
+  const pos = geo.attributes.position as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 3);
+
+  const side = new THREE.Color(pal.terrainSide);
+  const top = new THREE.Color(pal.terrainTop);
+  // 바닥색: terrainDark를 살짝 들어올려 새카맣지 않게
+  const dark = new THREE.Color(pal.terrainDark).lerp(side, 0.25);
+
+  for (let i = 0; i < pos.count; i++) {
+    const lx = pos.getX(i), ly = pos.getY(i), lz = pos.getZ(i);
+    const t = Math.min(1, Math.max(0, (ly + stoneH / 2) / stoneH)); // 0=바닥, 1=상단
+
+    // 배터: 아래로 갈수록 벌어짐(최대 +30%), 가장자리 noise로 울퉁불퉁
+    const flare = 1 + (1 - t) * (1 - t) * 0.30;
+    const wob = 1 + (vnoise2(lx * 1.3 + ly, lz * 1.3 - ly) - 0.5) * 0.10 * (1 - t);
+    pos.setX(i, lx * flare * wob);
+    pos.setZ(i, lz * flare * wob);
+
+    // 컬러: 바닥 암반 → 흙, 최상단은 잔디로 살짝 블렌드(상단 림)
+    _c2.copy(dark).lerp(side, Math.pow(t, 0.7));
+    if (t > 0.82) _c2.lerp(top, (t - 0.82) / 0.18 * 0.5);
+    const band = (Math.sin(ly * 3.0) * 0.5 + 0.5) * 0.07;
+    _c2.offsetHSL(0, 0, band - 0.035);
+    colors[i * 3] = _c2.r; colors[i * 3 + 1] = _c2.g; colors[i * 3 + 2] = _c2.b;
+  }
+  pos.needsUpdate = true;
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+
+  const mesh = new THREE.Mesh(geo, cliffVCMat());
+  mesh.position.set(p.x, stoneH / 2 - 0.8, p.z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+}
+
 export function buildPlatforms(scene: THREE.Scene): void {
   for (const p of PLATFORMS) {
     if (p.h <= 0) continue;
     const pal = paletteAt(p.x, p.z);
+    const isMain = p.w >= 14;
 
+    if (isMain) {
+      addRichCliff(scene, p, pal);
+      addRichGrassTop(scene, p, pal);
+      continue;
+    }
+
+    // 작은 디딤돌: 기존 단순 박스 유지 (작아서 디테일 불필요 + 가벼움)
     const stoneH = Math.max(0.1, p.h - 0.12);
     const stone = stdBox(p.w, stoneH, p.d, pal.terrainSide);
     stone.position.set(p.x, stoneH / 2, p.z);

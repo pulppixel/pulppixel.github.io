@@ -8,6 +8,7 @@ import { buildOcean } from './ocean';
 import { buildSkyDome, buildClouds } from './sky';
 import { buildWaterEdge, buildBushes, buildZoneDecor, buildZoneBoundaries } from './zonedetails';
 import { buildAllLandmarks } from './landmarks';
+import { buildLandscape } from './landscape';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -60,6 +61,7 @@ export function createScene(): SceneContext {
   buildAllLandmarks(scene);
   const skyUniforms = buildSkyDome(scene);
   const water = buildOcean(scene);
+  buildLandscape(scene);
   const clouds = buildClouds(scene);
 
   // --- Lighting ---

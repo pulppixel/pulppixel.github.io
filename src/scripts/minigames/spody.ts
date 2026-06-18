@@ -201,7 +201,7 @@ class SpodyGame extends MinigameBase {
     }
 
     if (this.phase === 'play') {
-      cx.beginPath(); cx.arc(W / 2, H - 38, 7, 0, Math.PI * 2); cx.fillStyle = '#111115'; cx.fill();
+      cx.beginPath(); cx.arc(W / 2, H - 38, 7, 0, Math.PI * 2); cx.fillStyle = '#15131f'; cx.fill();
       cx.strokeStyle = rgba(C.accent, this.ammo > 0 ? 0.45 : 0.12); cx.lineWidth = 1.5; cx.stroke();
     }
 
@@ -217,12 +217,12 @@ class SpodyGame extends MinigameBase {
 
     this.drawHudTitle();
     this.drawHudLine(`SCORE  ${this.score}`, 46);
-    this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#3a3a44');
+    this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#403d52');
 
     cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('AMMO', W - 20, 28);
     for (let i = 0; i < MAX_AMMO; i++) {
       cx.beginPath(); cx.arc(W - 24 - i * 16, 42, 5, 0, Math.PI * 2);
-      cx.fillStyle = i < this.ammo ? C.accent : (i === this.ammo ? rgba(C.accent, 0.12 + (this.ammoT / AMMO_CD) * 0.35) : '#1a1a1f');
+      cx.fillStyle = i < this.ammo ? C.accent : (i === this.ammo ? rgba(C.accent, 0.12 + (this.ammoT / AMMO_CD) * 0.35) : '#1f1d2e');
       cx.fill();
     }
 

@@ -348,7 +348,7 @@ class NineToSixGame extends MinigameBase {
             // Dark background ring
             c.beginPath();
             c.arc(gx, gy, ring.radius, 0, TAU);
-            c.strokeStyle = rgba('#1a1a1f', isPast ? 0.12 : 0.45);
+            c.strokeStyle = rgba('#1f1d2e', isPast ? 0.12 : 0.45);
             c.lineWidth = RING_W;
             c.stroke();
 
@@ -518,8 +518,8 @@ class NineToSixGame extends MinigameBase {
         this.drawHudTitle();
         this.drawHudLine(`SCORE  ${this.score}`, 46);
         const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
-        this.drawHudLine(`TIME  ${ts}  JUMPS  ${this.jumps}`, 62, '#3a3a44');
-        if (this.best > 0) this.drawHudLine(`BEST  ${this.best}`, 78, '#3a3a44');
+        this.drawHudLine(`TIME  ${ts}  JUMPS  ${this.jumps}`, 62, '#403d52');
+        if (this.best > 0) this.drawHudLine(`BEST  ${this.best}`, 78, '#403d52');
 
         // Time-to-death indicator
         if (this.phase === 'play' && this.pRing < this.rings.length) {

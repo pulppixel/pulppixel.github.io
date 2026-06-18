@@ -884,7 +884,7 @@ class NomadsGame extends MinigameBase {
         // HUD: Title + Score + Stage
         this.drawHudTitle();
         this.drawHudLine(`SCORE  ${this.score}`, 46);
-        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}`, 62, '#3a3a44');
+        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}`, 62, '#403d52');
 
         // Player HP
         cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono"'; cx.fillStyle = '#6e6a86';
@@ -892,7 +892,7 @@ class NomadsGame extends MinigameBase {
         const player = this.cars[0];
         for (let i = 0; i < HP_MAX; i++) {
             cx.font = '12px monospace';
-            cx.fillStyle = i < player.hp ? C.accent : '#1a1a1f';
+            cx.fillStyle = i < player.hp ? C.accent : '#1f1d2e';
             cx.fillText('♥', W - 18 - i * 14, 44);
         }
         if (player.boostT > 0) {
@@ -956,14 +956,14 @@ class NomadsGame extends MinigameBase {
             const dim = c.eliminated ? 0.3 : 1;
             cx.fillStyle = rgba(c.color, 0.7 * dim);
             cx.fillText(`${i + 1}`, x, yy);
-            cx.fillStyle = rgba(c.isPlayer ? '#ffffff' : '#a8a8b3', 0.85 * dim);
+            cx.fillStyle = rgba(c.isPlayer ? '#e0def4' : '#908caa', 0.85 * dim);
             cx.fillText(c.name, x + 14, yy);
             cx.textAlign = 'right';
             cx.fillStyle = rgba(C.yellow, 0.85 * dim);
             cx.fillText(`◆${c.coins}`, x + 118, yy);
             cx.textAlign = 'left';
             if (c.eliminated) {
-                cx.strokeStyle = rgba('#ef4444', 0.4);
+                cx.strokeStyle = rgba('#eb6f92', 0.4);
                 cx.lineWidth = 1;
                 cx.beginPath();
                 cx.moveTo(x - 2, yy - 3);

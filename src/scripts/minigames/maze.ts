@@ -534,7 +534,7 @@ class MazeGame extends MinigameBase {
         this.drawHudLine(`TIME  ${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}.${ms}`, 46);
         const gc = this.gems.filter(g => g.collected).length;
         cx.fillStyle = C.cyan; cx.fillText(`◇ ${gc}/${this.gems.length}`, 130, 46);
-        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}${fog > 0 ? ' · FOG' : ''}`, 62, '#3a3a44');
+        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}${fog > 0 ? ' · FOG' : ''}`, 62, '#403d52');
 
         // Time-left countdown (center top)
         const tFlash = this.timeLeft < 10 && Math.sin(now * 8) > 0;

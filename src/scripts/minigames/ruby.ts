@@ -267,12 +267,12 @@ class RubyGame extends MinigameBase {
             cx.beginPath(); cx.arc(m.x, m.y + bob, m.r + (hover ? 11 : 7), 0, Math.PI * 2);
             cx.fillStyle = rgba(m.color, hover ? 0.09 : 0.04); cx.fill();
             cx.beginPath(); cx.arc(m.x, m.y + bob, m.r, 0, Math.PI * 2);
-            cx.fillStyle = m.flashT > 0 ? rgba('#fff', 0.4) : rgba(m.color, 0.14); cx.fill();
+            cx.fillStyle = m.flashT > 0 ? rgba('#e0def4', 0.4) : rgba(m.color, 0.14); cx.fill();
             cx.strokeStyle = rgba(m.color, hover ? 0.85 : 0.5); cx.lineWidth = hover ? 2.5 : 2; cx.stroke();
             cx.font = `600 ${Math.round(m.r * 0.8)}px "JetBrains Mono",monospace`;
             cx.fillStyle = rgba(m.color, 0.85); cx.textAlign = 'center'; cx.textBaseline = 'middle';
             cx.fillText(m.sym, m.x, m.y + bob + 1);
-            if (m.maxHp > 1) { for (let i = 0; i < m.maxHp; i++) { cx.beginPath(); cx.arc(m.x - (m.maxHp - 1) * 4 + i * 8, m.y + bob - m.r - 8, 3, 0, Math.PI * 2); cx.fillStyle = i < m.hp ? m.color : '#222'; cx.fill(); } }
+            if (m.maxHp > 1) { for (let i = 0; i < m.maxHp; i++) { cx.beginPath(); cx.arc(m.x - (m.maxHp - 1) * 4 + i * 8, m.y + bob - m.r - 8, 3, 0, Math.PI * 2); cx.fillStyle = i < m.hp ? m.color : '#26233a'; cx.fill(); } }
             if (m.shoots && m.shootCd < 0.6) { cx.beginPath(); cx.arc(m.x, m.y + bob, m.r + 4, 0, Math.PI * 2 * (1 - m.shootCd / 0.6)); cx.strokeStyle = rgba(m.color, 0.55); cx.lineWidth = 2; cx.stroke(); }
         }
 
@@ -316,9 +316,9 @@ class RubyGame extends MinigameBase {
         // HUD
         this.drawHudTitle();
         this.drawHudLine(`SCORE  ${this.score}`, 46);
-        this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#3a3a44');
+        this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#403d52');
         cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('HP', W - 20, 28);
-        for (let i = 0; i < MAX_HP; i++) { cx.font = '12px monospace'; cx.fillStyle = i < this.hp ? C.pink : '#1a1a1f'; cx.fillText('♥', W - 18 - i * 16, 44); }
+        for (let i = 0; i < MAX_HP; i++) { cx.font = '12px monospace'; cx.fillStyle = i < this.hp ? C.pink : '#1f1d2e'; cx.fillText('♥', W - 18 - i * 16, 44); }
         this.drawComboHud(this.combo, now, W / 2, 38);
 
         cx.restore(); // end screen shake

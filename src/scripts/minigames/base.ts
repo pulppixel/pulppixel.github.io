@@ -12,15 +12,17 @@ export function rgba(hex: string, a: number): string {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+// 게임 그래픽 팔레트 — Rosé Pine 액센트로 통일(네온/고채도 제거).
+// accent/cyan은 maze·nomads에서 플레이어 vs 수집물로 공존 → 밝기로 구분 유지.
 export const C = {
   bg: '#191724',
-  accent: '#6ee7b7',
-  pink: '#ff6b9d',
-  purple: '#a78bfa',
-  yellow: '#fbbf24',
-  cyan: '#67e8f9',
-  red: '#ef4444',
-  blue: '#38bdf8',
+  accent: '#9ccfd8',  // foam — 플레이어·벽·기본 UI·긍정 피드백
+  pink: '#ebbcba',    // rose
+  purple: '#c4a7e7',  // iris
+  yellow: '#f6c177',  // gold — 보상·강조
+  cyan: '#31748f',    // pine — 수집물(보석/코인)·테크 틴트
+  red: '#eb6f92',     // love — 위험·적
+  blue: '#31748f',    // pine — 장식용 변주 팔레트에서만 사용
 } as const;
 
 // 공용 chrome(HUD·버튼·닫기·결과화면) 전용 Rosé Pine 색. 게임 그래픽 색(C.*)과 분리.
@@ -67,8 +69,18 @@ export abstract class MinigameBase {
   protected abstract readonly titleColor: string;
   protected cursorStyle = 'default';
   private _dpr = 1;
-  private _lw = 0;
-  private _lh = 0;
+  private _lw = 0;   // 창 본문(content) 폭 — W getter가 반환
+  private _lh = 0;   // 창 본문 높이 — H getter가 반환
+
+  // --- 맥OS 터미널 창 chrome 지오메트리 ---
+  private _vw = 0;            // 뷰포트 폭
+  private _vh = 0;            // 뷰포트 높이
+  private winM = 0;           // 창 바깥 여백(데스크탑 마진)
+  private winTB = 0;          // 타이틀바 높이
+  private winR = 0;           // 모서리 라운드 반경
+  private cX = 0;             // 본문 좌상단 x (CSS px)
+  private cY = 0;             // 본문 좌상단 y (CSS px)
+  private scanPat: CanvasPattern | null = null;  // CRT 스캔라인 패턴(데스크탑만)
 
   private aId = 0;
   private readonly container: HTMLElement;
@@ -269,13 +281,14 @@ export abstract class MinigameBase {
     this.container.appendChild(this.cv);
     this.container.style.display = 'block';
     this.cx = this.cv.getContext('2d')!;
+    this.buildScanPattern();
     this.rsz();
 
     this.bind(window, 'resize', () => this.rsz());
     this.bind(this.cv, 'click', (e: Event) => this.handleClick(e as MouseEvent));
-    this.bind(this.cv, 'mousemove', (e: Event) => { const me = e as MouseEvent; this.onMouseMoveAt(me.clientX, me.clientY); });
+    this.bind(this.cv, 'mousemove', (e: Event) => { const me = e as MouseEvent; this.onMouseMoveAt(me.clientX - this.cX, me.clientY - this.cY); });
     this.bind(this.cv, 'touchstart', (e: Event) => this.handleTouchStart(e as TouchEvent), { passive: false });
-    this.bind(this.cv, 'touchmove', (e: Event) => { (e as TouchEvent).preventDefault(); const t = (e as TouchEvent).changedTouches[0]; this.onTouchMoveAt(t.clientX, t.clientY); }, { passive: false });
+    this.bind(this.cv, 'touchmove', (e: Event) => { (e as TouchEvent).preventDefault(); const t = (e as TouchEvent).changedTouches[0]; this.onTouchMoveAt(t.clientX - this.cX, t.clientY - this.cY); }, { passive: false });
     this.bind(this.cv, 'touchend', () => this.onTouchEndAt());
     this.bind(document, 'keydown', (e: Event) => { const ke = e as KeyboardEvent; this.keys[ke.code] = true; if (ke.key === 'Escape') this.stop(); });
     this.bind(document, 'keyup', (e: Event) => { this.keys[(e as KeyboardEvent).code] = false; });
@@ -322,19 +335,11 @@ export abstract class MinigameBase {
     cx.textBaseline = 'alphabetic';
   }
 
-  protected drawCloseBtn(y = 38): void {
-    // 모바일에서 닫기 버튼 더 크게
-    this.cx.font = `400 ${this.mob ? 20 : 16}px "Cascadia Code","JetBrains Mono",monospace`;
-    this.cx.fillStyle = UI.muted; this.cx.textAlign = 'center';
-    this.cx.fillText('\u2715', this.W - 22, y);
-  }
+  // 닫기·타이틀은 맥OS 터미널 창 타이틀바(신호등 + 중앙 타이틀)로 흡수됨 → 본문 내 no-op.
+  // (게임 코드 호환을 위해 시그니처 유지)
+  protected drawCloseBtn(_y = 38): void {}
 
-  protected drawHudTitle(): void {
-    this.cx.textAlign = 'left';
-    this.cx.font = '600 11px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
-    this.cx.fillStyle = this.titleColor;
-    this.cx.fillText('\u276F ' + this.title, 20, 28);
-  }
+  protected drawHudTitle(): void {}
 
   protected drawHudLine(text: string, y: number, color = UI.subtle): void {
     this.cx.font = '500 10px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
@@ -450,11 +455,20 @@ export abstract class MinigameBase {
 
   private rsz(): void {
     this._dpr = Math.min(devicePixelRatio || 1, 2.5);
-    this._lw = innerWidth;
-    this._lh = innerHeight;
-    this.cv.width = this._lw * this._dpr;
-    this.cv.height = this._lh * this._dpr;
+    this._vw = innerWidth;
+    this._vh = innerHeight;
+    this.cv.width = this._vw * this._dpr;
+    this.cv.height = this._vh * this._dpr;
     this.cx.setTransform(this._dpr, 0, 0, this._dpr, 0, 0);
+
+    // 맥OS 터미널 창 지오메트리: 모바일은 전체화면(마진 0), 데스크탑은 살짝 띄운 창
+    this.winM = this.mob ? 0 : 22;
+    this.winTB = this.mob ? 30 : 36;
+    this.winR = this.mob ? 0 : 9;
+    this.cX = this.winM;
+    this.cY = this.winM + this.winTB;
+    this._lw = this._vw - this.winM * 2;            // 본문 폭
+    this._lh = this._vh - this.winM * 2 - this.winTB; // 본문 높이
     this.onResized();
   }
 
@@ -467,25 +481,110 @@ export abstract class MinigameBase {
     const n = performance.now();
     const dt = Math.min((n - this.prevT) / 1000, 0.05);
     this.prevT = n;
-    this.updateGame(dt); this.renderGame(n / 1000);
+    this.updateGame(dt);
+
+    const { cx } = this;
+    // 1) 데스크탑 배경 + 터미널 창 본체 + 타이틀바(신호등)
+    this.drawWindow();
+    // 2) 게임 렌더 — 창 본문 영역으로 평행이동 + 클립
+    cx.save();
+    cx.beginPath();
+    cx.roundRect(this.cX, this.cY, this._lw, this._lh, [0, 0, this.winR, this.winR]);
+    cx.clip();
+    cx.translate(this.cX, this.cY);
+    this.renderGame(n / 1000);
+    cx.restore();
+    // 3) 창 테두리 + 스캔라인(본문 위)
+    this.drawWindowFrame();
+
     this.setMobileControlsVisible(this.isInteractive());
     this.aId = requestAnimationFrame(this.loop);
   };
 
+  // 1x3 스캔라인 패턴 생성(데스크탑 CRT 질감) — 한 번만
+  private buildScanPattern(): void {
+    if (this.mob) { this.scanPat = null; return; }
+    const pc = document.createElement('canvas');
+    pc.width = 1; pc.height = 3;
+    const pcx = pc.getContext('2d')!;
+    pcx.fillStyle = 'rgba(0,0,0,0.14)';
+    pcx.fillRect(0, 2, 1, 1);
+    this.scanPat = this.cx.createPattern(pc, 'repeat');
+  }
+
+  // 데스크탑 배경 + 창 본체 + 타이틀바 + 신호등 버튼
+  private drawWindow(): void {
+    const { cx } = this;
+    const m = this.winM, tb = this.winTB, r = this.winR;
+    const ww = this._vw - m * 2, wh = this._vh - m * 2;
+
+    // 데스크탑 배경(창보다 어둡게)
+    cx.fillStyle = '#100e18';
+    cx.fillRect(0, 0, this._vw, this._vh);
+
+    // 창 본체
+    cx.beginPath(); cx.roundRect(m, m, ww, wh, r);
+    cx.fillStyle = C.bg; cx.fill();
+
+    // 타이틀바
+    cx.save();
+    cx.beginPath(); cx.roundRect(m, m, ww, tb, [r, r, 0, 0]); cx.clip();
+    cx.fillStyle = '#1f1d2e'; cx.fillRect(m, m, ww, tb);
+    cx.restore();
+    // 타이틀바 하단 구분선
+    cx.strokeStyle = UI.line; cx.lineWidth = 1;
+    cx.beginPath(); cx.moveTo(m, m + tb - 0.5); cx.lineTo(m + ww, m + tb - 0.5); cx.stroke();
+
+    // 신호등 버튼 (close=love / min=gold / max=green)
+    const dotY = m + tb / 2;
+    const dotX = m + (this.mob ? 16 : 18);
+    const gap = 20, rad = 6;
+    const lights = ['#eb6f92', '#f6c177', '#8ec8a3'];  // love / gold / 세이지(Rosé Pine 톤)
+    for (let i = 0; i < 3; i++) {
+      cx.beginPath(); cx.arc(dotX + i * gap, dotY, rad, 0, Math.PI * 2);
+      cx.fillStyle = lights[i]; cx.fill();
+    }
+
+    // 타이틀 텍스트(중앙)
+    cx.fillStyle = UI.subtle;
+    cx.font = '600 11px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(this.title, m + ww / 2, dotY + 0.5);
+    cx.textBaseline = 'alphabetic';
+  }
+
+  // 창 테두리 + 본문 스캔라인
+  private drawWindowFrame(): void {
+    const { cx } = this;
+    const m = this.winM, r = this.winR;
+    const ww = this._vw - m * 2, wh = this._vh - m * 2;
+    if (this.scanPat) {
+      cx.save();
+      cx.fillStyle = this.scanPat;
+      cx.fillRect(this.cX, this.cY, this._lw, this._lh);
+      cx.restore();
+    }
+    cx.beginPath(); cx.roundRect(m, m, ww, wh, r);
+    cx.strokeStyle = UI.line; cx.lineWidth = 1; cx.stroke();
+  }
+
+  // 닫기 히트 = 빨간 신호등(타이틀바 좌측). 모바일은 넉넉하게.
   private isCloseHit(x: number, y: number): boolean {
-    const sz = this.mob ? 60 : 44;
-    return x > this.W - sz && y < sz;
+    const dx = x - (this.winM + (this.mob ? 16 : 18));
+    const dy = y - (this.winM + this.winTB / 2);
+    const r = this.mob ? 16 : 11;
+    return dx * dx + dy * dy < r * r;
   }
 
   private handleClick(e: MouseEvent): void {
     if (this.isCloseHit(e.clientX, e.clientY)) { this.stop(); return; }
-    this.onClickAt(e.clientX, e.clientY);
+    this.onClickAt(e.clientX - this.cX, e.clientY - this.cY);
   }
 
   private handleTouchStart(e: TouchEvent): void {
     e.preventDefault();
     const t = e.changedTouches[0];
     if (this.isCloseHit(t.clientX, t.clientY)) { this.stop(); return; }
-    this.onClickAt(t.clientX, t.clientY);
+    this.onClickAt(t.clientX - this.cX, t.clientY - this.cY);
   }
 }

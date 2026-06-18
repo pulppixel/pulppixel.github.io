@@ -540,7 +540,6 @@ export function init(): void {
     }
 
     // Camera
-    if (!(import.meta.env.DEV && (window as any).__freeCam)) {
     const walkCamDist = input.camDist;
     const camH = walkCamDist * 0.55 + input.pitch * walkCamDist * 0.8;
     const camZ = walkCamDist * Math.cos(input.pitch * 0.5);
@@ -559,7 +558,6 @@ export function init(): void {
     if (Math.abs(camera.fov - targetFov) > 0.15) {
       camera.fov += (targetFov - camera.fov) * 3.5 * dt;
       camera.updateProjectionMatrix();
-    }
     }
 
     updateEnvironment(t, particles, stars, clouds, water);
@@ -581,16 +579,6 @@ export function init(): void {
       frameCount = 0;
       fpsLastTime = now;
     }
-  }
-
-  if (import.meta.env.DEV) {
-    (window as any).__dev = {
-      free(x: number, y: number, z: number, lx = 0, ly = 4, lz = -30) {
-        (window as any).__freeCam = true;
-        camera.position.set(x, y, z); camera.lookAt(lx, ly, lz); camera.updateProjectionMatrix();
-      },
-      release() { (window as any).__freeCam = false; },
-    };
   }
 
   animate();

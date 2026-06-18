@@ -479,19 +479,44 @@ function buildOverworldDecor(scene: THREE.Scene): void {
         scene.add(setPos(new THREE.Mesh(gravelGeo, gravelMat), cx - 2, h + 0.01, cz + gi * 0.8));
     }
 
-    // Waterfall — 반투명 물 커튼
+    // Waterfall — 반투명 물 커튼 (상단 절벽) + 배터를 따라 내려가는 하단 캐스케이드 + 발치 풀
     const fX = cx - 9, fZ = cz;
-    const waterCurtain = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.5, h),
-        glowMat({
-            color: 0x4898c0, emissive: 0x2a6080, emissiveIntensity: 0.08,
-            transparent: true, opacity: 0.18, doubleSide: true,
-            depthWrite: false, metalness: 0.1, roughness: 0.3,
-        }),
-    );
+    const curtainMat = glowMat({
+        color: 0x4898c0, emissive: 0x2a6080, emissiveIntensity: 0.08,
+        transparent: true, opacity: 0.18, doubleSide: true,
+        depthWrite: false, metalness: 0.1, roughness: 0.3,
+    });
+    const waterCurtain = new THREE.Mesh(new THREE.PlaneGeometry(2.5, h), curtainMat);
     waterCurtain.position.set(fX - 0.2, h / 2, fZ);
     waterCurtain.rotation.y = Math.PI / 2;
     scene.add(waterCurtain);
+
+    // 하단 캐스케이드: 절벽 배터(아래로 벌어짐)를 따라 바깥+아래로 기울여 lowland까지
+    const cascade = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 3.2), curtainMat);
+    cascade.position.set(fX - 1.3, -0.4, fZ);
+    cascade.rotation.set(-0.5, Math.PI / 2, 0);
+    scene.add(cascade);
+
+    // 발치 스플래시 풀 (lowland 물웅덩이)
+    const pool = new THREE.Mesh(
+        new THREE.CircleGeometry(2.4, 18),
+        glowMat({
+            color: 0x6fb8d8, emissive: 0x2a6080, emissiveIntensity: 0.12,
+            transparent: true, opacity: 0.55, depthWrite: false,
+            metalness: 0.2, roughness: 0.25,
+        }),
+    );
+    pool.rotation.x = -Math.PI / 2;
+    pool.position.set(fX - 2.4, -1.55, fZ);
+    scene.add(pool);
+    // 풀 가장자리 포말 링
+    const foamRing = new THREE.Mesh(
+        new THREE.RingGeometry(2.2, 2.7, 20),
+        new THREE.MeshBasicMaterial({ color: 0xd0f0ff, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false }),
+    );
+    foamRing.rotation.x = -Math.PI / 2;
+    foamRing.position.set(fX - 2.4, -1.53, fZ);
+    scene.add(foamRing);
 }
 
 // =============================================

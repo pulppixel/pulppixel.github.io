@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { perf } from '../core/performance';
-import { getGroundHeight } from '../core/data';
+import { getGroundHeight, PLATFORMS } from '../core/data';
 
 // 월드 중심 (대부분 시스템이 z=-29 기준). lowland/산맥 배치 기준점.
 const WORLD_CX = 0;
@@ -298,8 +298,91 @@ function _scatterMat(key: string, _col: THREE.Color): THREE.MeshStandardMaterial
   return m;
 }
 
+// =============================================
+// Cliff detail: 메인 아일랜드 절벽 발치 스크리(너덜) 바위 + 풀 (충돌 無)
+// =============================================
+
+const C_SCREE = [new THREE.Color(0x6e6457), new THREE.Color(0x837766), new THREE.Color(0x5a5142)];
+
+export function buildCliffDetail(scene: THREE.Scene): void {
+  if (perf.tier === 'low') return;
+  const mains = PLATFORMS.filter(p => p.w >= 14);
+
+  const buckets = new Map<string, { mat: THREE.Material; geoms: THREE.BufferGeometry[] }>();
+  const push = (key: string, g: THREE.BufferGeometry) => {
+    let b = buckets.get(key);
+    if (!b) { b = { mat: _scatterMat(key, _tmpCol), geoms: [] }; buckets.set(key, b); }
+    b.geoms.push(g);
+  };
+  const colorGeo = (g: THREE.BufferGeometry, col: THREE.Color) => {
+    const n = g.attributes.position.count;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    return g;
+  };
+
+  for (const p of mains) {
+    const hw = p.w / 2, hd = p.d / 2;
+    // 배터 절벽이 바닥에서 ~30% 벌어지므로 발치는 그 바깥
+    const ox = hw * 1.30, oz = hd * 1.30;
+    const perim = Math.round((p.w + p.d) * 0.9);
+
+    for (let k = 0; k < perim; k++) {
+      const f = k / perim;
+      // 사각 둘레를 따라 위치 (4 edge)
+      let ex: number, ez: number;
+      const seg = f * 4;
+      if (seg < 1)      { ex = p.x - ox + (seg) * 2 * ox;        ez = p.z - oz; }
+      else if (seg < 2) { ex = p.x + ox;                          ez = p.z - oz + (seg - 1) * 2 * oz; }
+      else if (seg < 3) { ex = p.x + ox - (seg - 2) * 2 * ox;     ez = p.z + oz; }
+      else              { ex = p.x - ox;                          ez = p.z + oz - (seg - 3) * 2 * oz; }
+
+      const r = vhash(k * 3 + p.x, k * 5 + p.z);
+      if (r < 0.45) continue; // 듬성듬성
+      // 바깥쪽으로 살짝 밀고 노이즈
+      const jx = (vhash(k, p.x + 1) - 0.5) * 1.4;
+      const jz = (vhash(k, p.z + 2) - 0.5) * 1.4;
+      const wx = ex + Math.sign(ex - p.x) * 0.4 + jx;
+      const wz = ez + Math.sign(ez - p.z) * 0.4 + jz;
+      if (getGroundHeight(wx, wz) > -0.5) continue; // 다른 플랫폼 위면 skip
+      const H = lowlandHeight(wx, wz);
+      if (H < -1.0) continue;
+
+      if (r < 0.8) {
+        // 스크리 바위 (절벽 발치 너덜)
+        const s = 0.5 + vhash(k, 7) * 1.1;
+        const ci = k % 3;
+        const rock = new THREE.DodecahedronGeometry(s, 0);
+        rock.scale(1 + r * 0.4, 0.6 + r * 0.3, 1);
+        rock.rotateY(r * 6.28);
+        rock.translate(wx, H + s * 0.35, wz);
+        push(`scree${ci}`, colorGeo(rock, C_SCREE[ci]));
+      } else {
+        // 발치 풀 다발
+        for (let j = 0; j < 3; j++) {
+          const tuft = new THREE.BoxGeometry(0.14, 0.4, 0.14);
+          tuft.translate(wx + (j - 1) * 0.18, H + 0.2, wz + (vhash(k + j, 9) - 0.5) * 0.3);
+          push('basetuft', colorGeo(tuft, C_TUFT));
+        }
+      }
+    }
+  }
+
+  for (const [, b] of buckets) {
+    if (!b.geoms.length) continue;
+    const merged = mergeGeometries(b.geoms);
+    b.geoms.forEach(g => g.dispose());
+    const mesh = new THREE.Mesh(merged, b.mat);
+    mesh.castShadow = perf.shadows;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  }
+}
+
 export function buildLandscape(scene: THREE.Scene): void {
   buildLowland(scene);
   buildDistantRange(scene);
   buildLowlandScatter(scene);
+  buildCliffDetail(scene);
 }

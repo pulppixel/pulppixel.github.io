@@ -40,12 +40,12 @@ export const ZONE_PALETTE = {
 
     // --- Spawn/Hub (중립, 기준) ---
     spawn: {
-        terrainTop:        0x8fc862,   // 생생한 잔디
-        terrainSide:       0x8b6b47,   // 흙
-        terrainAccent:     0x72b048,   // 진한 잔디 도트
-        terrainDark:       0x5c4a30,
+        terrainTop:        0x88b85e,   // 잔디 (채도 약간 낮춰 lowland와 조화)
+        terrainSide:       0x86684a,   // 흙
+        terrainAccent:     0x76a350,   // 잔디 도트
+        terrainDark:       0x584734,
 
-        foliage:           0x4fa848,
+        foliage:           0x57994e,
         foliageAlt:        0xffd3e0,   // 핑크 꽃
         trunk:             0x6b4a2a,
 
@@ -62,12 +62,12 @@ export const ZONE_PALETTE = {
 
     // --- Overworld (19-22): 초원 마을, 커리어 시작 ---
     overworld: {
-        terrainTop:        0x7fb852,   // 잔디 초록
-        terrainSide:       0x8b6b47,   // 흙
-        terrainAccent:     0x6ba642,
-        terrainDark:       0x5c4a30,
+        terrainTop:        0x80a85a,   // 잔디 초록 (차분하게)
+        terrainSide:       0x86684a,   // 흙
+        terrainAccent:     0x6f9a4e,
+        terrainDark:       0x584734,
 
-        foliage:           0x4a9848,
+        foliage:           0x548c4c,
         foliageAlt:        0xffd3e0,
         trunk:             0x6b4a2a,
 
@@ -84,12 +84,12 @@ export const ZONE_PALETTE = {
 
     // --- Treasure Isle (23): 해변 섬, 보물 ---
     treasure: {
-        terrainTop:        0xf5deb3,   // 모래
-        terrainSide:       0xc8b999,   // 베이지석
-        terrainAccent:     0xeac894,
-        terrainDark:       0x998573,
+        terrainTop:        0xead7a8,   // 모래 (살짝 차분)
+        terrainSide:       0xc4b596,   // 베이지석
+        terrainAccent:     0xe0c48e,
+        terrainDark:       0x948170,
 
-        foliage:           0x3aa878,   // 야자수 잎 초록 (채도 높음)
+        foliage:           0x4f9c78,   // 야자수 잎 (채도 낮춰 조화)
         foliageAlt:        0xfff5c8,   // 조개 크림
         trunk:             0x8b6b47,
 
@@ -106,9 +106,9 @@ export const ZONE_PALETTE = {
 
     // --- The Nether (25-26): 용암, 포털 ---
     nether: {
-        terrainTop:        0x9f2d2d,   // 네더랙 빨강
+        terrainTop:        0x973a3a,   // 네더랙 빨강 (살짝 톤다운, 정체성 유지)
         terrainSide:       0x2a1818,   // 블랙스톤
-        terrainAccent:     0xc83838,
+        terrainAccent:     0xbd4242,
         terrainDark:       0x1a0808,
 
         foliage:           0x6a3060,   // 네더 버섯 자주
@@ -150,12 +150,12 @@ export const ZONE_PALETTE = {
 
     // --- Bridge (존 사이 경로, 혼합 톤) ---
     bridge: {
-        terrainTop:        0x8a9868,
-        terrainSide:       0x8b6b47,
-        terrainAccent:     0x7a8858,
-        terrainDark:       0x5c4a30,
+        terrainTop:        0x849463,
+        terrainSide:       0x86684a,
+        terrainAccent:     0x788455,
+        terrainDark:       0x584734,
 
-        foliage:           0x68a868,
+        foliage:           0x6b9a60,
         foliageAlt:        0xfff5c8,
         trunk:             0x6b4a2a,
 

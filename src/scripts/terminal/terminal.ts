@@ -382,7 +382,7 @@ export class Terminal {
     if (proj) { this.openPage(proj); return null; }
     const k = K.filter((x) => x.label === arg)[0];
     if (k && k.url) { window.open(k.url, '_blank', 'noopener'); return rows([[tk('opening ', C.dim), tk(arg, C.foam), tk(' ↗', C.dim)]]); }
-    return rows([[tk('open: ' + arg + ': not found', C.love)], [tk('try: ', C.dim), tk('eterna, haul, ieum, peekar, github, linkedin, email', C.dim)]]);
+    return rows([[tk('open: ' + arg + ': not found', C.love)], [tk('try: ', C.dim), tk('eterna, ieum, peekar, github, linkedin, email', C.dim)]]);
   }
 
   // ---- navigation ----

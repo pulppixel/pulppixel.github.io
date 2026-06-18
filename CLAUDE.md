@@ -24,8 +24,8 @@ Debug the 3D scene's perf tier with `?perf=low|medium|high` on `/explore/` — b
 
 - `src/pages/index.astro` — classic portfolio. Almost no JS. Project list duplicated here as a local const (Astro-rendered cards).
 - `src/pages/explore.astro` — fullscreen Three.js scene; does NOT use `BaseLayout`. Bootstraps `src/scripts/main.ts`.
-- `src/pages/projects/{slug}.astro` (×11) — project detail pages, use `ProjectLayout`.
-- `src/pages/play/[key].astro` — single Astro file → 6 prerendered minigame routes via `getStaticPaths`. Dynamically imports just the requested minigame module so each page ships only its own game code.
+- `src/pages/projects/{slug}.astro` (×10) — project detail pages, use `ProjectLayout`.
+- `src/pages/play/[key].astro` — single Astro file → 5 prerendered minigame routes via `getStaticPaths`. Dynamically imports just the requested minigame module so each page ships only its own game code.
 
 The 3D scene's project cubes (`PROJECTS` in `src/scripts/core/data.ts`) are the canonical definition: zone assignment, position offset, and `minigame` slug mapping all live there. The classic portfolio's project list in `index.astro` is a separate hand-maintained array — **changes to project copy must be made in both places.**
 
@@ -38,7 +38,7 @@ world/             scene graph: terrain, sky, ocean, zones, time/weather/seasons
                    particles, wind, environment, landmarks/
 entity/            character (5 skins), npcs (FSM), animals, interactions
 system/            audio (Web Audio synth), postfx, ui, collectibles
-minigames/         base.ts (abstract), spody/maze/ruby/circles/nomads/haul
+minigames/         base.ts (abstract), spody/maze/ruby/circles/nomads
 ```
 
 Build pipeline in `world/scene.ts` runs in two phases: Phase-1 essentials always built; Phase-2 decorations skipped entirely when `perf.phase2Decor === false`.

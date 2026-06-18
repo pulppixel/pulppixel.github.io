@@ -57,27 +57,6 @@ export const DATA: Panel[] = [
       points: ['3계층 아키텍처 설계 및 컨벤션 정립', '아고라 CRUD · 알림 · 검색 · 권한 전체 구현', '크로스플랫폼 STT · 한글 조합 커스텀 InputField', 'UaaL 양방향 통신 검증'],
       url: '/projects/eterna/' },
 
-    { label: 'haul', meta: 'now', name: 'HAUL', sub: '2D PvPvE Extraction Shooter', period: '2025.10 — 현재', badge: 'IN PROGRESS', badgeColor: G,
-      desc: 'Server-authoritative 멀티플레이어 추출 슈터. 클라이언트 예측(prediction)과 서버 보정(reconciliation), NPC AI를 1인 설계·구현 중입니다.',
-      stack: ['Godot 4', 'C#', 'ASP.NET', 'gRPC', 'LiteNetLib'],
-      points: ['Server-authoritative 네트워크 모델 구축', 'Client prediction + server reconciliation', 'NPC AI 및 전투 로직 단독 설계'],
-      url: '/projects/haul/', play: '/play/haul/',
-      long: {
-        role: '기획 · 설계 · 클라이언트 · 서버 (1인)',
-        play: '/play/haul/', image: '/images/haul.png',
-        stack: ['Godot 4.6', 'C#', 'GDScript', 'ASP.NET Core 9', 'MagicOnion (gRPC)', 'LiteNetLib (UDP)', 'PostgreSQL', 'MessagePack'],
-        overview: 'Gabriel Gambetta의 고속(fast-paced) 멀티플레이어 환경에 최적화된 Server-authoritative 아키텍처를 구축하고 있습니다. 네오 서울을 배경으로 기획부터 서버까지 1인이 설계·구현 중입니다.',
-        sections: [
-          { title: '네트워크', items: ['Server-authoritative 구조 — 서버와 클라이언트가 동일한 Godot 물리 엔진을 사용해 misprediction 최소화', 'Client-side prediction + Server reconciliation 적용', 'Snapshot interpolation — 다양한 지연(latency) 시뮬레이션으로 최적 버퍼(150ms)를 산출·적용'] },
-          { title: 'AI · 게임플레이', items: ['NPC AI는 fake InputCmd 패턴 — 플레이어와 동일한 물리 파이프라인을 공유해 코드 변경 없이 NPC 추가', '시민 · 청소부 · 방역반 등 Human NPC를 7-state FSM으로 구현'] },
-        ],
-        progress: [
-          { t: '인증, 매칭, 이동 동기화', done: true }, { t: '전투, NPC AI', done: true },
-          { t: '추출 시스템', done: true }, { t: '영속 DB (6테이블), 평판 시스템', done: true },
-          { t: '인벤토리, 루팅', done: false }, { t: '맵 확장, 레벨 디자인', done: false }, { t: '사운드, 연출', done: false },
-        ],
-      } },
-
     { label: 'ieum', meta: '26.03', name: '이음작명소', sub: '신생아 작명 웹서비스', period: '2026.03 — 현재', badge: 'LIVE', badgeColor: F,
       desc: '훈민정음 해례본에 근거해 이름을 짓는 한국 신생아 작명 웹서비스. 같은 정보면 누가 보더라도 같은 결과를 약속합니다. 직접 기획·개발·운영하는 동글랩의 서비스입니다.',
       stack: ['Next.js', 'React', '.NET', 'TypeScript', 'PostgreSQL'],

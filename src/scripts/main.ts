@@ -251,7 +251,7 @@ export function init(): void {
 
   // --- Minigame lazy loading ---
   const mgCache: Record<string, { start(): void; stop(): void }> = {};
-  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'haul', 'ninetosix']);
+  const MG_KEYS = new Set(['spody', 'ruby', 'maze', 'nomads', 'ninetosix']);
 
   async function loadMinigame(key: string): Promise<{ start(): void; stop(): void }> {
     if (mgCache[key]) return mgCache[key];
@@ -261,7 +261,6 @@ export function init(): void {
       case 'ruby':      game = (await import('./minigames/ruby')).createRubyGame(mgContainer, exitMg, audio); break;
       case 'maze':      game = (await import('./minigames/maze')).createMazeGame(mgContainer, exitMg, audio); break;
       case 'nomads':    game = (await import('./minigames/nomads')).createNomadsGame(mgContainer, exitMg, audio); break;
-      case 'haul':      game = (await import('./minigames/haul')).createHaulGame(mgContainer, exitMg, audio); break;
       case 'ninetosix': game = (await import('./minigames/circles')).createNineToSixGame(mgContainer, exitMg, audio); break;
       default: throw new Error(`Unknown minigame: ${key}`);
     }
@@ -541,6 +540,7 @@ export function init(): void {
     }
 
     // Camera
+    if (!(import.meta.env.DEV && (window as any).__freeCam)) {
     const walkCamDist = input.camDist;
     const camH = walkCamDist * 0.55 + input.pitch * walkCamDist * 0.8;
     const camZ = walkCamDist * Math.cos(input.pitch * 0.5);
@@ -559,6 +559,7 @@ export function init(): void {
     if (Math.abs(camera.fov - targetFov) > 0.15) {
       camera.fov += (targetFov - camera.fov) * 3.5 * dt;
       camera.updateProjectionMatrix();
+    }
     }
 
     updateEnvironment(t, particles, stars, clouds, water);
@@ -580,6 +581,16 @@ export function init(): void {
       frameCount = 0;
       fpsLastTime = now;
     }
+  }
+
+  if (import.meta.env.DEV) {
+    (window as any).__dev = {
+      free(x: number, y: number, z: number, lx = 0, ly = 4, lz = -30) {
+        (window as any).__freeCam = true;
+        camera.position.set(x, y, z); camera.lookAt(lx, ly, lz); camera.updateProjectionMatrix();
+      },
+      release() { (window as any).__freeCam = false; },
+    };
   }
 
   animate();

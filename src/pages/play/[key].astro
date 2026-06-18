@@ -10,7 +10,6 @@ export function getStaticPaths() {
         { params: { key: 'ruby' },      props: { slug: 'ruby-adventure', title: '루비의 모험' } },
         { params: { key: 'nomads' },    props: { slug: 'nomads-planet',  title: 'Nomads Planet' } },
         { params: { key: 'ninetosix' }, props: { slug: 'frenzy-circle',  title: 'Nine to Six' } },
-        { params: { key: 'haul' },      props: { slug: 'haul',           title: 'HAUL' } },
     ];
 }
 
@@ -94,7 +93,6 @@ const projectUrl = `/projects/${slug}/`;
             case 'ruby':      game = (await import('../../scripts/minigames/ruby')).createRubyGame(container, onExit, audio); break;
             case 'nomads':    game = (await import('../../scripts/minigames/nomads')).createNomadsGame(container, onExit, audio); break;
             case 'ninetosix': game = (await import('../../scripts/minigames/circles')).createNineToSixGame(container, onExit, audio); break;
-            case 'haul':      game = (await import('../../scripts/minigames/haul')).createHaulGame(container, onExit, audio); break;
             default: location.href = projectUrl; return;
         }
 

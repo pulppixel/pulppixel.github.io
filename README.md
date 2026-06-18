@@ -79,7 +79,7 @@ Astro 정적 빌드 + Three.js 3D 씬 + Canvas 2D 미니게임으로 구성.
 ```
 
 프로젝트 slug: `eterna`, `reiw`, `iw-zombie`, `stelsi-wallet`, `stelsi`,
-`frenzy-circle`, `haul`, `nomads-planet`, `math-master`, `spody`,
+`frenzy-circle`, `nomads-planet`, `math-master`, `spody`,
 `ruby-adventure`.
 
 리더보드와 방명록은 두 경로로 접근 가능합니다. 전용 페이지(`/leaderboard/`,
@@ -138,7 +138,7 @@ src/
     ├── entity/                         character, npcs, animals, interactions
     ├── system/                         audio, postfx, ui, collectibles
     └── minigames/                      spody, maze, ruby, circles, nomads,
-                                        haul, guestbook, leaderboard, base
+                                        guestbook, leaderboard, base
 code-samples/                           별도 repo로 분리한 Unity C# 코드 샘플
 ```
 
@@ -164,7 +164,7 @@ Spawn (h=1)
   -- Hub (h=4) -- East: Treasure Isle (h=9)   : 2023년 zone
               |-- West: The Nether (h=8)      : 2025-26년 zone
               |-- North Summit: Beacon Peak (h=12)
-                                              : 2026년 진행중 (HAUL)
+                                              : 2026년 zone
 ```
 
 플랫폼 배치는 점프 물리에 맞춰 역산되었습니다.
@@ -202,7 +202,7 @@ const STEP_H = 0.35;  // 자동 step-up 허용 범위
 | Overworld      | (0, -18)    | `#ff6b9d` | 2019-22   | SPODY, Math Master, 루비의 모험             |
 | Treasure Isle  | (28, -40)   | `#6ee7b7` | 2023      | STELSI Wallet, Nomads Planet, Nine to Six  |
 | The Nether     | (-28, -40)  | `#a78bfa` | 2025-26   | ETERNA, REIW, IW Zombie                    |
-| Beacon Peak    | (0, -58)    | `#fbbf24` | 2026~     | HAUL (in progress)                          |
+| Beacon Peak    | (0, -58)    | `#fbbf24` | 2026~     | —                                           |
 
 각 zone은 기둥(pillar) + 바닥 ring + 색상 light를 가지며, 플레이어가
 다가가면 ring opacity와 light intensity가 부드럽게 올라갑니다. 처음으로
@@ -261,7 +261,6 @@ mat.emissiveIntensity += (tei - mat.emissiveIntensity) * 0.1;
 ETERNA          -> guestbook    (Supabase 방명록)
 Nomads Planet   -> nomads       (범퍼카)
 Nine to Six     -> ninetosix    (Frenzy Circle)
-HAUL            -> haul         (1-hit 플랫포머)
 SPODY           -> spody        (타겟 슈팅)
 Math Master     -> maze         (미로)
 루비의 모험      -> ruby         (탑다운 ARPG)
@@ -871,7 +870,6 @@ Math Master     maze         (미로)
 루비의 모험      ruby         (탑다운 ARPG)
 Nine to Six     ninetosix    (Frenzy Circle, 동심원 점프)
 Nomads Planet   nomads       (범퍼카 아레나)
-HAUL            haul         (1-hit 플랫포머)
 ```
 
 각 미니게임은 원본 프로젝트의 핵심 메커닉을 단순화해서 재현한 것입니다.
@@ -911,7 +909,7 @@ abstract class MinigameBase {
 ```
 
 `setupMobileControls(config)`로 모바일 컨트롤을 게임별로 켤 수 있습니다.
-HAUL과 ruby는 jump + action 둘 다, maze는 swipe만, spody는 tap만 쓰는
+ruby는 jump + action 둘 다, maze는 swipe만, spody는 tap만 쓰는
 식으로.
 
 ### 1. SPODY (`spody.ts`, 276줄)
@@ -1056,56 +1054,6 @@ type CState = 'idle' | 'chase_coin' | 'attack' | 'flee' | 'boost' | 'stunned';
 플레이어는 drift 물리(가속 + 마찰 + 관성)로 움직이고, 부스트 패드를 먹으면
 4초간 1.7배 속도. 들이받기에 RAM_COOLDOWN과 stun이 있어서 무한 스팸 방지.
 
-### 6. HAUL (`haul.ts`, 997줄)
-
-원본: HAUL (현재 1인 개발 중인 2D PvPvE Extraction shooter).
-
-미니게임 버전: 1-hit die 정밀 플랫포머. 3 stage, 모든 적/위험에 한 번
-닿으면 죽음. 죽으면 stage 입구에서 부활.
-
-```ts
-const GRAV = 1400;
-const MOVE_SPD = 220;
-const JUMP_V = -520;
-const COYOTE_TIME = 0.08;       // 발판에서 떨어진 후 점프 허용 시간
-const JUMP_BUFFER = 0.10;       // 착지 전 점프 입력 버퍼
-```
-
-`COYOTE_TIME`과 `JUMP_BUFFER`는 정밀 플랫포머의 표준 game feel 패턴입니다.
-입력 타이밍이 살짝 어긋나도 점프가 의도대로 나가게 해줍니다.
-
-플랫폼은 3종:
-
-```ts
-type Plat = { kind: 'solid' | 'falling' | 'fake' };
-//  solid   : 일반
-//  falling : 밟으면 떨림 -> 0.125초 후 낙하 -> 4초 후 재생성
-//  fake    : 처음엔 진짜처럼 보이다가 통과해버림. 4초 후 재생성
-```
-
-코어(수집물) 두 종:
-
-```ts
-type Core = { fake: boolean; tier: 1 | 2 | 3 };
-//  진짜 코어 : 점수 추가
-//  가짜 코어 : 떨림 애니메이션이 살짝 다름. 먹으면 즉사
-```
-
-Stage 3에서는 가짜 코어 위치가 매번 랜덤화되어 외워서 풀 수 없습니다.
-
-추가로 `humans`라는 NPC가 stage 2부터 등장합니다. 정해진 patrol 구간
-(`pL`, `pR`)을 왕복하며 닿으면 죽음.
-
-```ts
-interface Human {
-  x, y, pL, pR, dir: 1 | -1, walkPhase: number;
-}
-```
-
-이 게임이 6개 중에서 가장 큽니다 (997줄). HAUL 본 프로젝트의 server-auth
-멀티플레이는 미니게임에서 재현하기 어려워서, 대신 "정밀 플랫포머 + 트롤
-함정"이라는 다른 각도로 핵심 game feel을 표현했습니다.
-
 ---
 
 ## Leaderboard
@@ -1128,7 +1076,7 @@ table game_scores (
 ```
 
 `metadata`는 게임마다 다른 부가 정보를 담습니다. 예: SPODY는 max combo,
-maze는 수집한 gem 개수와 클리어 시간, HAUL은 모은 core 개수.
+maze는 수집한 gem 개수와 클리어 시간.
 
 ### Game Registry
 
@@ -1142,8 +1090,6 @@ export const GAMES: Record<string, GameInfo> = {
                maxScore: 30000,  formatExtra: e => `${e.metadata?.gems ?? 0} ${e.metadata?.time?.toFixed(1)}s` },
   nomads:    { id: 'nomads',    title: 'Nomads Planet', color: '#fbbf24',
                maxScore: 999999, formatExtra: e => e.metadata?.combo ? `x${e.metadata.combo}` : '' },
-  haul:      { id: 'haul',      title: 'HAUL',          color: '#ff966b',
-               maxScore: 99999,  formatExtra: e => `${e.metadata?.cores ?? 0}` },
   ninetosix: { id: 'ninetosix', title: 'Frenzy Circle', color: '#22d3ee',
                maxScore: 99999,  formatExtra: e => e.metadata?.combo ? `x${e.metadata.combo}` : '' },
 };
@@ -1310,19 +1256,10 @@ Stack: Unreal Engine 5, C++, Bink2
 ### Nine to Six - Frenzy Circle (2024.06 - 2024.10)
 
 TON 생태계 텔레그램 환경(WebGL) 미니게임. 코인 밈 테마, 랭킹 시스템.
-이 프로젝트의 랭킹 시스템 작업이 본 포트폴리오 사이트의 6개 미니게임
+이 프로젝트의 랭킹 시스템 작업이 본 포트폴리오 사이트의 미니게임
 리더보드로 일반화되었습니다.
 
 Stack: Unity, C#, WebGL, RESTful API
-
-### HAUL - 2D PvPvE Extraction (2025.10 - Present)
-
-현재 1인 개발 중인 사이드 프로젝트. Server-authoritative 멀티플레이어
-구조로, Client-side prediction과 Server reconciliation을 직접 구현하고
-있습니다. 동일 물리 엔진을 클라이언트와 서버 양쪽에서 돌려 misprediction을
-최소화하는 방식. NPC도 fake InputCmd 패턴으로 동작합니다.
-
-Stack: Godot 4, C#, ASP.NET, gRPC, LiteNetLib
 
 ### Nomads Planet (2023.06 - 2023.09)
 

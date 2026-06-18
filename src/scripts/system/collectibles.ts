@@ -46,14 +46,13 @@ interface FloatText {
 
 function spawnFloatText(name: string, color: string): FloatText {
     const el = document.createElement('div');
-    el.textContent = `◆ ${name}`;
+    el.textContent = `+ ${name}`;
     el.style.cssText = `
     position:fixed; left:50%; top:45%;
     transform:translateX(-50%);
-    font-family:'JetBrains Mono',monospace;
+    font-family:'Cascadia Code','D2Coding','JetBrains Mono',monospace;
     font-size:13px; color:${color};
     pointer-events:none; z-index:22;
-    text-shadow:0 0 12px ${color}40;
     transition:opacity 0.5s, top 0.8s ease-out;
     opacity:1;
   `;
@@ -77,14 +76,14 @@ function createHUD(): HTMLDivElement {
     el.style.cssText = `
     position:absolute; top:56px; right:50%;
     transform:translateX(50%);
-    font-family:'JetBrains Mono',monospace;
-    font-size:10px; color:#6ee7b7;
+    font-family:'Cascadia Code','D2Coding','JetBrains Mono',monospace;
+    font-size:10px; color:#9ccfd8;
     letter-spacing:0.08em;
-    background:rgba(10,10,11,0.65);
-    border:1px solid rgba(110,231,183,0.15);
-    border-radius:4px; padding:3px 10px;
+    background:rgba(25,23,36,0.92);
+    border:1px solid #403d52;
+    border-radius:6px; padding:4px 11px;
     z-index:12; pointer-events:none;
-    backdrop-filter:blur(4px);
+    backdrop-filter:blur(8px);
     opacity:0; transition:opacity 0.5s;
   `;
     document.body.appendChild(el);
@@ -128,11 +127,11 @@ export function createCollectibles(
 
     function updateHUD(): void {
         const c = states.filter(s => s.collected).length;
-        hudEl.textContent = `◆ ${c} / ${GEMS.length}`;
+        hudEl.textContent = `● ${c} / ${GEMS.length}`;
         if (c === GEMS.length) {
-            hudEl.style.color = '#fbbf24';
-            hudEl.style.borderColor = 'rgba(251,191,36,0.3)';
-            hudEl.textContent = `★ ${c} / ${GEMS.length} COMPLETE`;
+            hudEl.style.color = '#f6c177';
+            hudEl.style.borderColor = 'rgba(246,193,119,0.4)';
+            hudEl.textContent = `✓ ${c} / ${GEMS.length} COMPLETE`;
         }
     }
 

@@ -611,7 +611,7 @@ class MazeGame extends MinigameBase {
         this.cx.font = '700 22px "JetBrains Mono",monospace'; this.cx.fillStyle = C.accent;
         this.cx.fillText('CLEAR!', this.W / 2, this.H / 2 - 16);
         const st = this.stageTimes[this.stageTimes.length - 1];
-        this.cx.font = '400 12px "JetBrains Mono",monospace'; this.cx.fillStyle = '#8a8a9a';
+        this.cx.font = '400 12px "JetBrains Mono",monospace'; this.cx.fillStyle = '#908caa';
         this.cx.fillText(this.fmtTime(st), this.W / 2, this.H / 2 + 12);
         if (this.gems.length > 0) {
             this.cx.fillStyle = C.cyan;
@@ -639,18 +639,17 @@ class MazeGame extends MinigameBase {
         const allGems = this.totalGems.reduce((a, b) => a + b, 0);
         const score = allGems * 1000 - Math.round(total * 10);
 
-        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec';
+        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e0def4';
         cx.fillText(`${score}`, bx, by - 40);
-        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66';
+        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86';
         cx.fillText('SCORE', bx, by - 24);
         cx.fillText(`${allGems} GEMS · ${this.fmtTime(total)}`, bx, by - 8);
 
-        this.drawLeaderboard(bx, by + 100, 280);
-        this.drawResultBtns(bx, by + 220);
+        this.drawResultBtns(bx, by + 36);
     }
 
     private get resultBtnY(): number {
-        return this.H / 2 + 220;
+        return this.H / 2 + 36;
     }
 
     private fmtTime(t: number): string {

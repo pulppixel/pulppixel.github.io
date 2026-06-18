@@ -29,7 +29,7 @@ const NPC_DEFS: NPCDef[] = [
             '반갑다, 여행자! 여기가 pulppixel의 세계야.',
             'WASD로 이동, Space로 점프. 간단하지?',
             '빛나는 큐브에 다가가서 E를 눌러봐!',
-            '12개의 숨겨진 보석 ◆ 을 모두 찾을 수 있을까?',
+            '12개의 숨겨진 보석 ● 을 모두 찾을 수 있을까?',
         ],
         wanderRadius: 3,
     },
@@ -160,7 +160,7 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
             const gem = new THREE.Mesh(
                 new THREE.BoxGeometry(0.12, 0.12, 0.12),
                 new THREE.MeshStandardMaterial({
-                    color: 0x7dd3fc, emissive: 0x7dd3fc, emissiveIntensity: 0.6,
+                    color: 0x9ccfd8, emissive: 0x9ccfd8, emissiveIntensity: 0.6,
                     metalness: 0.3, roughness: 0.4, transparent: true, opacity: 0.85,
                 }),
             );
@@ -327,11 +327,11 @@ function createBubble(): HTMLDivElement {
     const el = document.createElement('div');
     el.style.cssText = `
     position:absolute; pointer-events:none; z-index:14;
-    background:rgba(10,10,11,0.88);
-    border:1px solid rgba(110,231,183,0.25);
-    border-radius:6px; padding:8px 14px;
+    background:rgba(25,23,36,0.92);
+    border:1px solid #403d52;
+    border-radius:7px; padding:8px 14px;
     backdrop-filter:blur(8px);
-    font-family:'JetBrains Mono',monospace;
+    font-family:'Cascadia Code','D2Coding','Nanum Gothic Coding','JetBrains Mono',monospace;
     max-width:220px; text-align:center;
     opacity:0;
     transform:translate(-50%,-100%);
@@ -343,10 +343,10 @@ function createBubble(): HTMLDivElement {
     el.appendChild(nameEl);
 
     const textEl = document.createElement('div');
-    textEl.style.cssText = 'font-size:11px;color:#a8a8b3;line-height:1.6;';
+    textEl.style.cssText = "font-size:11px;color:#cdc9de;line-height:1.6;";
     el.appendChild(textEl);
 
-    // 삼각형 꼬리
+    // 삼각형 꼬리 (말풍선 배경색과 일치)
     const tail = document.createElement('div');
     tail.style.cssText = `
     position:absolute; bottom:-6px; left:50%;
@@ -354,7 +354,7 @@ function createBubble(): HTMLDivElement {
     width:0; height:0;
     border-left:6px solid transparent;
     border-right:6px solid transparent;
-    border-top:6px solid rgba(10,10,11,0.88);
+    border-top:6px solid #403d52;
   `;
     el.appendChild(tail);
 
@@ -417,7 +417,7 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
         const textEl = bubble.children[1] as HTMLElement;
 
         nameEl.style.color = '#' + def.color.toString(16).padStart(6, '0');
-        nameEl.textContent = `◆ ${def.name}`;
+        nameEl.textContent = `❯ ${def.name}`;
 
         npcs.push({
             def, parts, bubble, nameEl, textEl,

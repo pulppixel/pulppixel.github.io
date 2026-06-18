@@ -317,7 +317,7 @@ class RubyGame extends MinigameBase {
         this.drawHudTitle();
         this.drawHudLine(`SCORE  ${this.score}`, 46);
         this.drawHudLine(`WAVE ${this.wave + 1}/${WAVES.length}`, 62, '#3a3a44');
-        cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('HP', W - 20, 28);
+        cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('HP', W - 20, 28);
         for (let i = 0; i < MAX_HP; i++) { cx.font = '12px monospace'; cx.fillStyle = i < this.hp ? C.pink : '#1a1a1f'; cx.fillText('♥', W - 18 - i * 16, 44); }
         this.drawComboHud(this.combo, now, W / 2, 38);
 
@@ -349,19 +349,18 @@ class RubyGame extends MinigameBase {
         const isWin = this.phase === 'result';
         const { bx, by } = this.drawResultBg(isWin ? 'COMPLETE' : 'DEFEATED', isWin ? C.accent : C.red);
         const { cx } = this;
-        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e8e8ec'; cx.fillText(`${this.score}`, bx, by - 40);
-        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66'; cx.fillText('POINTS', bx, by - 24);
+        cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e0def4'; cx.fillText(`${this.score}`, bx, by - 40);
+        cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('POINTS', bx, by - 24);
         cx.fillText(`${this.kills} KILLS · ×${this.maxCombo} COMBO`, bx, by - 8);
 
-        this.drawLeaderboard(bx, by + 100, 280);
-        this.drawResultBtns(bx, by + 220);
+        this.drawResultBtns(bx, by + 36);
     }
 
     // --- Input ---
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') {
             if (this.isLeaderboardBusy()) return;
-            const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 220);
+            const hit = this.hitResultBtn(x, y, this.W / 2, this.H / 2 + 36);
             if (hit === 'retry') this.resetGame();
             if (hit === 'exit') this.stop();
             return;

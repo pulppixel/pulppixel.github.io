@@ -486,7 +486,7 @@ class NineToSixGame extends MinigameBase {
                 c.stroke();
 
                 // Eyes (look outward)
-                c.fillStyle = '#e8e8ec';
+                c.fillStyle = '#e0def4';
                 c.beginPath();
                 c.arc(px + Math.cos(drawAngle - 0.3) * 3, py + Math.sin(drawAngle - 0.3) * 3, 1.5, 0, TAU);
                 c.fill();
@@ -570,20 +570,19 @@ class NineToSixGame extends MinigameBase {
         const { bx, by } = this.drawResultBg(ok ? 'GREAT RUN!' : 'GAME OVER', ok ? C.accent : C.red);
         const c = this.cx;
         c.font = '700 32px "JetBrains Mono"';
-        c.fillStyle = '#e8e8ec';
+        c.fillStyle = '#e0def4';
         c.textAlign = 'center';
         c.fillText(`${this.score}`, bx, by - 40);
         c.font = '400 9px "JetBrains Mono"';
-        c.fillStyle = '#5a5a66';
+        c.fillStyle = '#6e6a86';
         c.fillText('POINTS', bx, by - 24);
         const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
         c.fillText(`${ts} · ${this.jumps} jumps · ×${this.maxCombo}`, bx, by - 8);
 
-        this.drawLeaderboard(bx, by + 100, 280);
-        this.drawResultBtns(bx, by + 220);
+        this.drawResultBtns(bx, by + 36);
     }
 
-    private get resBY(): number { return this.H / 2 + 220; }
+    private get resBY(): number { return this.H / 2 + 36; }
 
     // --- Input ---
 

@@ -13,7 +13,7 @@ export function rgba(hex: string, a: number): string {
 }
 
 export const C = {
-  bg: '#0a0a0b',
+  bg: '#191724',
   accent: '#6ee7b7',
   pink: '#ff6b9d',
   purple: '#a78bfa',
@@ -21,6 +21,12 @@ export const C = {
   cyan: '#67e8f9',
   red: '#ef4444',
   blue: '#38bdf8',
+} as const;
+
+// 공용 chrome(HUD·버튼·닫기·결과화면) 전용 Rosé Pine 색. 게임 그래픽 색(C.*)과 분리.
+export const UI = {
+  foam: '#9ccfd8', iris: '#c4a7e7',
+  muted: '#6e6a86', subtle: '#908caa', line: '#403d52',
 } as const;
 
 export interface Particle { x: number; y: number; vx: number; vy: number; a: number; color: string; s: number; }
@@ -116,16 +122,16 @@ export abstract class MinigameBase {
     base.style.cssText = `
       position:absolute; bottom:30px; left:30px;
       width:100px; height:100px; border-radius:50%;
-      border:1.5px solid rgba(110,231,183,0.25);
-      background:rgba(110,231,183,0.04);
+      border:1.5px solid rgba(156,207,216,0.25);
+      background:rgba(156,207,216,0.04);
       pointer-events:auto; touch-action:none;
     `;
     const thumb = document.createElement('div');
     thumb.style.cssText = `
       position:absolute; top:50%; left:50%;
       width:40px; height:40px; border-radius:50%;
-      background:rgba(110,231,183,0.2);
-      border:1px solid rgba(110,231,183,0.4);
+      background:rgba(156,207,216,0.2);
+      border:1px solid rgba(156,207,216,0.4);
       transform:translate(-50%,-50%);
       pointer-events:none;
     `;
@@ -182,21 +188,21 @@ export abstract class MinigameBase {
     btn.textContent = label;
     btn.style.cssText = `
       position:absolute; bottom:40px; right:30px;
-      width:60px; height:60px; border-radius:50%;
-      border:1.5px solid rgba(110,231,183,0.3);
-      background:rgba(110,231,183,0.08);
-      color:#6ee7b7; font-size:12px; font-family:'JetBrains Mono',monospace;
+      width:60px; height:60px; border-radius:14px;
+      border:1.5px solid rgba(156,207,216,0.3);
+      background:rgba(156,207,216,0.08);
+      color:#9ccfd8; font-size:12px; font-family:'Cascadia Code','JetBrains Mono',monospace;
       pointer-events:auto; touch-action:none;
       display:flex; align-items:center; justify-content:center;
     `;
     btn.addEventListener('touchstart', (e) => {
       e.preventDefault(); e.stopPropagation();
       this.mAction = true;
-      btn.style.background = 'rgba(110,231,183,0.25)';
+      btn.style.background = 'rgba(156,207,216,0.25)';
     }, { passive: false });
     btn.addEventListener('touchend', () => {
       this.mAction = false;
-      btn.style.background = 'rgba(110,231,183,0.08)';
+      btn.style.background = 'rgba(156,207,216,0.08)';
     });
     this.mobileOverlay!.appendChild(btn);
   }
@@ -206,21 +212,21 @@ export abstract class MinigameBase {
     btn.textContent = '▲';
     btn.style.cssText = `
       position:absolute; bottom:110px; right:30px;
-      width:50px; height:50px; border-radius:50%;
-      border:1.5px solid rgba(110,231,183,0.2);
-      background:rgba(110,231,183,0.04);
-      color:#6ee7b7; font-size:16px; font-family:'JetBrains Mono',monospace;
+      width:50px; height:50px; border-radius:14px;
+      border:1.5px solid rgba(156,207,216,0.2);
+      background:rgba(156,207,216,0.04);
+      color:#9ccfd8; font-size:16px; font-family:'Cascadia Code','JetBrains Mono',monospace;
       pointer-events:auto; touch-action:none;
       display:flex; align-items:center; justify-content:center;
     `;
     btn.addEventListener('touchstart', (e) => {
       e.preventDefault(); e.stopPropagation();
       this.mJump = true;
-      btn.style.background = 'rgba(110,231,183,0.25)';
+      btn.style.background = 'rgba(156,207,216,0.25)';
     }, { passive: false });
     btn.addEventListener('touchend', () => {
       this.mJump = false;
-      btn.style.background = 'rgba(110,231,183,0.04)';
+      btn.style.background = 'rgba(156,207,216,0.04)';
     });
     this.mobileOverlay!.appendChild(btn);
   }
@@ -306,10 +312,10 @@ export abstract class MinigameBase {
   protected drawBtn(x: number, y: number, w: number, h: number, text: string, primary: boolean): void {
     const { cx } = this;
     cx.beginPath(); cx.roundRect(x, y, w, h, 6);
-    cx.fillStyle = primary ? rgba(C.accent, 0.1) : 'transparent'; cx.fill();
-    cx.strokeStyle = primary ? rgba(C.accent, 0.4) : '#333'; cx.lineWidth = 1; cx.stroke();
-    cx.font = '500 12px "JetBrains Mono",monospace';
-    cx.fillStyle = primary ? C.accent : '#8a8a9a';
+    cx.fillStyle = primary ? rgba(UI.foam, 0.12) : 'transparent'; cx.fill();
+    cx.strokeStyle = primary ? UI.foam : UI.line; cx.lineWidth = 1; cx.stroke();
+    cx.font = '500 12px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
+    cx.fillStyle = primary ? UI.foam : UI.subtle;
     cx.textAlign = 'center';
     cx.textBaseline = 'middle';
     cx.fillText(text, x + w / 2, y + h / 2);
@@ -318,21 +324,20 @@ export abstract class MinigameBase {
 
   protected drawCloseBtn(y = 38): void {
     // 모바일에서 닫기 버튼 더 크게
-    const sz = this.mob ? 48 : 40;
-    this.cx.font = `400 ${this.mob ? 20 : 16}px "JetBrains Mono",monospace`;
-    this.cx.fillStyle = '#5a5a66'; this.cx.textAlign = 'center';
+    this.cx.font = `400 ${this.mob ? 20 : 16}px "Cascadia Code","JetBrains Mono",monospace`;
+    this.cx.fillStyle = UI.muted; this.cx.textAlign = 'center';
     this.cx.fillText('\u2715', this.W - 22, y);
   }
 
   protected drawHudTitle(): void {
     this.cx.textAlign = 'left';
-    this.cx.font = '600 11px "JetBrains Mono",monospace';
+    this.cx.font = '600 11px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
     this.cx.fillStyle = this.titleColor;
-    this.cx.fillText('\u25C6 ' + this.title, 20, 28);
+    this.cx.fillText('\u276F ' + this.title, 20, 28);
   }
 
-  protected drawHudLine(text: string, y: number, color = '#7a7a8a'): void {
-    this.cx.font = '500 10px "JetBrains Mono",monospace';
+  protected drawHudLine(text: string, y: number, color = UI.subtle): void {
+    this.cx.font = '500 10px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
     this.cx.fillStyle = color; this.cx.textAlign = 'left'; this.cx.fillText(text, 20, y);
   }
 
@@ -395,18 +400,18 @@ export abstract class MinigameBase {
     cx.fillStyle = rgba(C.bg, 0.55 * (1 - Math.max(0, (phaseT - 0.3) / 1.0)));
     cx.fillRect(0, 0, W, H);
     cx.textAlign = 'center'; cx.globalAlpha = p;
-    cx.font = '700 26px "JetBrains Mono",monospace'; cx.fillStyle = this.titleColor;
+    cx.font = '700 26px "Cascadia Code","D2Coding","JetBrains Mono",monospace'; cx.fillStyle = this.titleColor;
     cx.fillText(line1, W / 2, H / 2 - 16);
-    cx.font = '400 11px "JetBrains Mono",monospace'; cx.fillStyle = '#5a5a66';
+    cx.font = '400 11px "Cascadia Code","D2Coding","JetBrains Mono",monospace'; cx.fillStyle = UI.muted;
     cx.fillText(line2, W / 2, H / 2 + 12);
     if (line3) cx.fillText(line3, W / 2, H / 2 + 30);
     cx.globalAlpha = 1;
   }
 
-  protected drawResultBg(title: string, color: string = C.accent): { bx: number; by: number } {
-    this.cx.fillStyle = rgba(C.bg, 0.85); this.cx.fillRect(0, 0, this.W, this.H);
+  protected drawResultBg(title: string, color: string = UI.foam): { bx: number; by: number } {
+    this.cx.fillStyle = rgba(C.bg, 0.88); this.cx.fillRect(0, 0, this.W, this.H);
     const bx = this.W / 2, by = this.H / 2;
-    this.cx.textAlign = 'center'; this.cx.font = '600 12px "JetBrains Mono",monospace';
+    this.cx.textAlign = 'center'; this.cx.font = '600 12px "Cascadia Code","D2Coding","JetBrains Mono",monospace';
     this.cx.fillStyle = color; this.cx.fillText(title, bx, by - 62);
     return { bx, by };
   }

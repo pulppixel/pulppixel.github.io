@@ -89,7 +89,8 @@ export function init(): void {
   if (soundBtn) {
     soundBtn.onclick = () => {
       const m = audio.toggleMute();
-      soundBtn.textContent = m ? '🔇' : '🔊';
+      soundBtn.textContent = m ? 'mut' : 'snd';
+      soundBtn.classList.toggle('off', m);
     };
   }
 

@@ -887,7 +887,7 @@ class NomadsGame extends MinigameBase {
         this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}`, 62, '#3a3a44');
 
         // Player HP
-        cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono"'; cx.fillStyle = '#5a5a66';
+        cx.textAlign = 'right'; cx.font = '500 9px "JetBrains Mono"'; cx.fillStyle = '#6e6a86';
         cx.fillText('HP', W - 20, 28);
         const player = this.cars[0];
         for (let i = 0; i < HP_MAX; i++) {
@@ -987,18 +987,17 @@ class NomadsGame extends MinigameBase {
         const isWin = this.phase === 'result';
         const { bx, by } = this.drawResultBg(isWin ? 'CHAMPION' : 'WRECKED', isWin ? C.accent : C.red);
         const cx = this.cx;
-        cx.font = '700 32px "JetBrains Mono"'; cx.fillStyle = '#e8e8ec';
+        cx.font = '700 32px "JetBrains Mono"'; cx.fillStyle = '#e0def4';
         cx.fillText(`${this.score}`, bx, by - 40);
-        cx.font = '400 9px "JetBrains Mono"'; cx.fillStyle = '#5a5a66';
+        cx.font = '400 9px "JetBrains Mono"'; cx.fillStyle = '#6e6a86';
         cx.fillText('POINTS', bx, by - 24);
         const rankStr = this.maxRank === 99 ? 'NO RANK' : `BEST RANK #${this.maxRank}`;
         cx.fillText(`${rankStr} · ◆${this.cars[0].coins}`, bx, by - 8);
 
-        this.drawLeaderboard(bx, by + 100, 280);
-        this.drawResultBtns(bx, by + 220);
+        this.drawResultBtns(bx, by + 36);
     }
 
-    private get rBtnY() { return this.H / 2 + 220; }
+    private get rBtnY() { return this.H / 2 + 36; }
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') {

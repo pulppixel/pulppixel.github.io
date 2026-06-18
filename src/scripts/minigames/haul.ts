@@ -756,7 +756,7 @@ class HaulGame extends MinigameBase {
         const totalReal = this.cores.filter(c => !c.fake).length;
         const collected = this.cores.filter(c => c.collected && !c.fake).length;
         cx.fillText(`◆ ${collected} / ${totalReal}`, 20, 46);
-        cx.fillStyle = '#7a7a8a';
+        cx.fillStyle = '#908caa';
         cx.fillText(`☠ ${this.deaths}`, 20, 62);
 
         const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
@@ -959,10 +959,10 @@ class HaulGame extends MinigameBase {
         const score = this.computeScore();
 
         cx.font = '700 32px "JetBrains Mono"';
-        cx.fillStyle = '#e8e8ec';
+        cx.fillStyle = '#e0def4';
         cx.fillText(`${score}`, bx, by - 40);
         cx.font = '400 9px "JetBrains Mono"';
-        cx.fillStyle = '#5a5a66';
+        cx.fillStyle = '#6e6a86';
         cx.fillText('POINTS', bx, by - 24);
 
         // 스테이지별 코어 표시
@@ -972,15 +972,14 @@ class HaulGame extends MinigameBase {
             `S1 ◆${this.stageCoreCount[0]}  ·  S2 ◆${this.stageCoreCount[1]}  ·  S3 ◆${this.stageCoreCount[2]}`,
             bx, by - 8,
         );
-        cx.fillStyle = '#7a7a8a';
+        cx.fillStyle = '#908caa';
         cx.font = '400 9px "JetBrains Mono"';
         cx.fillText(`☠ ${this.deaths}  ·  ${Math.floor(this.elapsed)}s`, bx, by + 8);
 
-        this.drawLeaderboard(bx, by + 110, 280);
-        this.drawResultBtns(bx, by + 230);
+        this.drawResultBtns(bx, by + 52);
     }
 
-    private get rBY(): number { return this.H / 2 + 230; }
+    private get rBY(): number { return this.H / 2 + 52; }
 
     protected onClickAt(x: number, y: number): void {
         if (this.phase === 'result' || this.phase === 'dead') {

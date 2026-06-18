@@ -148,8 +148,9 @@ export function buildLowland(scene: THREE.Scene): void {
 // Distant range: fog 너머 먼 산맥 실루엣
 // =============================================
 
-const C_MTN_NEAR = new THREE.Color(0x93aac6);  // 가까운 능선 (하늘빛 도는 슬레이트)
-const C_MTN_FAR = new THREE.Color(0xb2c6dc);   // 먼 능선 (하늘색에 가깝게 → fog 블렌드)
+const C_MTN_NEAR = new THREE.Color(0x5d6f8c);  // 가까운 능선 (진한 슬레이트블루 — 하늘과 대비)
+const C_MTN_FAR = new THREE.Color(0x7889a6);   // 먼 능선 (살짝 옅게, 그래도 또렷)
+const C_MTN_SNOW = new THREE.Color(0xe8eef6);  // 설산 정상
 
 export function buildDistantRange(scene: THREE.Scene): void {
   const count = perf.tier === 'high' ? 30 : perf.tier === 'medium' ? 22 : 14;
@@ -160,12 +161,13 @@ export function buildDistantRange(scene: THREE.Scene): void {
     const ang = t * Math.PI * 2 + vhash(i, 3) * 0.4;
     // 2겹 능선: 안쪽(가까운)·바깥쪽(먼)
     const ring = i % 3 === 0 ? 1 : 0;
-    const radius = (ring ? 130 : 94) + (vhash(i, 7) - 0.5) * 18;
+    const radius = (ring ? 124 : 88) + (vhash(i, 7) - 0.5) * 18;
     const mx = WORLD_CX + Math.cos(ang) * radius;
     const mz = WORLD_CZ + Math.sin(ang) * radius;
 
-    const height = (ring ? 24 : 15) + vhash(i, 11) * 14;
-    const baseR = (ring ? 20 : 13) + vhash(i, 13) * 10;
+    // 훨씬 높게 — 눈높이에서도 지평선 위로 또렷이 솟게
+    const height = (ring ? 40 : 28) + vhash(i, 11) * 20;
+    const baseR = (ring ? 24 : 16) + vhash(i, 13) * 11;
     const seg = 5 + (i % 3); // 5~7각 → 패싯한 로우폴리
 
     const cone = new THREE.ConeGeometry(baseR, height, seg, 1);
@@ -180,14 +182,17 @@ export function buildDistantRange(scene: THREE.Scene): void {
     }
     cone.translate(mx, -2 + height / 2 - 1.5, mz);
 
-    // 정점 색: 먼 능선일수록 하늘색에 가깝게 (fog와 자연 블렌드)
+    // 정점 색: 슬레이트 능선 + 상단 설산 캡
     cone.computeVertexNormals();
     const cc = new Float32Array(cp.count * 3);
     const col = ring ? C_MTN_FAR : C_MTN_NEAR;
+    const baseY = -2 + height / 2 - 1.5;
     for (let v = 0; v < cp.count; v++) {
-      const vy = cp.getY(v) - (-2 + height / 2 - 1.5);
-      const up = THREE.MathUtils.clamp(vy / height + 0.5, 0, 1);
-      _tmpCol.copy(col).offsetHSL(0, 0, up * 0.06);
+      const up = THREE.MathUtils.clamp((cp.getY(v) - baseY) / height + 0.5, 0, 1);
+      _tmpCol.copy(col);
+      // 상단 ~30%에 눈: up 0.7→1.0 구간에서 설백으로 블렌드
+      const snow = THREE.MathUtils.smoothstep(up, 0.68, 0.92);
+      _tmpCol.lerp(C_MTN_SNOW, snow * 0.85);
       cc[v * 3] = _tmpCol.r; cc[v * 3 + 1] = _tmpCol.g; cc[v * 3 + 2] = _tmpCol.b;
     }
     cone.setAttribute('color', new THREE.BufferAttribute(cc, 3));
@@ -196,8 +201,9 @@ export function buildDistantRange(scene: THREE.Scene): void {
 
   const merged = mergeGeometries(geoms);
   geoms.forEach(g => g.dispose());
+  // fog:false → 안개에 묻히지 않고 또렷한 실루엣 유지 (눈높이 가독성)
   const mat = new THREE.MeshStandardMaterial({
-    vertexColors: true, metalness: 0.0, roughness: 1.0, flatShading: true, fog: true,
+    vertexColors: true, metalness: 0.0, roughness: 1.0, flatShading: true, fog: false,
   });
   const range = new THREE.Mesh(merged, mat);
   range.castShadow = false;

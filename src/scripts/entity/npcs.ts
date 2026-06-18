@@ -684,8 +684,10 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                         npc.bubbleSY += (sy - npc.bubbleSY) * Math.min(1, 10 * dt);
                     }
 
-                    // 화면 밖 클램프
-                    npc.bubbleSX = Math.max(60, Math.min(window.innerWidth - 60, npc.bubbleSX));
+                    // 화면 밖 클램프 — 버블은 translate(-50%)로 중앙정렬되므로
+                    // 실제 반폭(+여백)만큼 가장자리에서 떨어뜨려야 좁은 화면에서 안 잘림.
+                    const halfW = npc.bubble.offsetWidth / 2 + 8;
+                    npc.bubbleSX = Math.max(halfW, Math.min(window.innerWidth - halfW, npc.bubbleSX));
                     npc.bubbleSY = Math.max(40, Math.min(window.innerHeight - 40, npc.bubbleSY));
 
                     // DOM 적용 (transform으로 GPU compositing)

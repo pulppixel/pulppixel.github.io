@@ -39,9 +39,11 @@ const projectUrl = `/projects/${slug}/`;
 
         #minigame-container { position: fixed; inset: 0; z-index: 10; }
 
-        #close-btn { position: fixed; top: 16px; right: 20px; z-index: 30; font-size: 11px; color: #908caa; text-decoration: none; letter-spacing: 0.06em; padding: 6px 12px; border: 1px solid #403d52; border-radius: 6px; background: rgba(25,23,36,0.85); backdrop-filter: blur(8px); transition: opacity 0.3s, color 0.2s, border-color 0.2s; font-family: inherit; }
+        #close-btn { position: fixed; top: max(16px, env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); z-index: 30; font-size: 11px; color: #908caa; text-decoration: none; letter-spacing: 0.06em; padding: 6px 12px; border: 1px solid #403d52; border-radius: 6px; background: rgba(25,23,36,0.85); backdrop-filter: blur(8px); transition: opacity 0.3s, color 0.2s, border-color 0.2s; font-family: inherit; }
         #close-btn.hidden { opacity: 0; pointer-events: none; }
         #close-btn:hover { color: #9ccfd8; border-color: #9ccfd8; }
+        /* 터치 기기: BACK 버튼을 게임 중에도 노출하므로 손가락에 맞게 키움 */
+        @media (pointer: coarse) { #close-btn { padding: 11px 16px; font-size: 12px; } }
 
         #start-overlay { position: fixed; inset: 0; z-index: 25; background: #191724; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; cursor: pointer; transition: opacity 0.4s ease; }
         #start-overlay.hidden { opacity: 0; pointer-events: none; }
@@ -97,7 +99,10 @@ const projectUrl = `/projects/${slug}/`;
         }
 
         overlay.classList.add('hidden');
-        document.getElementById('close-btn')!.classList.add('hidden');
+        // 데스크탑은 캔버스 터미널 창의 신호등(빨간 점)·ESC로 닫지만,
+        // 모바일은 그 히트박스가 작고 ESC도 없으므로 BACK 버튼을 계속 노출.
+        const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
+        if (!isMobile) document.getElementById('close-btn')!.classList.add('hidden');
         // Wait for fade-out before starting so the canvas pops in cleanly.
         setTimeout(() => { overlay.remove(); game.start(); }, 400);
     }, { once: true });

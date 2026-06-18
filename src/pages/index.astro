@@ -34,7 +34,6 @@ const og = 'https://pulppixel.github.io/og.png';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/d2coding@1.3.2/d2coding-full.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/400.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/700.css" rel="stylesheet" />
   <style>
@@ -51,9 +50,10 @@ const og = 'https://pulppixel.github.io/og.png';
     ::-webkit-scrollbar-thumb:hover { background: #524f67; background-clip: padding-box; }
     ::-webkit-scrollbar-track { background: transparent; }
     #app {
-      min-height: 100vh; width: 100%;
+      --pad: clamp(0px, 4vw, 52px);
+      height: 100vh; height: 100dvh; width: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: clamp(0px, 4vw, 52px);
+      padding: max(var(--pad), env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) max(var(--pad), env(safe-area-inset-bottom)) max(var(--pad), env(safe-area-inset-left));
       font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'D2Coding', 'Nanum Gothic Coding', 'JetBrains Mono', monospace;
       -webkit-font-smoothing: antialiased;
       background:

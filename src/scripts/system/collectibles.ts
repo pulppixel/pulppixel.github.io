@@ -73,9 +73,13 @@ function spawnFloatText(name: string, color: string): FloatText {
 function createHUD(): HTMLDivElement {
     const el = document.createElement('div');
     el.id = 'gem-counter';
+    // 모바일은 상단 중앙이 nav·TELEPORT 패널·NPC 말풍선과 겹쳐서 우측 정렬(nav 아래)로.
+    const isMobile = document.body.classList.contains('is-mobile');
+    const pos = isMobile
+        ? `top:calc(40px + max(16px, env(safe-area-inset-top))); right:max(20px, env(safe-area-inset-right));`
+        : `top:56px; right:50%; transform:translateX(50%);`;
     el.style.cssText = `
-    position:absolute; top:56px; right:50%;
-    transform:translateX(50%);
+    position:absolute; ${pos}
     font-family:'Cascadia Code','D2Coding','JetBrains Mono',monospace;
     font-size:10px; color:#9ccfd8;
     letter-spacing:0.08em;

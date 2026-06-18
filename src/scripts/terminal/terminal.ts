@@ -198,7 +198,9 @@ export class Terminal {
 
     const d = new Date();
     const today = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' ' + d.toTimeString().slice(0, 5);
-    const motd = rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  type ', C.dim), tk("'help'", C.iris), tk(' for commands — or just press ', C.dim), tk('⏎', C.rose), tk(' to launch the gui.', C.dim)]]);
+    const motd = this.state.isMobile
+      ? rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  아래 ', C.dim), tk('실행 버튼', C.rose), tk(' 으로 GUI 진입.', C.dim)]])
+      : rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  type ', C.dim), tk("'help'", C.iris), tk(' for commands — or just press ', C.dim), tk('⏎', C.rose), tk(' to launch the gui.', C.dim)]]);
     this.state.sys = sys;
     this.state.blocks = [rows([[tk('Last login: ' + today + ' on ttys006', C.dim)]]), { isNeofetch: true }, motd];
 
@@ -418,7 +420,8 @@ export class Terminal {
     const act = el.dataset.act!;
     const pi = el.dataset.pi ? +el.dataset.pi : 0;
     const ii = el.dataset.ii ? +el.dataset.ii : 0;
-    if (act === 'focus') this.focusPanel(pi);
+    if (act === 'launch') { this.cancelDemo(); this.exec(''); }
+    else if (act === 'focus') this.focusPanel(pi);
     else if (act === 'select') this.select(pi, ii);
     else if (act === 'openMain') { const p = DATA[this.state.focus]; const it = p.items[this.state.sels[this.state.focus]]; if (p.kind === 'project') this.openPage(it as ProjectItem); }
     else if (act === 'back') this.back();
@@ -435,7 +438,7 @@ export class Terminal {
     else if (s.phase === 'page') body = this.viewPage();
 
     this.root.innerHTML =
-      `<div style="position:relative;width:min(1340px,100%);height:min(900px,100vh);display:flex;flex-direction:column;background:rgba(25,23,36,0.88);backdrop-filter:blur(26px) saturate(1.25);-webkit-backdrop-filter:blur(26px) saturate(1.25);border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden">
+      `<div style="position:relative;width:min(1340px,100%);height:min(900px, 100%);display:flex;flex-direction:column;background:rgba(25,23,36,0.88);backdrop-filter:blur(26px) saturate(1.25);-webkit-backdrop-filter:blur(26px) saturate(1.25);border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden">
         ${this.viewTitleBar()}
         ${body}
       </div>`;
@@ -455,18 +458,27 @@ export class Terminal {
   }
 
   private viewTitleBar(): string {
+    const m = this.state.isMobile;
+    // 모바일은 폭이 좁아 호스트명을 빼고 경로만 — 가운데 탭이 잘리지 않게.
+    const tab = m
+      ? `<span style="color:#9ccfd8">~/portfolio</span>`
+      : `<span style="color:#e0def4">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#9ccfd8">~/portfolio</span>`;
+    // 3d-world 링크: 모바일은 아이콘만(공간 확보), 데스크탑은 라벨 포함.
+    const worldLink = m
+      ? `<a href="/explore/" aria-label="3D 월드" style="flex:none;font-size:13px;color:#9ccfd8;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 10px" title="3D 월드">❯ ↗</a>`
+      : `<a href="/explore/" style="flex:none;font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 9px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world ↗</a>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:14px;padding:0 16px;height:42px;background:#1f1d2e;border-bottom:1px solid #16141f">
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex:none">
         <span style="width:12px;height:12px;border-radius:50%;background:#eb6f92"></span>
         <span style="width:12px;height:12px;border-radius:50%;background:#f6c177"></span>
         <span style="width:12px;height:12px;border-radius:50%;background:#9ccfd8"></span>
       </div>
       <div style="flex:1;display:flex;justify-content:center;min-width:0">
-        <div style="display:flex;align-items:center;gap:9px;background:#191724;border:1px solid #403d52;border-radius:7px;padding:5px 16px;font-size:12px;color:#908caa;white-space:nowrap;overflow:hidden">
-          <span style="color:#e0def4">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#9ccfd8">~/portfolio</span>
+        <div style="display:flex;align-items:center;gap:9px;background:#191724;border:1px solid #403d52;border-radius:7px;padding:5px 16px;font-size:12px;color:#908caa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${tab}
         </div>
       </div>
-      <a href="/explore/" style="font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 9px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world ↗</a>
+      ${worldLink}
     </div>`;
   }
 
@@ -519,6 +531,8 @@ export class Terminal {
           <input id="t-input" autocomplete="off" autocapitalize="off" spellcheck="false" style="position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;border:none;outline:none;color:transparent;caret-color:transparent;font:inherit;padding:0;margin:0" />
         </div>
       </div>
+      ${this.state.isMobile ? `<div data-act="launch" style="margin-top:18px;display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:9px;background:#c4a7e7;color:#191724;font-size:13.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:transparent">❯ 탭하여 GUI 실행</div>
+      <div style="margin-top:9px;font-size:11px;color:#6e6a86">…또는 위 입력창을 탭해 명령어를 직접 칠 수 있어요.</div>` : ''}
     </div>`;
   }
 
@@ -560,11 +574,11 @@ export class Terminal {
       <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">↑↓ / j k &nbsp;navigate<br>1–5 &nbsp;jump · ⏎ open · q shell</div>
     </div>`;
 
-    const mobileSel = `<div style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto">
-        ${DATA.map((p, pi) => { const f = pi === focus; return `<div data-act="focus" data-pi="${pi}" style="flex:none;white-space:nowrap;border:1px solid ${f ? '#c4a7e7' : '#403d52'};border-radius:7px;padding:6px 12px;font-size:12px;color:${f ? '#c4a7e7' : '#6e6a86'}"><span style="opacity:.6">${p.key}</span> ${esc(p.title)}</div>`; }).join('')}
+    const mobileSel = `<div style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
+        ${DATA.map((p, pi) => { const f = pi === focus; return `<div data-act="focus" data-pi="${pi}" style="flex:none;white-space:nowrap;border:1px solid ${f ? '#c4a7e7' : '#403d52'};border-radius:7px;padding:9px 13px;font-size:12px;color:${f ? '#c4a7e7' : '#6e6a86'};-webkit-tap-highlight-color:transparent"><span style="opacity:.6">${p.key}</span> ${esc(p.title)}</div>`; }).join('')}
       </div>
-      <div style="flex:none;display:flex;gap:7px;padding:9px 12px;overflow-x:auto;border-bottom:1px solid #26233a">
-        ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:5px 12px;font-size:12.5px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'}">${esc(label)}</div>`; }).join('')}
+      <div style="flex:none;display:flex;gap:7px;padding:9px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #26233a">
+        ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:9px 13px;font-size:12.5px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'};-webkit-tap-highlight-color:transparent">${esc(label)}</div>`; }).join('')}
       </div>`;
 
     return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:pop .32s ease both">
@@ -612,9 +626,12 @@ export class Terminal {
         ${chip('Unity', '#9ccfd8')}${chip('Unreal 5', '#c4a7e7')}${chip('Godot 4', '#ebbcba')}${chip('Flutter', '#f6c177')}${chip('Next.js', '#9ccfd8')}${chip('WebAR', '#eb6f92')}
       </div>
       <div style="margin-top:30px;padding-top:18px;border-top:1px dashed #26233a;font-size:12.5px;color:#6e6a86;line-height:1.95">
-        <div><span style="color:#9ccfd8">→</span> 좌측 패널을 <span style="color:#e0def4">↑↓ / j k</span> 로 탐색하고 <span style="color:#e0def4">⏎</span> 로 엽니다.</div>
+        ${this.state.isMobile
+          ? `<div><span style="color:#9ccfd8">→</span> 위쪽 <span style="color:#e0def4">탭</span> 으로 패널을, 항목을 <span style="color:#e0def4">탭</span> 해서 봅니다.</div>
+        <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯↗</span> 링크로.</div>`
+          : `<div><span style="color:#9ccfd8">→</span> 좌측 패널을 <span style="color:#e0def4">↑↓ / j k</span> 로 탐색하고 <span style="color:#e0def4">⏎</span> 로 엽니다.</div>
         <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로.</div>
-        <div><span style="color:#9ccfd8">→</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>
+        <div><span style="color:#9ccfd8">→</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>`}
       </div>`;
   }
 
@@ -664,12 +681,15 @@ export class Terminal {
   }
 
   private viewStatusBar(): string {
+    const hints = this.state.isMobile
+      ? `<span style="color:#c4a7e7">rosé pine ♥</span>`
+      : `<span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">⏎</span> open</span><span><span style="color:#908caa">q</span> shell</span><span style="color:#c4a7e7">rosé pine ♥</span>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:11.5px;overflow:hidden">
       <span style="background:#c4a7e7;color:#191724;height:100%;display:flex;align-items:center;padding:0 12px;font-weight:700;white-space:nowrap"> main</span>
       <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span><span style="color:#9ccfd8">↑</span>4</span><span><span style="color:#c4a7e7">●</span> 13 projects</span><span>6y</span></span>
       <span style="flex:1"></span>
       <span style="color:#524f67;padding:0 14px;display:flex;align-items:center;gap:12px;white-space:nowrap">
-        <span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">⏎</span> open</span><span><span style="color:#908caa">q</span> shell</span><span style="color:#c4a7e7">rosé pine ♥</span>
+        ${hints}
       </span>
     </div>`;
   }

@@ -421,14 +421,19 @@ export abstract class MinigameBase {
     return { bx, by };
   }
 
+  // \uBAA8\uBC14\uC77C\uC740 \uD130\uCE58\uC5D0 \uB9DE\uAC8C \uBC84\uD2BC \uB192\uC774\uB97C \uD0A4\uC6C0(34\u219244).
+  private get _resultBtnH(): number { return this.mob ? 44 : 34; }
+
   protected drawResultBtns(bx: number, btnY: number): void {
-    this.drawBtn(bx - 112, btnY, 100, 34, '\uB2E4\uC2DC', true);
-    this.drawBtn(bx + 12, btnY, 100, 34, '\uB098\uAC00\uAE30', false);
+    const h = this._resultBtnH;
+    this.drawBtn(bx - 112, btnY, 100, h, '\uB2E4\uC2DC', true);
+    this.drawBtn(bx + 12, btnY, 100, h, '\uB098\uAC00\uAE30', false);
   }
 
   protected hitResultBtn(x: number, y: number, bx: number, btnY: number): 'retry' | 'exit' | null {
-    if (x > bx - 112 && x < bx - 12 && y > btnY && y < btnY + 34) return 'retry';
-    if (x > bx + 12 && x < bx + 112 && y > btnY && y < btnY + 34) return 'exit';
+    const h = this._resultBtnH;
+    if (x > bx - 112 && x < bx - 12 && y > btnY && y < btnY + h) return 'retry';
+    if (x > bx + 12 && x < bx + 112 && y > btnY && y < btnY + h) return 'exit';
     return null;
   }
 

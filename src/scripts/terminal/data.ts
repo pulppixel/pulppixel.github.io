@@ -78,13 +78,13 @@ export const DATA: Panel[] = [
         ],
       } },
 
-    { label: 'ieum', meta: '24.05', name: '이음작명소', sub: '신생아 작명 웹서비스', period: '2024.05 — 현재', badge: 'LIVE', badgeColor: F,
+    { label: 'ieum', meta: '26.03', name: '이음작명소', sub: '신생아 작명 웹서비스', period: '2026.03 — 현재', badge: 'LIVE', badgeColor: F,
       desc: '훈민정음 해례본에 근거해 이름을 짓는 한국 신생아 작명 웹서비스. 같은 정보면 누가 보더라도 같은 결과를 약속합니다. 직접 기획·개발·운영하는 동글랩의 서비스입니다.',
       stack: ['Next.js', 'React', '.NET', 'TypeScript', 'PostgreSQL'],
       points: ['훈민정음 해례본 기반 작명', '같은 정보 → 동일 결과 보장', '결제 · 온보딩까지 직접 운영'],
       url: 'https://ieum-name.kr' },
 
-    { label: 'peekar', meta: '25', name: 'PEEKAR', sub: 'WebAR 갤러리 플랫폼 (B2B)', period: '2024 — 현재', badge: 'B2B', badgeColor: L,
+    { label: 'peekar', meta: '26.04', name: 'PEEKAR', sub: 'WebAR 갤러리 플랫폼 (B2B)', period: '2026.04 — 현재', badge: 'B2B', badgeColor: L,
       desc: '갤러리 운영자가 작품 이미지와 오버레이 영상을 등록하면, 관람객이 QR로 진입해 작품을 카메라로 비추면 영상이 재생되는 WebAR 갤러리 플랫폼. 동글랩에서 직접 운영하는 B2B 서비스입니다.',
       stack: ['Next.js', 'Supabase', 'MindAR.js', 'WebAR', 'TypeScript'],
       points: ['MindAR 이미지 타깃 트래킹', '운영자용 작품 · 영상 등록 CMS', 'QR 진입 → 모바일 AR 뷰어'],

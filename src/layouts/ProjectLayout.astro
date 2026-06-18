@@ -11,21 +11,21 @@ interface Props {
   ogImage?: string;
 }
 
-import BaseLayout from './BaseLayout.astro';
-import Nav from '../components/Nav.astro';
-import Footer from '../components/Footer.astro';
-
 const { title, subtitle, period, role, team, tags, links, badge, ogImage } = Astro.props;
 
-// 프로젝트 순서 (index.astro와 동일)
+const resolvedOg = ogImage
+    ? (ogImage.startsWith('http') ? ogImage : `https://pulppixel.github.io${ogImage}`)
+    : 'https://pulppixel.github.io/og.png';
+
+// 프로젝트 순서 (터미널 data.ts 프로젝트 순서와 동일한 흐름)
 const projectOrder = [
   { slug: 'eterna', title: 'ETERNA' },
+  { slug: 'haul', title: 'HAUL' },
   { slug: 'reiw', title: 'REIW' },
   { slug: 'iw-zombie', title: 'IW Zombie' },
+  { slug: 'frenzy-circle', title: 'Nine to Six' },
   { slug: 'stelsi-wallet', title: 'STELSI Wallet' },
   { slug: 'stelsi', title: 'STELSI UE5' },
-  { slug: 'frenzy-circle', title: 'Nine to Six' },
-  { slug: 'haul', title: 'HAUL' },
   { slug: 'nomads-planet', title: 'Nomads Planet' },
   { slug: 'math-master', title: 'Math Master' },
   { slug: 'spody', title: 'SPODY' },
@@ -35,10 +35,9 @@ const projectOrder = [
 const currentSlug = Astro.url.pathname.replace(/^\/projects\//, '').replace(/\/$/, '');
 const currentIdx = projectOrder.findIndex(p => p.slug === currentSlug);
 const prev = currentIdx > 0 ? projectOrder[currentIdx - 1] : null;
-const next = currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1] : null;
+const next = currentIdx >= 0 && currentIdx < projectOrder.length - 1 ? projectOrder[currentIdx + 1] : null;
 
-// Slug -> minigame key (kept in sync with scripts/core/data.ts).
-// Renders a "play minigame" CTA only for projects that have one.
+// Slug -> minigame key (scripts/core/data.ts 와 동기 유지)
 const minigameMap: Record<string, string> = {
   'math-master':    'maze',
   'spody':          'spody',
@@ -48,304 +47,302 @@ const minigameMap: Record<string, string> = {
   'haul':           'haul',
 };
 const minigameKey = minigameMap[currentSlug];
+
+const pageTitle = `${title} — Pulppixel`;
 ---
 
-<BaseLayout title={`${title} - Pulppixel`} description={subtitle} ogImage={ogImage}>
-  <Nav showBackLink={true} />
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={subtitle} />
+  <title>{pageTitle}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="author" content="Hwankee Baik" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href={`https://pulppixel.github.io${Astro.url.pathname}`} />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content={`https://pulppixel.github.io${Astro.url.pathname}`} />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={subtitle} />
+  <meta property="og:image" content={resolvedOg} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="Pulppixel" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={subtitle} />
+  <meta name="twitter:image" content={resolvedOg} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/d2coding@1.3.2/d2coding-full.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/400.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/700.css" rel="stylesheet" />
+</head>
+<body>
+  <main class="frame">
+    <!-- 타이틀바 (Ghostty 윈도우 크롬) -->
+    <header class="titlebar">
+      <div class="lights">
+        <span style="background:#eb6f92"></span>
+        <span style="background:#f6c177"></span>
+        <span style="background:#9ccfd8"></span>
+      </div>
+      <div class="tab">
+        <span class="t-host">hwankee@pulppixel</span><span class="t-colon">:</span><span class="t-path">~/portfolio</span>
+      </div>
+      <a href="/explore/" class="world-link" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world ↗</a>
+    </header>
 
-  <article class="project-detail">
-    <div class="container">
+    <!-- cat 헤더 (인앱 상세와 동일한 줄) -->
+    <div class="catbar">
+      <div class="catpath"><span class="cmd">cat</span> ~/portfolio/projects/{currentSlug}.md</div>
+      <a href="/" class="back">← back (esc)</a>
+    </div>
 
-      <!-- HEADER -->
-      <header class="detail-header">
-        <div class="detail-meta">
-          <span class="detail-period">{period}</span>
-          {badge && <span class="detail-badge">{badge}</span>}
-        </div>
-        <h1>{title}</h1>
-        <p class="detail-subtitle">{subtitle}</p>
+    <article class="content">
+      <div class="eyebrow">PROJECT</div>
+      <div class="title-row">
+        <h1>{title.split(' - ')[0].split(' — ')[0]}</h1>
+        {badge && <span class="badge">{badge}</span>}
+      </div>
+      <p class="subtitle">{subtitle}</p>
+      <div class="period">{period}</div>
 
-        <div class="detail-info">
-          <div class="info-item">
-            <span class="info-label">역할</span>
-            <span class="info-value">{role}</span>
-          </div>
-          {team && (
-              <div class="info-item">
-                <span class="info-label">팀</span>
-                <span class="info-value">{team}</span>
-              </div>
-          )}
-          <div class="info-item">
-            <span class="info-label">스택</span>
-            <div class="info-tags">
-              {tags.map(t => <span>{t}</span>)}
-            </div>
-          </div>
-          {links && links.length > 0 && (
-              <div class="info-item">
-                <span class="info-label">링크</span>
-                <div class="info-links">
-                  {links.map(l => <a href={l.url} target="_blank" rel="noopener">{l.label}</a>)}
-                </div>
-              </div>
-          )}
-          {minigameKey && (
-              <div class="info-item">
-                <span class="info-label">체험</span>
-                <a class="minigame-cta" href={`/play/${minigameKey}/`}>
-                  <span class="cta-icon">🎮</span>
-                  <span class="cta-text">미니게임 하러 가기</span>
-                  <span class="cta-arrow">→</span>
-                </a>
-              </div>
-          )}
-        </div>
-      </header>
+      <div class="meta-row">
+        {role && <span class="chip"><span class="chip-k">역할</span> · {role}</span>}
+        {team && <span class="chip"><span class="chip-k">팀</span> · {team}</span>}
+        {links && links.map(l => (
+          <a class="chip chip-link" href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>
+        ))}
+        {minigameKey && (
+          <a class="cta-play" href={`/play/${minigameKey}/`}>▶ 미니게임 하러 가기 →</a>
+        )}
+      </div>
 
-      <!-- CONTENT (slot) -->
+      <div class="rule"></div>
+
       <div class="detail-content">
         <slot />
       </div>
 
-      <!-- PREV / NEXT -->
-      <nav class="project-nav">
+      <nav class="proj-nav">
         {prev ? (
-            <a href={`/projects/${prev.slug}/`} class="nav-prev">
-              <span class="nav-dir">이전</span>
-              <span class="nav-title">{prev.title}</span>
-            </a>
+          <a href={`/projects/${prev.slug}/`} class="nav-prev">
+            <span class="nav-dir">← 이전</span>
+            <span class="nav-title">{prev.title}</span>
+          </a>
         ) : <div />}
         {next ? (
-            <a href={`/projects/${next.slug}/`} class="nav-next">
-              <span class="nav-dir">다음</span>
-              <span class="nav-title">{next.title}</span>
-            </a>
+          <a href={`/projects/${next.slug}/`} class="nav-next">
+            <span class="nav-dir">다음 →</span>
+            <span class="nav-title">{next.title}</span>
+          </a>
         ) : <div />}
       </nav>
 
-    </div>
-  </article>
+      <div class="foot">
+        <a href="/" class="foot-back">← back to gui</a>
+        <span class="foot-sig">rosé pine ♥</span>
+      </div>
+    </article>
+  </main>
 
-  <Footer />
-</BaseLayout>
+  <script is:inline>
+    // esc / q 로 홈(터미널)으로 복귀 — 인앱 상세와 동일한 조작감
+    document.addEventListener('keydown', (e) => {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      if (e.key === 'Escape' || e.key === 'q') window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
+
+<style is:global>
+  /* YouTube.astro 등 슬롯 컴포넌트가 참조하는 변수 호환(Rosé Pine) */
+  :root { --border: #26233a; --bg-card: #1f1d2e; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #13111c; min-height: 100%; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: #c4a7e7; color: #191724; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb { background: #403d52; border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #524f67; background-clip: padding-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  body {
+    font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'D2Coding', 'Nanum Gothic Coding', 'JetBrains Mono', monospace;
+    -webkit-font-smoothing: antialiased;
+    color: #cdc9de;
+    padding: clamp(0px, 4vw, 52px);
+    min-height: 100vh;
+    background:
+      radial-gradient(60% 50% at 80% 8%, rgba(196,167,231,.30) 0%, rgba(196,167,231,0) 60%),
+      radial-gradient(55% 48% at 14% 90%, rgba(122,162,247,.18) 0%, rgba(122,162,247,0) 58%),
+      radial-gradient(46% 42% at 92% 95%, rgba(235,188,186,.12) 0%, rgba(235,188,186,0) 62%),
+      linear-gradient(150deg, #241d3a 0%, #1a1626 46%, #100e18 100%);
+    background-attachment: fixed;
+  }
+</style>
 
 <style>
-  .project-detail {
-    padding-top: calc(56px + 4rem);
-    padding-bottom: 4rem;
-  }
-
-  .detail-header {
-    margin-bottom: 4rem;
-    padding-bottom: 3rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .detail-meta {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    margin-bottom: 1.25rem;
-  }
-  .detail-period {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--text-tertiary);
-  }
-  .detail-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    border: 1px solid var(--accent-mid);
-  }
-
-  .detail-header h1 {
-    font-family: 'Outfit', 'Pretendard Variable', sans-serif;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.2;
-    margin-bottom: 0.75rem;
-  }
-  .detail-subtitle {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-    line-height: 1.7;
-    max-width: 640px;
-  }
-
-  .detail-info {
-    margin-top: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .info-item {
-    display: flex;
-    gap: 1rem;
-    align-items: baseline;
-  }
-  .info-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    min-width: 3rem;
-    flex-shrink: 0;
-  }
-  .info-value {
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-  }
-  .info-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
-  .info-tags span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    padding: 0.2rem 0.55rem;
-    background: var(--tag-bg);
-    border: 1px solid var(--tag-border);
-    border-radius: 4px;
-    color: var(--text-secondary);
-  }
-  .info-links {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .info-links a {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: var(--accent);
-    text-decoration: none;
-    transition: opacity 0.2s;
-  }
-  .info-links a:hover { opacity: 0.7; }
-
-  .minigame-cta { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.95rem; background: var(--accent-dim); border: 1px solid var(--accent-mid); border-radius: 6px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; text-decoration: none; transition: all 0.2s; }
-  .minigame-cta:hover { background: var(--accent-mid); transform: translateX(2px); box-shadow: 0 0 16px var(--accent-dim); }
-  .minigame-cta .cta-icon { font-size: 0.95rem; }
-  .minigame-cta .cta-arrow { display: inline-block; opacity: 0.6; transform: translateY(-1px); transition: opacity 0.2s, transform 0.2s; }
-  .minigame-cta:hover .cta-arrow { opacity: 1; transform: translateY(-1px) translateX(2px); }
-
-  /* CONTENT AREA */
-  .detail-content {
-    max-width: 720px;
-  }
-  .detail-content :global(h2) {
-    font-family: 'Outfit', 'Pretendard Variable', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin-top: 3rem;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-  }
-  .detail-content :global(h2:first-child) {
-    margin-top: 0;
-  }
-  .detail-content :global(p) {
-    font-size: 0.92rem;
-    color: var(--text-secondary);
-    line-height: 1.8;
-    font-weight: 400;
-    margin-bottom: 1rem;
-  }
-  .detail-content :global(ul) {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 1.5rem;
-  }
-  .detail-content :global(li) {
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    line-height: 1.75;
-    font-weight: 400;
-    padding-left: 1rem;
+  /* backdrop-filter 는 문서 전체가 스크롤되는 장신(長身) 프레임에서 Chromium 페인트 버그를
+     일으키므로 사용하지 않음. 대신 불투명 base 로 칠하고 주변 그라데이션으로 부유감만 유지. */
+  .frame {
     position: relative;
+    width: min(1040px, 100%);
+    margin: 0 auto;
+    background: #1a1826;
+    border: 1px solid #524f67;
+    border-radius: 12px;
+    box-shadow: 0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);
+    overflow: hidden;
+  }
+
+  /* ── 타이틀바 ── */
+  .titlebar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 14px;
+    height: 42px; padding: 0 16px;
+    background: #1f1d2e; border-bottom: 1px solid #16141f;
+  }
+  .lights { display: flex; gap: 8px; flex: none; }
+  .lights span { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .tab {
+    flex: 1; display: flex; justify-content: center; min-width: 0;
+  }
+  .tab > :is(.t-host, .t-colon, .t-path) {
+    font-size: 12px; white-space: nowrap;
+  }
+  .tab { gap: 0; }
+  .t-host { color: #e0def4; }
+  .t-colon { color: #6e6a86; }
+  .t-path { color: #9ccfd8; }
+  .world-link {
+    flex: none; font-size: 11px; color: #908caa; letter-spacing: .04em; white-space: nowrap;
+    border: 1px solid #403d52; border-radius: 6px; padding: 4px 9px; transition: all .2s;
+  }
+  .world-link:hover { border-color: #9ccfd8; color: #e0def4; }
+
+  /* ── cat 헤더 ── */
+  .catbar {
+    position: sticky; top: 42px; z-index: 19;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 9px 16px; background: #1f1d2e; border-bottom: 1px solid #16141f; font-size: 12px;
+  }
+  .catpath { color: #6e6a86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .catpath .cmd { color: #9ccfd8; }
+  .back {
+    flex: none; border: 1px solid #403d52; color: #908caa;
+    padding: 5px 12px; border-radius: 6px; white-space: nowrap; transition: all .2s;
+  }
+  .back:hover { border-color: #9ccfd8; color: #e0def4; }
+
+  /* ── 본문 ── */
+  .content {
+    max-width: 760px; margin: 0 auto;
+    padding: clamp(28px, 5vw, 56px) clamp(20px, 5vw, 40px) 80px;
+  }
+  .eyebrow { font-size: 11px; color: #9ccfd8; letter-spacing: .16em; }
+  .title-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+  .title-row h1 {
+    font-size: clamp(1.9rem, 5vw, 3rem); color: #e0def4; line-height: 1.06;
+    letter-spacing: -.01em; font-weight: 700;
+  }
+  .badge {
+    white-space: nowrap; font-size: 12px; letter-spacing: .06em;
+    padding: 4px 13px; border-radius: 6px;
+    border: 1px solid #c4a7e7; color: #c4a7e7;
+  }
+  .subtitle { margin-top: 14px; color: #c4a7e7; font-size: 15px; line-height: 1.7; max-width: 64ch; }
+  .period { margin-top: 6px; color: #6e6a86; font-size: 13px; }
+
+  .meta-row { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .chip {
+    font-size: 12px; color: #cdc9de; border: 1px solid #26233a;
+    border-radius: 6px; padding: 6px 12px; line-height: 1.5;
+  }
+  .chip-k { color: #9ccfd8; }
+  .chip-link { color: #9ccfd8; transition: all .2s; }
+  .chip-link:hover { border-color: #9ccfd8; background: rgba(156,207,216,.08); }
+  .cta-play {
+    font-size: 12px; white-space: nowrap; font-weight: 700;
+    background: #9ccfd8; color: #191724; border-radius: 6px; padding: 7px 14px; transition: all .2s;
+  }
+  .cta-play:hover { filter: brightness(1.08); transform: translateX(2px); }
+
+  .rule { margin-top: 30px; height: 1px; background: #26233a; }
+
+  /* ── 슬롯 콘텐츠 (마크다운형) ── */
+  .detail-content { margin-top: 30px; }
+  .detail-content :global(h2) {
+    font-size: clamp(1rem, 2.4vw, 1.2rem); color: #9ccfd8; letter-spacing: .04em;
+    font-weight: 700; margin-top: 2.8rem; margin-bottom: 1rem; line-height: 1.4;
+  }
+  .detail-content :global(h2::before) { content: '# '; color: #c4a7e7; }
+  .detail-content :global(h2:first-child) { margin-top: 0; }
+  .detail-content :global(p) {
+    font-size: 14px; color: #cdc9de; line-height: 2.0; margin-bottom: 1rem; max-width: 68ch;
+  }
+  .detail-content :global(strong) { color: #e0def4; font-weight: 700; }
+  .detail-content :global(a) { color: #9ccfd8; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #403d52; }
+  .detail-content :global(a:hover) { text-decoration-color: #9ccfd8; }
+  .detail-content :global(ul) { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+  .detail-content :global(li) {
+    font-size: 13.5px; color: #cdc9de; line-height: 1.85; padding-left: 1.4rem;
+    position: relative; margin-bottom: .55rem; max-width: 68ch;
   }
   .detail-content :global(li::before) {
-    content: '-';
-    position: absolute;
-    left: 0;
-    color: var(--text-tertiary);
+    content: '›'; position: absolute; left: .2rem; color: #c4a7e7;
   }
   .detail-content :global(code) {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-    background: var(--tag-bg);
-    border: 1px solid var(--tag-border);
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    font-family: 'D2Coding', 'JetBrains Mono', monospace; font-size: 12.5px;
+    background: #21202e; border: 1px solid #26233a; color: #ebbcba;
+    padding: .1rem .42rem; border-radius: 4px;
   }
   .detail-content :global(img) {
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    margin: 1.5rem 0;
+    display: block; width: 100%; border-radius: 9px;
+    border: 1px solid #26233a; margin: 1.6rem 0;
   }
   .detail-content :global(.media-placeholder) {
-    background: var(--bg-card);
-    border: 1px dashed var(--border-hover);
-    border-radius: 8px;
-    padding: 3rem 2rem;
-    text-align: center;
-    color: var(--text-tertiary);
-    font-size: 0.82rem;
-    font-family: 'JetBrains Mono', monospace;
-    margin: 1.5rem 0;
+    background: #1f1d2e; border: 1px dashed #403d52; border-radius: 9px;
+    padding: 3rem 2rem; text-align: center; color: #6e6a86; font-size: 13px; margin: 1.6rem 0;
   }
 
-  /* PREV / NEXT NAV */
-  .project-nav {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
-    gap: 1rem;
+  /* ── prev / next ── */
+  .proj-nav {
+    display: flex; justify-content: space-between; gap: 1rem;
+    margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid #26233a;
   }
-  .project-nav a {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    text-decoration: none;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition: all 0.2s;
-    min-width: 140px;
+  .proj-nav a {
+    display: flex; flex-direction: column; gap: .3rem;
+    padding: .8rem 1.1rem; border: 1px solid #403d52; border-radius: 8px;
+    min-width: 150px; transition: all .2s;
   }
-  .project-nav a:hover {
-    border-color: var(--border-hover);
-    background: var(--bg-card);
-  }
+  .proj-nav a:hover { border-color: #9ccfd8; background: rgba(156,207,216,.06); }
   .nav-prev { align-items: flex-start; }
   .nav-next { align-items: flex-end; }
-  .nav-dir {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--text-tertiary);
-    letter-spacing: 0.04em;
-  }
-  .nav-title {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-  .project-nav a:hover .nav-title { color: var(--accent); }
+  .nav-dir { font-size: 11px; color: #6e6a86; letter-spacing: .04em; }
+  .nav-title { font-size: 14px; color: #cdc9de; font-weight: 500; }
+  .proj-nav a:hover .nav-title { color: #9ccfd8; }
 
-  @media (max-width: 768px) {
-    .info-item { flex-direction: column; gap: 0.25rem; }
-    .info-label { min-width: auto; }
-    .project-nav { flex-direction: column; }
+  .foot {
+    margin-top: 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    font-size: 12px;
+  }
+  .foot-back {
+    border: 1px solid #403d52; color: #908caa; padding: 10px 20px; border-radius: 8px; transition: all .2s;
+  }
+  .foot-back:hover { border-color: #9ccfd8; color: #e0def4; }
+  .foot-sig { color: #c4a7e7; letter-spacing: .02em; }
+
+  @media (max-width: 720px) {
+    .world-link { display: none; }
+    .proj-nav { flex-direction: column; }
     .nav-next { align-items: flex-start; }
   }
 </style>

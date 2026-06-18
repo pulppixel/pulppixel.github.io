@@ -71,7 +71,7 @@ function matchType(hex: number): 'leaf' | 'flower' | 'grass' | null {
 function hasTaggedAncestor(obj: THREE.Object3D): boolean {
   let p = obj.parent;
   while (p) {
-    if (p.userData?.isCharacter || p.userData?.isAnimal) return true;
+    if (p.userData?.isCharacter || p.userData?.isAnimal || p.userData?.isNPC) return true;
     p = p.parent;
   }
   return false;

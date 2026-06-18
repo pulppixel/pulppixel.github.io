@@ -23,7 +23,8 @@ interface Rabbit {
   tx: number; tz: number;
 }
 
-const CREAM = 0xf5efe0, RPINK = 0xf0a0b0, RWHITE = 0xffffff, RDARK = 0x1a1520;
+// 머트 톤: 따뜻한 오프화이트 본체 + 살짝 어두운 새들(two-tone) + 더스티 로즈 디테일.
+const CREAM = 0xEADFCD, SADDLE = 0xD8CCB4, RPINK = 0xD8A6A4, RWHITE = 0xF4EEE3, RDARK = 0x2A2230;
 
 function createRabbit(scene: THREE.Scene, x: number, z: number): Rabbit {
   const h = getGroundHeight(x, z);
@@ -33,11 +34,15 @@ function createRabbit(scene: THREE.Scene, x: number, z: number): Rabbit {
   g.scale.setScalar(0.4);
 
   const body = setPos(stdBox(0.35, 0.28, 0.45, CREAM), 0, 0.28, 0);
+  // 둥근 엉덩이(뒤로 봉긋) + 가슴 — body의 자식이라 hop squash에 같이 반응.
+  body.add(setPos(stdBox(0.34, 0.30, 0.22, SADDLE), 0, 0.04, -0.14));   // 엉덩이 새들
+  body.add(setPos(stdBox(0.26, 0.20, 0.16, CREAM), 0, -0.04, 0.20));    // 가슴
   g.add(body);
 
   const head = new THREE.Group();
   head.position.set(0, 0.45, 0.18);
   head.add(stdBox(0.28, 0.24, 0.26, CREAM));
+  head.add(setPos(stdBox(0.18, 0.13, 0.10, CREAM), 0, -0.05, 0.13));    // 주둥이(머즐)
 
   const earL = setPos(stdBox(0.07, 0.22, 0.04, CREAM), -0.08, 0.20, -0.02);
   head.add(earL);
@@ -50,16 +55,17 @@ function createRabbit(scene: THREE.Scene, x: number, z: number): Rabbit {
   head.add(setPos(facePlane(0.04, 0.05, RDARK), 0.08, 0.02, 0.131));
   head.add(setPos(facePlane(0.015, 0.015, RWHITE), -0.065, 0.035, 0.133));
   head.add(setPos(facePlane(0.015, 0.015, RWHITE), 0.065, 0.035, 0.133));
-  head.add(setPos(facePlane(0.03, 0.02, RPINK), 0, -0.04, 0.131));
+  head.add(setPos(facePlane(0.03, 0.02, RPINK), 0, -0.045, 0.181));     // 코(머즐 앞면)
   g.add(head);
 
-  const legFL = setPos(stdBox(0.08, 0.14, 0.08, CREAM), -0.10, 0.07, 0.14);
-  const legFR = setPos(stdBox(0.08, 0.14, 0.08, CREAM), 0.10, 0.07, 0.14);
-  const legBL = setPos(stdBox(0.09, 0.12, 0.12, CREAM), -0.10, 0.06, -0.14);
-  const legBR = setPos(stdBox(0.09, 0.12, 0.12, CREAM), 0.10, 0.06, -0.14);
+  // 앞다리는 가늘게, 뒷다리는 큰 발(haunch) 느낌으로 차별화.
+  const legFL = setPos(stdBox(0.08, 0.14, 0.08, SADDLE), -0.10, 0.07, 0.14);
+  const legFR = setPos(stdBox(0.08, 0.14, 0.08, SADDLE), 0.10, 0.07, 0.14);
+  const legBL = setPos(stdBox(0.10, 0.12, 0.15, SADDLE), -0.10, 0.06, -0.15);
+  const legBR = setPos(stdBox(0.10, 0.12, 0.15, SADDLE), 0.10, 0.06, -0.15);
   g.add(legFL, legFR, legBL, legBR);
 
-  const tail = setPos(stdBox(0.09, 0.09, 0.06, RWHITE), 0, 0.20, -0.26);
+  const tail = setPos(stdBox(0.10, 0.10, 0.07, RWHITE), 0, 0.22, -0.26);
   g.add(tail);
 
   // Shadow circle
@@ -180,7 +186,9 @@ function updateRabbit(r: Rabbit, dt: number, t: number, px: number, pz: number):
     r.earL.rotation.x = ea; r.earR.rotation.x = ea;
   } else {
     r.group.position.y = gndH;
-    r.body.scale.set(1, 1, 1);
+    // idle 호흡 (부피 보존형 미세 스케일)
+    const br = 1 + Math.sin(t * 2.2 + r.homeX) * 0.018;
+    r.body.scale.set(br, 1 / br, br);
     r.legFL.rotation.x = 0; r.legFR.rotation.x = 0;
     r.legBL.rotation.x = 0; r.legBR.rotation.x = 0;
 
@@ -226,26 +234,31 @@ function createBird(scene: THREE.Scene, x: number, y: number, z: number, color: 
   g.position.set(x, y, z);
   g.scale.setScalar(0.3);
 
-  const BELLY = 0xf0e8d8, BEAK = 0xf0a040, DARK = 0x1a1520;
+  const BELLY = 0xEDE2CF, BEAK = 0xE0A24E, DARK = 0x2A2230;
+  const wingTip = new THREE.Color(color).multiplyScalar(0.78).getHex();  // 날개 끝 살짝 어둡게
 
   g.add(setPos(stdBox(0.18, 0.16, 0.32, color), 0, 0, 0));
-  g.add(setPos(stdBox(0.14, 0.10, 0.22, BELLY), 0, -0.04, 0.02));
+  g.add(setPos(stdBox(0.14, 0.11, 0.24, BELLY), 0, -0.045, 0.02));
 
   const head = new THREE.Group();
   head.position.set(0, 0.10, 0.16);
   head.add(stdBox(0.15, 0.14, 0.15, color));
   head.add(setPos(stdBox(0.05, 0.04, 0.08, BEAK), 0, -0.02, 0.10));
+  head.add(setPos(stdBox(0.04, 0.06, 0.04, wingTip), 0, 0.10, -0.01));   // 작은 볏(crest)
   const eL = facePlane(0.03, 0.04, DARK); eL.rotation.y = -0.3;
   head.add(setPos(eL, -0.065, 0.02, 0.055));
   const eR = facePlane(0.03, 0.04, DARK); eR.rotation.y = 0.3;
   head.add(setPos(eR, 0.065, 0.02, 0.055));
   g.add(head);
 
+  // 날개: 본체색 + 끝단 두 톤
   const wingL = setPos(stdBox(0.26, 0.03, 0.16, color), -0.18, 0.02, -0.02);
+  wingL.add(setPos(stdBox(0.10, 0.032, 0.16, wingTip), -0.10, 0, 0));
   const wingR = setPos(stdBox(0.26, 0.03, 0.16, color), 0.18, 0.02, -0.02);
+  wingR.add(setPos(stdBox(0.10, 0.032, 0.16, wingTip), 0.10, 0, 0));
   g.add(wingL, wingR);
 
-  const tail = setPos(stdBox(0.10, 0.03, 0.12, color), 0, 0.02, -0.22);
+  const tail = setPos(stdBox(0.10, 0.03, 0.12, wingTip), 0, 0.02, -0.22);
   tail.rotation.x = 0.2;
   g.add(tail);
 
@@ -314,9 +327,11 @@ interface Butterfly {
   phase: number; speed: number; radius: number;
 }
 
+// flower 팔레트(0xf5a8c0/0xf0d060/0x88c8e8/0xf5c8e0)와 겹치지 않게 머트화
+// → 시즌 틴팅 머티리얼 공유 회피 + 색 조화.
 const BF_COLS: [number, number][] = [
-  [0xf5a8c0, 0xf0d060], [0x88c8e8, 0xf5a8c0],
-  [0xf0d060, 0x88c8e8], [0xf5a8c0, 0xf5c8e0], [0x88c8e8, 0xf0d060],
+  [0xE3A6BE, 0xE6CE84], [0x8FC0D8, 0xE3A6BE],
+  [0xE6CE84, 0x8FC0D8], [0xE3A6BE, 0xEAD0DE], [0x8FC0D8, 0xE6CE84],
 ];
 
 function createButterfly(scene: THREE.Scene, x: number, z: number, cols: [number, number]): Butterfly {
@@ -381,9 +396,9 @@ export function createAnimals(scene: THREE.Scene): Animals {
   ];
 
   const birds: Bird[] = [
-    createBird(scene, -6, getGroundHeight(-6, -3) + 4.2, -3, 0x5588cc),
-    createBird(scene, 7, getGroundHeight(7, -15) + 3.8, -15, 0xe87040),
-    createBird(scene, -7, getGroundHeight(-7, -54) + 6.2, -54, 0x5588cc),
+    createBird(scene, -6, getGroundHeight(-6, -3) + 4.2, -3, 0x5E80B0),
+    createBird(scene, 7, getGroundHeight(7, -15) + 3.8, -15, 0xCF7E54),
+    createBird(scene, -7, getGroundHeight(-7, -54) + 6.2, -54, 0x5E80B0),
   ];
 
   const bfSpawns: [number, number][] = [[-4, -2], [5, -4], [8, -17], [-7, -22], [3, -55]];

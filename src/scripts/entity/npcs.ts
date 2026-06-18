@@ -17,14 +17,17 @@ interface NPCDef {
     lines: string[];
     wanderRadius?: number;
     accessory?: 'guide' | 'straw' | 'pirate' | 'sage' | 'crown';
+    // 체형 다양성 (실루엣). 균일 scale + 몸통 너비 배율 → shear 없이 차별화.
+    build?: 'normal' | 'stocky' | 'slim' | 'broad';
 }
 
 const NPC_DEFS: NPCDef[] = [
     {
         x: 1, z: -3,
-        color: 0x6ee7b7, bodyColor: 0xd8d0c0,
+        color: 0x8FC4B4, bodyColor: 0xCFC8B8,
         name: '안내자',
         accessory: 'guide',
+        build: 'normal',
         lines: [
             '반갑다, 여행자! 여기가 pulppixel의 세계야.',
             'WASD로 이동, Space로 점프. 간단하지?',
@@ -35,9 +38,10 @@ const NPC_DEFS: NPCDef[] = [
     },
     {
         x: -6, z: -13,
-        color: 0xff6b9d, bodyColor: 0xe8c8c0,
+        color: 0xCBA66A, bodyColor: 0xDFC9B4,
         name: '오버월드 주민',
         accessory: 'straw',
+        build: 'stocky',
         lines: [
             '여긴 오버월드. 모든 건 여기서 시작됐지.',
             'SPODY... Kinect로 바닥을 터치스크린으로 만들었어.',
@@ -47,9 +51,10 @@ const NPC_DEFS: NPCDef[] = [
     },
     {
         x: 32, z: -37,
-        color: 0x6ee7b7, bodyColor: 0xc8d8c0,
+        color: 0xCF7068, bodyColor: 0xC6CBBA,
         name: '보물섬 해적',
         accessory: 'pirate',
+        build: 'broad',
         lines: [
             '요호! 보물섬에 온 걸 환영하네!',
             'STELSI Wallet... Unity를 버리고 Flutter로 갈아탔지. 혼자서.',
@@ -59,26 +64,15 @@ const NPC_DEFS: NPCDef[] = [
     },
     {
         x: -24, z: -37,
-        color: 0xa78bfa, bodyColor: 0xc8c0d8,
+        color: 0x9B86C9, bodyColor: 0xCAC2D6,
         name: '네더 현자',
         accessory: 'sage',
+        build: 'slim',
         lines: [
             '네더의 기운을 느끼는가... 여기엔 최신작들이 있다.',
             'ETERNA... 디스코드 같은 커뮤니티를 Unity 위에 올렸지.',
             'REIW에서 채팅을 개선했고, 그 경험이 ETERNA의 토대가 됐어.',
             'IW Zombie는 첫 실전이었지. 5단계 루프를 처음부터 끝까지.',
-        ],
-    },
-    {
-        x: 3, z: -55,
-        color: 0xfbbf24, bodyColor: 0xd8d0b0,
-        name: '봉화대 수호자',
-        accessory: 'crown',
-        lines: [
-            '정상에 올라왔구나! 여기까지 온 사람은 드물어.',
-            'HAUL... 서버가 모든 걸 결정하는 구조야. 클라이언트는 예측만 해.',
-            'Godot 서버와 클라이언트가 같은 물리 엔진을 쓰는 게 핵심이지.',
-            '기획, 서버, 클라이언트, DB 전부 혼자. 이게 풀스택 게임 개발이야.',
         ],
     },
 ];
@@ -97,49 +91,100 @@ type NPCState = 'idle' | 'wander' | 'alert' | 'talk';
 
 interface NPCParts {
     group: THREE.Group;
-    body: THREE.Mesh;
-    head: THREE.Group; // head + hat + eyes 묶음
-    legL: THREE.Mesh;
-    legR: THREE.Mesh;
+    body: THREE.Group;  // 목+테이퍼 몸통 묶음 (bob용)
+    head: THREE.Group;  // head + hat + eyes 묶음
+    hipL: THREE.Group; hipR: THREE.Group;     // 엉덩이 피벗 (걷기 스윙)
+    kneeL: THREE.Group; kneeR: THREE.Group;   // 무릎 (걷기 굽힘)
+    shoulderL: THREE.Group; shoulderR: THREE.Group;  // 어깨 (팔 스윙)
     eyeL: THREE.Mesh;
     eyeR: THREE.Mesh;
 }
 
+// 매트 박스 (stdMat 캐시 공유 → draw call 합쳐짐). 캐릭터와 달리 NPC는 발광 없음.
+function nBox(w: number, h: number, d: number, c: number): THREE.Mesh {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), stdMat(c));
+    m.castShadow = true;
+    return m;
+}
+function nDark(hex: number, f = 0.8): number {
+    return new THREE.Color(hex).multiplyScalar(f).getHex();
+}
+
+// 체형 프로파일: 균일 scale(=shear 없음) + 정적 몸통/머리 너비 배율.
+const N_PROFILE: Record<string, { scale: number; torsoW: number; headW: number }> = {
+    normal: { scale: 1.0, torsoW: 1.0, headW: 1.0 },
+    stocky: { scale: 0.95, torsoW: 1.18, headW: 1.05 },
+    slim: { scale: 1.05, torsoW: 0.86, headW: 0.94 },
+    broad: { scale: 1.08, torsoW: 1.12, headW: 1.02 },
+};
+
+// 스켈레톤 기준값
+const N_HIP_Y = 0.40, N_HIP_X = 0.085;
+const N_BODY_Y = 0.56;
+const N_SHO_Y = 0.74, N_SHO_X = 0.20;
+const N_HEAD_Y = 0.90;
+
+// 관절 다리: 엉덩이 → 허벅지 + 무릎 → 정강이/발. 무릎 반환.
+function addNPCLeg(hip: THREE.Group, legC: number, footC: number): THREE.Group {
+    hip.add(setPos(nBox(0.13, 0.20, 0.13, legC), 0, -0.10, 0));
+    const knee = new THREE.Group();
+    knee.position.set(0, -0.20, 0);
+    hip.add(knee);
+    knee.add(setPos(nBox(0.115, 0.16, 0.12, legC), 0, -0.08, 0));
+    knee.add(setPos(nBox(0.15, 0.075, 0.17, footC), 0, -0.18, 0.02));
+    return knee;
+}
+
+// 관절 팔: 어깨 → 상박 + 팔꿈치(고정 굽힘) → 전박/손. 어깨 반환은 호출부에서 보관.
+function addNPCArm(shoulder: THREE.Group, armC: number, handC: number): void {
+    shoulder.add(setPos(nBox(0.105, 0.19, 0.115, armC), 0, -0.095, 0));
+    const elbow = new THREE.Group();
+    elbow.position.set(0, -0.19, 0);
+    elbow.rotation.x = -0.2;  // 살짝 굽힌 자연 포즈
+    shoulder.add(elbow);
+    elbow.add(setPos(nBox(0.09, 0.15, 0.10, armC), 0, -0.075, 0));
+    elbow.add(setPos(nBox(0.08, 0.08, 0.085, handC), 0, -0.165, 0.005));
+}
+
 function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     const g = new THREE.Group();
+    g.userData = { isNPC: true };  // seasonal tinting · wind 에서 제외
     g.position.set(def.x, baseY, def.z);
 
-    // Legs (pivot at top)
-    const legGeo = new THREE.BoxGeometry(0.12, 0.22, 0.12);
-    const legMat = stdMat(def.bodyColor);
-    const legL = new THREE.Mesh(legGeo, legMat);
-    legL.position.set(-0.08, 0.22, 0);
-    legL.geometry.translate(0, -0.11, 0); // pivot top
-    legL.castShadow = true;
-    g.add(legL);
+    const prof = N_PROFILE[def.build ?? 'normal'];
+    const tw = prof.torsoW;
+    const tz = 1 + (tw - 1) * 0.6;  // 깊이는 너비보다 덜 변형
+    const hw = prof.headW;
+    const bodyC = def.bodyColor;
+    const footC = nDark(def.bodyColor, 0.72);  // 발/신발은 살짝 어둡게
 
-    const legR = new THREE.Mesh(legGeo, legMat);
-    legR.position.set(0.08, 0.22, 0);
-    legR.geometry.translate(0, -0.11, 0);
-    legR.castShadow = true;
-    g.add(legR);
+    // 관절 다리
+    const hipL = new THREE.Group(); hipL.position.set(-N_HIP_X, N_HIP_Y, 0); g.add(hipL);
+    const hipR = new THREE.Group(); hipR.position.set(N_HIP_X, N_HIP_Y, 0); g.add(hipR);
+    const kneeL = addNPCLeg(hipL, bodyC, footC);
+    const kneeR = addNPCLeg(hipR, bodyC, footC);
 
-    // Body
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.36, 0.34, 0.24),
-        stdMat(def.bodyColor),
-    );
-    body.position.y = 0.50;
-    body.castShadow = true;
+    // 목 + 테이퍼 2단 몸통 (bob 묶음)
+    const body = new THREE.Group();
+    body.position.y = N_BODY_Y;
+    body.add(setPos(nBox(0.34 * tw, 0.16, 0.22 * tz, bodyC), 0, 0.09, 0));   // 윗몸통
+    body.add(setPos(nBox(0.30 * tw, 0.15, 0.20 * tz, bodyC), 0, -0.07, 0));  // 아랫몸통
+    body.add(setPos(nBox(0.15, 0.10, 0.14, bodyC), 0, 0.205, 0));            // 목
     g.add(body);
+
+    // 관절 팔 (기존엔 없던 부위 — 실루엣 보강)
+    const shoulderL = new THREE.Group(); shoulderL.position.set(-N_SHO_X * tw, N_SHO_Y, 0); g.add(shoulderL);
+    const shoulderR = new THREE.Group(); shoulderR.position.set(N_SHO_X * tw, N_SHO_Y, 0); g.add(shoulderR);
+    addNPCArm(shoulderL, bodyC, nDark(def.bodyColor, 0.85));
+    addNPCArm(shoulderR, bodyC, nDark(def.bodyColor, 0.85));
 
     // Head group (머리 bob 시 eyes/hat 같이 움직이게)
     const headGrp = new THREE.Group();
-    headGrp.position.y = 0.88;
+    headGrp.position.y = N_HEAD_Y;
     g.add(headGrp);
 
     const head = new THREE.Mesh(
-        new THREE.BoxGeometry(0.38, 0.36, 0.34),
+        new THREE.BoxGeometry(0.37 * hw, 0.35, 0.33 * hw),
         stdMat(def.bodyColor),
     );
     head.castShadow = true;
@@ -148,7 +193,7 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     // Accessory
     const accMat = new THREE.MeshStandardMaterial({
         color: def.color, emissive: def.color,
-        emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.7,
+        emissiveIntensity: 0.05, metalness: 0.1, roughness: 0.8,
     });
 
     switch (def.accessory) {
@@ -192,8 +237,8 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
             const bandana = new THREE.Mesh(
                 new THREE.BoxGeometry(0.42, 0.06, 0.40),
                 new THREE.MeshStandardMaterial({
-                    color: 0xe53e3e, emissive: 0xe53e3e,
-                    emissiveIntensity: 0.1, metalness: 0.1, roughness: 0.8,
+                    color: 0xC0584E, emissive: 0xC0584E,
+                    emissiveIntensity: 0.04, metalness: 0.1, roughness: 0.85,
                 }),
             );
             bandana.position.set(0, 0.20, -0.02);
@@ -284,20 +329,21 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
         }
     }
 
-    // Eyes
+    // Eyes (머리 너비에 맞춰 간격 조정)
+    const ex = 0.08 * hw;
     const eyeL = facePlane(0.06, 0.07, 0x1a1520);
-    eyeL.position.set(-0.08, 0.0, 0.175);
+    eyeL.position.set(-ex, 0.0, 0.175);
     headGrp.add(eyeL);
     const eyeR = facePlane(0.06, 0.07, 0x1a1520);
-    eyeR.position.set(0.08, 0.0, 0.175);
+    eyeR.position.set(ex, 0.0, 0.175);
     headGrp.add(eyeR);
 
     // Highlights
     const hlL = facePlane(0.025, 0.025, 0xffffff);
-    hlL.position.set(-0.065, 0.02, 0.177);
+    hlL.position.set(-ex + 0.015, 0.02, 0.177);
     headGrp.add(hlL);
     const hlR = facePlane(0.025, 0.025, 0xffffff);
-    hlR.position.set(0.095, 0.02, 0.177);
+    hlR.position.set(ex + 0.015, 0.02, 0.177);
     headGrp.add(hlR);
 
     // Mouth
@@ -318,7 +364,10 @@ function buildNPCMesh(def: NPCDef, baseY: number): NPCParts {
     shadow.position.y = 0.005;
     g.add(shadow);
 
-    return { group: g, body, head: headGrp, legL, legR, eyeL, eyeR };
+    // 체형 균일 scale (shear 없음)
+    g.scale.setScalar(prof.scale);
+
+    return { group: g, body, head: headGrp, hipL, hipR, kneeL, kneeR, shoulderL, shoulderR, eyeL, eyeR };
 }
 
 // Speech Bubble (DOM)
@@ -535,18 +584,31 @@ export function createNPCs(scene: THREE.Scene, camera: THREE.PerspectiveCamera):
                 // Animation
 
                 const isWalking = npc.state === 'wander';
+                const p = npc.parts;
 
-                // Leg swing (걸을 때만)
-                const legSwing = isWalking ? Math.sin(npc.walkPhase * 8) * 0.5 : 0;
-                npc.parts.legL.rotation.x = legSwing;
-                npc.parts.legR.rotation.x = -legSwing;
+                // 다리 스윙 + 무릎 굽힘 (걸을 때만)
+                const sw = isWalking ? Math.sin(npc.walkPhase * 8) : 0;
+                p.hipL.rotation.x = sw * 0.5;
+                p.hipR.rotation.x = -sw * 0.5;
+                p.kneeL.rotation.x = isWalking ? Math.max(0, -sw) * 0.5 + 0.05 : 0.05;
+                p.kneeR.rotation.x = isWalking ? Math.max(0, sw) * 0.5 + 0.05 : 0.05;
+
+                // 팔 스윙 (걸을 땐 다리 반대로, 정지 땐 미세한 흔들림)
+                p.shoulderL.rotation.x = isWalking ? -sw * 0.4 : Math.sin(t * 1.3 + npc.def.x) * 0.05;
+                p.shoulderR.rotation.x = isWalking ? sw * 0.4 : -Math.sin(t * 1.3 + npc.def.x) * 0.05;
+                p.shoulderL.rotation.z = 0.07;
+                p.shoulderR.rotation.z = -0.07;
 
                 // Body bob
                 const bob = isWalking
                     ? Math.abs(Math.sin(npc.walkPhase * 8)) * 0.04
                     : Math.sin(t * 1.8 + npc.def.x) * 0.025;
-                npc.parts.body.position.y = 0.50 + bob;
-                npc.parts.head.position.y = 0.88 + bob;
+                p.body.position.y = N_BODY_Y + bob;
+                p.head.position.y = N_HEAD_Y + bob;
+                p.shoulderL.position.y = N_SHO_Y + bob * 0.9;
+                p.shoulderR.position.y = N_SHO_Y + bob * 0.9;
+                p.hipL.position.y = N_HIP_Y + bob * 0.3;
+                p.hipR.position.y = N_HIP_Y + bob * 0.3;
 
                 // alert 상태: 살짝 고개 기울임 (?)
                 if (npc.state === 'alert') {

@@ -52,11 +52,11 @@ const DAWN: P = {
   starOp: 0.05, exposure: 1.2, waterDeep: [0.12, 0.35, 0.40], waterShallow: [0.45, 0.55, 0.50],
 };
 const DAY: P = {
-  skyTop: [0.22, 0.50, 0.82], skyMid: [0.40, 0.66, 0.88], skyBot: [0.68, 0.82, 0.92], bg: [0.68, 0.82, 0.92],
-  sunCol: [1.0, 0.96, 0.88], sunI: 1.5, sunPos: [15, 25, 10],
-  ambCol: [0.48, 0.55, 0.68], ambI: 1.0, hemiSky: [0.53, 0.73, 1.0], hemiGnd: [0.27, 0.40, 0.20], hemiI: 0.7,
-  fillCol: [0.60, 0.67, 0.80], fillI: 0.4, fogCol: [0.72, 0.85, 0.94], fogD: 0.008,
-  starOp: 0.0, exposure: 1.25, waterDeep: [0.10, 0.47, 0.53], waterShallow: [0.35, 0.85, 0.91],
+  skyTop: [0.26, 0.52, 0.80], skyMid: [0.46, 0.68, 0.87], skyBot: [0.74, 0.86, 0.93], bg: [0.74, 0.86, 0.93],
+  sunCol: [1.0, 0.95, 0.83], sunI: 1.45, sunPos: [15, 25, 10],
+  ambCol: [0.54, 0.57, 0.62], ambI: 1.02, hemiSky: [0.60, 0.76, 0.96], hemiGnd: [0.33, 0.43, 0.26], hemiI: 0.72,
+  fillCol: [0.64, 0.68, 0.78], fillI: 0.38, fogCol: [0.77, 0.86, 0.93], fogD: 0.0094,
+  starOp: 0.0, exposure: 1.22, waterDeep: [0.10, 0.47, 0.53], waterShallow: [0.35, 0.85, 0.91],
 };
 const SUNSET: P = {
   skyTop: [0.10, 0.06, 0.25], skyMid: [0.75, 0.30, 0.18], skyBot: [0.95, 0.62, 0.30], bg: [0.90, 0.55, 0.28],

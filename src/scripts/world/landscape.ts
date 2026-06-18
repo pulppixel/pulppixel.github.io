@@ -205,7 +205,101 @@ export function buildDistantRange(scene: THREE.Scene): void {
   scene.add(range);
 }
 
+// =============================================
+// Lowland scatter: 구릉 위 침엽수·바위·풀 (분위기용, 충돌 無)
+// =============================================
+
+const C_CONIFER = [new THREE.Color(0x466e3c), new THREE.Color(0x3c6236), new THREE.Color(0x547c44)];
+const C_TRUNK = new THREE.Color(0x5a4530);
+const C_ROCK = [new THREE.Color(0x8a8278), new THREE.Color(0x767064)];
+const C_TUFT = new THREE.Color(0x6f9a52);
+
+export function buildLowlandScatter(scene: THREE.Scene): void {
+  if (perf.tier === 'low') return; // 모바일/저사양: 스킵
+  const N = perf.tier === 'high' ? 110 : 60;
+
+  // 머티리얼별 geometry 수집 → 색별 1 draw call
+  const buckets = new Map<string, { mat: THREE.Material; geoms: THREE.BufferGeometry[] }>();
+  const push = (key: string, mat: THREE.Material, g: THREE.BufferGeometry) => {
+    let b = buckets.get(key);
+    if (!b) { b = { mat, geoms: [] }; buckets.set(key, b); }
+    b.geoms.push(g);
+  };
+  const colorGeo = (g: THREE.BufferGeometry, col: THREE.Color) => {
+    const n = g.attributes.position.count;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    return g;
+  };
+
+  for (let i = 0; i < N; i++) {
+    const a = vhash(i, 17) * Math.PI * 2;
+    const r = 8 + vhash(i, 23) * 50;
+    const wx = WORLD_CX + Math.cos(a) * r;
+    const wz = WORLD_CZ + Math.sin(a) * r * 0.85;
+
+    // 플랫폼 위/물속엔 배치 안 함
+    if (getGroundHeight(wx, wz) > -0.5) continue;
+    const H = lowlandHeight(wx, wz);
+    if (H < -0.7) continue;
+
+    const kind = vhash(i, 31);
+    if (kind < 0.42) {
+      // 침엽수 (2단 콘) — 언덕 위 숲
+      const s = 0.8 + vhash(i, 41) * 0.9;
+      const cidx = i % 3;
+      const trunk = new THREE.CylinderGeometry(0.12 * s, 0.16 * s, 0.7 * s, 5);
+      trunk.translate(wx, H + 0.35 * s, wz);
+      push('trunk', _scatterMat('trunk', C_TRUNK), colorGeo(trunk, C_TRUNK));
+      const c1 = new THREE.ConeGeometry(0.62 * s, 1.1 * s, 6);
+      c1.translate(wx, H + 1.0 * s, wz);
+      const c2 = new THREE.ConeGeometry(0.44 * s, 0.85 * s, 6);
+      c2.translate(wx, H + 1.6 * s, wz);
+      push(`con${cidx}`, _scatterMat(`con${cidx}`, C_CONIFER[cidx]), colorGeo(c1, C_CONIFER[cidx]));
+      push(`con${cidx}`, _scatterMat(`con${cidx}`, C_CONIFER[cidx]), colorGeo(c2, C_CONIFER[cidx]));
+    } else if (kind < 0.62) {
+      // 바위
+      const s = 0.4 + vhash(i, 43) * 0.7;
+      const ridx = i % 2;
+      const rock = new THREE.DodecahedronGeometry(s, 0);
+      rock.scale(1, 0.7, 1);
+      rock.translate(wx, H + s * 0.4, wz);
+      push(`rock${ridx}`, _scatterMat(`rock${ridx}`, C_ROCK[ridx]), colorGeo(rock, C_ROCK[ridx]));
+    } else {
+      // 풀 다발 (작은 박스 2~3개)
+      const cnt = 2 + (i % 2);
+      for (let j = 0; j < cnt; j++) {
+        const tuft = new THREE.BoxGeometry(0.14, 0.34, 0.14);
+        tuft.translate(wx + (j - 1) * 0.18, H + 0.17, wz + (vhash(i + j, 51) - 0.5) * 0.3);
+        push('tuft', _scatterMat('tuft', C_TUFT), colorGeo(tuft, C_TUFT));
+      }
+    }
+  }
+
+  for (const [, b] of buckets) {
+    if (!b.geoms.length) continue;
+    const merged = mergeGeometries(b.geoms);
+    b.geoms.forEach(g => g.dispose());
+    const mesh = new THREE.Mesh(merged, b.mat);
+    mesh.castShadow = perf.shadows;
+    mesh.receiveShadow = false;
+    scene.add(mesh);
+  }
+}
+
+const _scatterMatCache = new Map<string, THREE.MeshStandardMaterial>();
+function _scatterMat(key: string, _col: THREE.Color): THREE.MeshStandardMaterial {
+  let m = _scatterMatCache.get(key);
+  if (!m) {
+    m = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.0, roughness: 0.95, flatShading: true });
+    _scatterMatCache.set(key, m);
+  }
+  return m;
+}
+
 export function buildLandscape(scene: THREE.Scene): void {
   buildLowland(scene);
   buildDistantRange(scene);
+  buildLowlandScatter(scene);
 }

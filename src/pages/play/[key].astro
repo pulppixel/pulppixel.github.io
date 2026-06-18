@@ -5,7 +5,6 @@
 
 export function getStaticPaths() {
     return [
-        { params: { key: 'guestbook' }, props: { slug: 'eterna',         title: 'Guestbook' } },
         { params: { key: 'maze' },      props: { slug: 'math-master',    title: 'Math Master Maze' } },
         { params: { key: 'spody' },     props: { slug: 'spody',          title: 'SPODY' } },
         { params: { key: 'ruby' },      props: { slug: 'ruby-adventure', title: '루비의 모험' } },
@@ -85,7 +84,6 @@ const projectUrl = `/projects/${slug}/`;
 
         let game: { start(): void; stop(): void };
         switch (key) {
-            case 'guestbook': game = (await import('../../scripts/minigames/guestbook')).createGuestbookGame(container, onExit, audio); break;
             case 'maze':      game = (await import('../../scripts/minigames/maze')).createMazeGame(container, onExit, audio); break;
             case 'spody':     game = (await import('../../scripts/minigames/spody')).createSpodyGame(container, onExit, audio); break;
             case 'ruby':      game = (await import('../../scripts/minigames/ruby')).createRubyGame(container, onExit, audio); break;

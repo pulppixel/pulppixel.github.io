@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-A Game Client Engineer portfolio site — Astro static build + Three.js 3D scene + Canvas-2D minigames. Two entry points (`/` classic portfolio, `/explore/` 3D world) share the same project data and Supabase backend. Deployed to GitHub Pages via Actions.
+A Game Client Engineer portfolio site — Astro static build + Three.js 3D scene + Canvas-2D minigames. Two entry points (`/` classic portfolio, `/explore/` 3D world) share the same project data. Fully static, no backend. Deployed to GitHub Pages via Actions.
 
 `README.md` is the long-form design doc (~1500 lines, Korean) — read it for any non-trivial change to the 3D world, performance system, or minigames. `src/scripts/PROP_GUIDE.md` is mandatory reading before adding voxel landmarks.
 
@@ -14,7 +14,7 @@ npm run build        # static output → ./dist/
 npm run preview
 ```
 
-No test suite, no linter. Verification = `npm run build` succeeds + manual play in the browser. Node 20+ (CI uses Node 22). No env vars locally — the Supabase publishable key is committed (RLS-protected).
+No test suite, no linter. Verification = `npm run build` succeeds + manual play in the browser. Node 20+ (CI uses Node 22). No env vars, no backend, no secrets.
 
 Debug the 3D scene's perf tier with `?perf=low|medium|high` on `/explore/` — bypasses GPU detection and the FPS auto-downgrade.
 
@@ -25,8 +25,7 @@ Debug the 3D scene's perf tier with `?perf=low|medium|high` on `/explore/` — b
 - `src/pages/index.astro` — classic portfolio. Almost no JS. Project list duplicated here as a local const (Astro-rendered cards).
 - `src/pages/explore.astro` — fullscreen Three.js scene; does NOT use `BaseLayout`. Bootstraps `src/scripts/main.ts`.
 - `src/pages/projects/{slug}.astro` (×11) — project detail pages, use `ProjectLayout`.
-- `src/pages/play/[key].astro` — single Astro file → 7 prerendered minigame routes via `getStaticPaths`. Dynamically imports just the requested minigame module so each page ships only its own game code.
-- `src/pages/guestbook.astro`, `src/pages/leaderboard.astro` — Supabase-backed pages, also reachable from inside the 3D scene.
+- `src/pages/play/[key].astro` — single Astro file → 6 prerendered minigame routes via `getStaticPaths`. Dynamically imports just the requested minigame module so each page ships only its own game code.
 
 The 3D scene's project cubes (`PROJECTS` in `src/scripts/core/data.ts`) are the canonical definition: zone assignment, position offset, and `minigame` slug mapping all live there. The classic portfolio's project list in `index.astro` is a separate hand-maintained array — **changes to project copy must be made in both places.**
 
@@ -39,8 +38,7 @@ world/             scene graph: terrain, sky, ocean, zones, time/weather/seasons
                    particles, wind, environment, landmarks/
 entity/            character (5 skins), npcs (FSM), animals, interactions
 system/            audio (Web Audio synth), postfx, ui, collectibles
-minigames/         base.ts (abstract), spody/maze/ruby/circles/nomads/haul,
-                   guestbook (Supabase form), leaderboard (Supabase REST)
+minigames/         base.ts (abstract), spody/maze/ruby/circles/nomads/haul
 ```
 
 Build pipeline in `world/scene.ts` runs in two phases: Phase-1 essentials always built; Phase-2 decorations skipped entirely when `perf.phase2Decor === false`.
@@ -71,21 +69,15 @@ Things deliberately NOT instanced (because per-frame transforms differ): leaves/
 
 ### Minigames share `MinigameBase`
 
-All games extend `src/scripts/minigames/base.ts`. Subclasses implement `resetGame / updateGame / renderGame / onClickAt`; the base owns canvas + DPR + input routing + mobile virtual controls + particle/popup pools + leaderboard fetch/submit + audio hooks. Canvas uses logical (CSS) size for game logic with a separate DPR-scaled buffer — read `this.W`/`this.H`, never `canvas.width/height`.
+All games extend `src/scripts/minigames/base.ts`. Subclasses implement `resetGame / updateGame / renderGame / onClickAt`; the base owns canvas + DPR + input routing + mobile virtual controls + particle/popup pools + audio hooks. Canvas uses logical (CSS) size for game logic with a separate DPR-scaled buffer — read `this.W`/`this.H`, never `canvas.width/height`. (`startLeaderboard / drawLeaderboard / isLeaderboardBusy` remain as no-op stubs after the Supabase removal — games still call them; the result-screen Top10 slot is intentionally empty pending the UI restyle.)
 
 DPR cap is 2.5 (higher than the 3D scene's 1.0 mobile cap — Canvas-2D has the headroom).
 
-### Supabase
+### No backend (Supabase removed)
 
-Three tables live in `supabase/*.sql` (apply manually via the Supabase SQL editor; this is not migration tooling):
+The site was previously backed by Supabase (guestbook + minigame leaderboard via raw REST `fetch`). That was fully removed — the project is now 100% static. There is no DB, no `supabase/` dir, no keep-alive workflow, no client API keys. The guestbook + leaderboard pages and the guestbook minigame were deleted; the leaderboard plumbing in `base.ts` is now no-op stubs (see "Minigames share `MinigameBase`"). Minigames run offline with no score persistence.
 
-- `guestbook` — public read/insert with length checks
-- `game_scores` — minigame leaderboard, `game_id` partitioned, jsonb `metadata`
-- `keep_alive` — pinged Mon/Thu by `.github/workflows/supabase-keepalive.yml` to defeat the 60-day free-tier inactivity sleep
-
-Client uses raw `fetch` against the REST API — no `supabase-js`. The publishable key in `minigames/leaderboard.ts` and `guestbook.ts` is intentionally client-side; RLS is the security boundary. `submitScore` enforces a 5-second client-side cooldown and `maxScore` per-game ceiling before POSTing.
-
-When adding a new minigame to the leaderboard: register it in `GAMES` and `GAME_ORDER` in `leaderboard.ts`, add the `minigame` slug to the matching `PROJECTS` entry in `data.ts`, and add a `getStaticPaths` row in `pages/play/[key].astro`.
+When adding a new minigame: extend `MinigameBase`, add the `minigame` slug to the matching `PROJECTS` entry in `data.ts`, add a `getStaticPaths` row in `pages/play/[key].astro`, and add the slug to `MG_KEYS` + the dispatch switch in `main.ts`.
 
 ## Conventions worth knowing
 

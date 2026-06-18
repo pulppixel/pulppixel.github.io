@@ -219,7 +219,7 @@ export const PROJECTS: ProjectData[] = [
       '한글 조합 커스텀 InputField',
       'UaaL 양방향 통신 검증',
     ],
-    link: '/projects/eterna/', off: { x: -2.5, z: 0 }, minigame: 'guestbook',
+    link: '/projects/eterna/', off: { x: -2.5, z: 0 },
   },
   {
     co: 'The Nether (25-26)', title: 'REIW', sub: '3D 메타버스',

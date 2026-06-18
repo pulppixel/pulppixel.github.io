@@ -67,7 +67,6 @@ const NPC_DEFS: NPCDef[] = [
             'ETERNA... 디스코드 같은 커뮤니티를 Unity 위에 올렸지.',
             'REIW에서 채팅을 개선했고, 그 경험이 ETERNA의 토대가 됐어.',
             'IW Zombie는 첫 실전이었지. 5단계 루프를 처음부터 끝까지.',
-            '방명록도 남겨봐. ETERNA 큐브에서 가능해.',
         ],
     },
     {

@@ -62,7 +62,7 @@ export function renderMd(src: string): string {
       flush();
       const items: string[] = [];
       while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-*]\s+/, '')); i++; }
-      out.push(`<ul style="list-style:none;padding:0;margin:0 0 24px">${items.map((it) => `<li style="${LI}"><span style="position:absolute;left:.2rem;color:#c4a7e7">›</span>${inline(it)}</li>`).join('')}</ul>`);
+      out.push(`<ul style="list-style:none;padding:0;margin:0 0 24px">${items.map((it) => `<li style="${LI}"><span style="position:absolute;left:.2rem;color:#c4a7e7">-</span>${inline(it)}</li>`).join('')}</ul>`);
       continue;
     }
     if (/^>\s+/.test(t)) {

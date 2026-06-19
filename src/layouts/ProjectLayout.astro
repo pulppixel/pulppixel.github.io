@@ -98,7 +98,7 @@ const pageTitle = `${title} — Pulppixel`;
     <!-- cat 헤더 (인앱 상세와 동일한 줄) -->
     <div class="catbar">
       <div class="catpath"><span class="cmd">cat</span> ~/portfolio/projects/{currentSlug}.md</div>
-      <a href="/" class="back">← back (esc)</a>
+      <a href="/" class="back">back (esc)</a>
     </div>
 
     <article class="content">
@@ -117,7 +117,7 @@ const pageTitle = `${title} — Pulppixel`;
           <a class="chip chip-link" href={l.url} target="_blank" rel="noopener">{l.label}</a>
         ))}
         {minigameKey && (
-          <a class="cta-play" href={`/play/${minigameKey}/`}>▶ 미니게임 하러 가기 →</a>
+          <a class="cta-play" href={`/play/${minigameKey}/`}>미니게임 하러 가기</a>
         )}
       </div>
 
@@ -130,20 +130,20 @@ const pageTitle = `${title} — Pulppixel`;
       <nav class="proj-nav">
         {prev ? (
           <a href={`/projects/${prev.slug}/`} class="nav-prev">
-            <span class="nav-dir">← 이전</span>
+            <span class="nav-dir">이전</span>
             <span class="nav-title">{prev.title}</span>
           </a>
         ) : <div />}
         {next ? (
           <a href={`/projects/${next.slug}/`} class="nav-next">
-            <span class="nav-dir">다음 →</span>
+            <span class="nav-dir">다음</span>
             <span class="nav-title">{next.title}</span>
           </a>
         ) : <div />}
       </nav>
 
       <div class="foot">
-        <a href="/" class="foot-back">← back to gui</a>
+        <a href="/" class="foot-back">back to gui</a>
       </div>
     </article>
   </main>
@@ -291,9 +291,6 @@ const pageTitle = `${title} — Pulppixel`;
   .detail-content :global(li) {
     font-size: 13.5px; color: #cdc9de; line-height: 1.85; padding-left: 1.4rem;
     position: relative; margin-bottom: .55rem; max-width: 68ch;
-  }
-  .detail-content :global(li::before) {
-    content: '›'; position: absolute; left: .2rem; color: #c4a7e7;
   }
   .detail-content :global(code) {
     font-family: 'D2Coding', 'JetBrains Mono', monospace; font-size: 12.5px;

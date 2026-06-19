@@ -575,7 +575,7 @@ export class Terminal {
         const label = (it as { label: string }).label;
         return `<div data-act="select" data-pi="${pi}" data-ii="${ii}" style="display:flex;align-items:center;gap:7px;padding:4px 11px;cursor:pointer;background:${rowBg}">
           <span style="flex:none;width:7px;color:#9ccfd8">${bar}</span>
-          <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${fg};font-weight:${activeSel ? '700' : '400'};font-size:13px">${esc(icon)} ${esc(label)}</span>
+          <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${fg};font-weight:${activeSel ? '700' : '400'};font-size:13px">${icon ? esc(icon) + ' ' : ''}${esc(label)}</span>
           <span style="flex:none;white-space:nowrap;font-size:10.5px;color:${metaColor}">${esc(meta)}</span>
         </div>`;
       }).join('');
@@ -587,7 +587,7 @@ export class Terminal {
 
     const leftDesktop = `<div style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
       ${desktopPanels}
-      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">↑↓ / j k &nbsp;navigate<br>1–5 &nbsp;jump · enter open · q shell</div>
+      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;navigate<br>1–5 &nbsp;jump · enter open · q shell</div>
     </div>`;
 
     const mobileSel = `<div style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -627,7 +627,7 @@ export class Terminal {
 
     return `<div style="position:absolute;top:-8px;left:13px;background:#191724;padding:0 7px;font-size:11.5px;color:#9ccfd8">${esc(viewTitle)}</div>
       <div style="flex:1;min-height:0;overflow-y:auto;padding:22px clamp(18px,3vw,34px)">
-        <div style="font-size:11.5px;color:#6e6a86;margin-bottom:20px">${esc(path)} <span style="color:#524f67">›</span></div>
+        <div style="font-size:11.5px;color:#6e6a86;margin-bottom:20px">${esc(path)}</div>
         ${inner}
       </div>`;
   }
@@ -643,11 +643,11 @@ export class Terminal {
       </div>
       <div style="margin-top:30px;padding-top:18px;border-top:1px dashed #26233a;font-size:12.5px;color:#6e6a86;line-height:1.95">
         ${this.state.isMobile
-          ? `<div><span style="color:#9ccfd8">→</span> 위쪽 <span style="color:#e0def4">탭</span> 으로 패널을, 항목을 <span style="color:#e0def4">탭</span> 해서 봅니다.</div>
-        <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯</span> 링크로.</div>`
-          : `<div><span style="color:#9ccfd8">→</span> 좌측 패널을 <span style="color:#e0def4">↑↓ / j k</span> 로 탐색하고 <span style="color:#e0def4">enter</span> 로 엽니다.</div>
-        <div><span style="color:#9ccfd8">→</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로.</div>
-        <div><span style="color:#9ccfd8">→</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>`}
+          ? `<div><span style="color:#9ccfd8">-</span> 위쪽 <span style="color:#e0def4">탭</span> 으로 패널을, 항목을 <span style="color:#e0def4">탭</span> 해서 봅니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯</span> 링크로.</div>`
+          : `<div><span style="color:#9ccfd8">-</span> 좌측 패널을 <span style="color:#e0def4">j k</span> 로 탐색하고 <span style="color:#e0def4">enter</span> 로 엽니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로.</div>
+        <div><span style="color:#9ccfd8">-</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>`}
       </div>`;
   }
 
@@ -677,7 +677,7 @@ export class Terminal {
       <p style="margin-top:22px;max-width:64ch;color:#cdc9de;line-height:1.95;font-size:14px">${esc(it.desc)}</p>
       <div style="margin-top:26px;font-size:11px;color:#9ccfd8;letter-spacing:.1em">PROJECTS</div>
       <div style="margin-top:11px;font-size:13.5px;color:#cdc9de;line-height:1.55">
-        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#f6c177;flex:none">●</span><span>${esc(p)}</span></div>`).join('')}
+        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#f6c177;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
       </div>`;
   }
 
@@ -701,7 +701,7 @@ export class Terminal {
       : `<span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">enter</span> open</span><span><span style="color:#908caa">q</span> shell</span>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:11.5px;overflow:hidden">
       <span style="background:#c4a7e7;color:#191724;height:100%;display:flex;align-items:center;padding:0 12px;font-weight:700;white-space:nowrap"> main</span>
-      <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span><span style="color:#9ccfd8">↑</span>4</span><span><span style="color:#c4a7e7">●</span> 13 projects</span><span>6y</span></span>
+      <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span>13 projects</span><span>6y</span></span>
       <span style="flex:1"></span>
       <span style="color:#524f67;padding:0 14px;display:flex;align-items:center;gap:12px;white-space:nowrap">
         ${hints}
@@ -723,22 +723,22 @@ export class Terminal {
 
     const sections = L ? L.sections.map((sec) => `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># ${esc(sec.title)}</div>
       <div style="margin-top:14px;font-size:14.5px;color:#cdc9de;line-height:1.7">
-        ${sec.items.map((i) => `<div style="display:flex;gap:12px;margin-bottom:11px"><span style="color:#c4a7e7;flex:none">›</span><span>${esc(i)}</span></div>`).join('')}
+        ${sec.items.map((i) => `<div style="display:flex;gap:12px;margin-bottom:11px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(i)}</span></div>`).join('')}
       </div>`).join('') : '';
 
     const progress = L ? `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># PROGRESS</div>
       <div style="margin-top:14px;font-size:14px;color:#cdc9de;line-height:1.6">
-        ${L.progress.map((p) => { const col = p.done ? '#9ccfd8' : '#524f67'; const ic = p.done ? '✓' : '○'; return `<div style="display:flex;gap:12px;margin-bottom:9px"><span style="flex:none;color:${col}">${ic}</span><span style="color:${col}">${esc(p.t)}</span></div>`; }).join('')}
+        ${L.progress.map((p) => { const col = p.done ? '#9ccfd8' : '#524f67'; const ic = p.done ? '[x]' : '[ ]'; return `<div style="display:flex;gap:12px;margin-bottom:9px"><span style="flex:none;color:${col}">${ic}</span><span style="color:${col}">${esc(p.t)}</span></div>`; }).join('')}
       </div>` : '';
 
     const highlights = !hasLong ? `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># HIGHLIGHTS</div>
       <div style="margin-top:14px;font-size:14.5px;color:#cdc9de;line-height:1.7">
-        ${pg.points.map((p) => `<div style="display:flex;gap:12px;margin-bottom:12px"><span style="color:#c4a7e7;flex:none">›</span><span>${esc(p)}</span></div>`).join('')}
+        ${pg.points.map((p) => `<div style="display:flex;gap:12px;margin-bottom:12px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
       </div>` : '';
 
     const roleChip = role ? `<span style="font-size:12px;color:#908caa;border:1px solid #26233a;border-radius:6px;padding:6px 12px"><span style="color:#9ccfd8">역할</span> · ${esc(role)}</span>` : '';
     const siteChip = (pg.url && /^https?:/.test(pg.url)) ? `<a href="${esc(pg.url)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#c4a7e7;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">사이트 방문</a>` : '';
-    const playChip = playUrl ? `<a href="${esc(playUrl)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#9ccfd8;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">▶ 미니게임 하러 가기 →</a>` : '';
+    const playChip = playUrl ? `<a href="${esc(playUrl)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#9ccfd8;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">미니게임 하러 가기</a>` : '';
     const metaRow = (roleChip || siteChip || playChip) ? `<div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">${roleChip}${siteChip}${playChip}</div>` : '';
 
     const stackBlock = `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># STACK</div>
@@ -760,7 +760,7 @@ export class Terminal {
     return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .3s ease both' : 'none'}">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 16px;background:#1f1d2e;border-bottom:1px solid #16141f;font-size:12px">
         <div style="color:#6e6a86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#9ccfd8">cat</span> ~/portfolio/projects/${esc(pg.label)}.md</div>
-        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">← back (esc)</div>
+        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">back (esc)</div>
       </div>
       <div style="flex:1;min-height:0;overflow-y:auto">
         <div style="max-width:760px;margin:0 auto;padding:clamp(30px,5vw,64px) clamp(20px,5vw,40px) 90px">
@@ -775,7 +775,7 @@ export class Terminal {
           <div style="margin-top:30px;height:1px;background:#26233a"></div>
           ${bodyHtml}
           <div style="margin-top:46px;display:flex;gap:12px;flex-wrap:wrap">
-            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">← back to gui</div>
+            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">back to gui</div>
           </div>
         </div>
       </div>

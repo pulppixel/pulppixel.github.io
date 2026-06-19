@@ -65,6 +65,7 @@ export class Terminal {
   private dispEl: HTMLElement | null = null;
   private shellEl: HTMLElement | null = null;
   private lastPhase: State['phase'] | null = null;
+  private lastFocus = -1;
   private anim = false;
   private keyHandler!: (e: KeyboardEvent) => void;
   private resizeHandler!: () => void;
@@ -457,7 +458,24 @@ export class Terminal {
       this.root.appendChild(wrap);
       this.shellEl = wrap;
     }
+
+    // innerHTML 통째 교체는 스크롤 컨테이너를 새로 만들어 scroll 위치가 초기화된다.
+    // [data-keepscroll] 요소의 위치를 교체 전에 저장 → 교체 후 복원. 단, 상위 패널(focus)이
+    // 바뀌면 항목 목록 자체가 달라지므로 항목 행은 복원하지 않고 초기화한다.
+    const focusChanged = s.focus !== this.lastFocus;
+    this.lastFocus = s.focus;
+    const scrollSave: Record<string, [number, number]> = {};
+    this.shellEl.querySelectorAll<HTMLElement>('[data-keepscroll]').forEach((el) => {
+      if (el.id) scrollSave[el.id] = [el.scrollLeft, el.scrollTop];
+    });
+
     this.shellEl.innerHTML = this.viewTitleBar() + body;
+
+    for (const id in scrollSave) {
+      if (id === 't-mobile-items' && focusChanged) continue;
+      const el = this.shellEl.querySelector<HTMLElement>('#' + id);
+      if (el) { el.scrollLeft = scrollSave[id][0]; el.scrollTop = scrollSave[id][1]; }
+    }
 
     // shell: 입력 element 직접 바인딩 + 포커스/스크롤
     this.inputEl = this.shellEl.querySelector('#t-input');
@@ -554,7 +572,7 @@ export class Terminal {
 
   private viewBoot(): string {
     return `<div style="flex:1;min-height:0;padding:clamp(28px,7vw,90px);font-size:13.5px;line-height:2.1;color:#908caa">
-      ${this.state.bootLines.map((l) => `<div style="display:flex;gap:12px;animation:rise .16s ease both"><span style="color:#524f67;flex:none">${esc(l.t)}</span><span style="color:${l.c}">${esc(l.m)}</span></div>`).join('')}
+      ${this.state.bootLines.map((l, i) => `<div style="display:flex;gap:12px;${i === this.state.bootLines.length - 1 ? 'animation:rise .16s ease both' : ''}"><span style="color:#524f67;flex:none">${esc(l.t)}</span><span style="color:${l.c}">${esc(l.m)}</span></div>`).join('')}
       <div class="cur" style="margin-top:2px"></div>
     </div>`;
   }
@@ -585,15 +603,15 @@ export class Terminal {
       </div>`;
     }).join('');
 
-    const leftDesktop = `<div style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
+    const leftDesktop = `<div id="t-left" data-keepscroll style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
       ${desktopPanels}
       <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;navigate<br>1–5 &nbsp;jump · enter open · q shell</div>
     </div>`;
 
-    const mobileSel = `<div style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
+    const mobileSel = `<div id="t-mobile-panels" data-keepscroll style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
         ${DATA.map((p, pi) => { const f = pi === focus; return `<div data-act="focus" data-pi="${pi}" style="flex:none;white-space:nowrap;border:1px solid ${f ? '#c4a7e7' : '#403d52'};border-radius:7px;padding:9px 13px;font-size:12px;color:${f ? '#c4a7e7' : '#6e6a86'};-webkit-tap-highlight-color:transparent"><span style="opacity:.6">${p.key}</span> ${esc(p.title)}</div>`; }).join('')}
       </div>
-      <div style="flex:none;display:flex;gap:7px;padding:9px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #26233a">
+      <div id="t-mobile-items" data-keepscroll style="flex:none;display:flex;gap:7px;padding:9px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #26233a">
         ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:9px 13px;font-size:12.5px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'};-webkit-tap-highlight-color:transparent">${esc(label)}</div>`; }).join('')}
       </div>`;
 

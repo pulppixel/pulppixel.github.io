@@ -89,7 +89,7 @@ export function init(): void {
   if (soundBtn) {
     soundBtn.onclick = () => {
       const m = audio.toggleMute();
-      soundBtn.textContent = m ? 'mut' : 'snd';
+      soundBtn.textContent = m ? 'muted' : 'sound';
       soundBtn.classList.toggle('off', m);
     };
   }

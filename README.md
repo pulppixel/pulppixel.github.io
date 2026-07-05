@@ -139,7 +139,6 @@ src/
     ├── system/                         audio, postfx, ui, collectibles
     └── minigames/                      spody, maze, ruby, circles, nomads,
                                         guestbook, leaderboard, base
-code-samples/                           별도 repo로 분리한 Unity C# 코드 샘플
 ```
 
 ---

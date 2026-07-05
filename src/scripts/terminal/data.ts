@@ -152,9 +152,9 @@ export const DATA: Panel[] = [
   ] },
 
   { key: '5', title: 'Contact', kind: 'contact', items: [
-    { label: 'email', value: 'devenvy100@gmail.com', cta: 'send mail', note: '협업·채용 제안부터 가벼운 질문까지 모두 환영합니다. 가장 빠르게 답하는 채널입니다.', url: 'mailto:devenvy100@gmail.com' },
-    { label: 'github', value: 'github.com/pulppixel', cta: 'open github', note: '작업물과 크고 작은 실험들을 공개해 두었습니다.', url: 'https://github.com/pulppixel' },
-    { label: 'linkedin', value: 'in/hwankee-baik', cta: 'open linkedin', note: '경력과 프로젝트 이력을 시간순으로 정리해 두었습니다.', url: 'https://www.linkedin.com/in/hwankee-baik-272948266/' },
+    { label: 'email', value: 'devenvy100@gmail.com', cta: '메일 보내기', note: '협업·채용 제안부터 가벼운 질문까지 모두 환영합니다. 가장 빠르게 답하는 채널입니다.', url: 'mailto:devenvy100@gmail.com' },
+    { label: 'github', value: 'github.com/pulppixel', cta: 'GitHub 열기', note: '작업물과 크고 작은 실험들을 공개해 두었습니다.', url: 'https://github.com/pulppixel' },
+    { label: 'linkedin', value: 'in/hwankee-baik', cta: 'LinkedIn 열기', note: '경력과 프로젝트 이력을 시간순으로 정리해 두었습니다.', url: 'https://www.linkedin.com/in/hwankee-baik-272948266/' },
   ] },
 ];
 

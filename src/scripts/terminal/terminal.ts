@@ -209,8 +209,8 @@ export class Terminal {
     const d = new Date();
     const today = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' ' + d.toTimeString().slice(0, 5);
     const motd = this.state.isMobile
-      ? rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  아래 ', C.dim), tk('실행 버튼', C.rose), tk(' 으로 GUI 진입.', C.dim)]])
-      : rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  type ', C.dim), tk("'help'", C.iris), tk(' for commands — or just press ', C.dim), tk('Enter', C.rose), tk(' to launch the gui.', C.dim)]]);
+      ? rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  아래 ', C.dim), tk('실행 버튼', C.rose), tk('으로 GUI를 시작하세요.', C.dim)]])
+      : rows([[tk('Welcome to ', C.dim), tk('pulppixel', C.foam), tk('.  ', C.dim), tk("'help'", C.iris), tk('로 명령어를 보거나, ', C.dim), tk('Enter', C.rose), tk('를 눌러 GUI를 실행하세요.', C.dim)]]);
     this.state.sys = sys;
     this.state.blocks = [rows([[tk('Last login: ' + today + ' on ttys006', C.dim)]]), { isNeofetch: true }, motd];
 
@@ -342,21 +342,21 @@ export class Terminal {
         return rows([
           [tk('"' + f + '" [readonly]', C.dim)],
           [tk('~', C.faint)], [tk('~', C.faint)],
-          [tk('~     이력서는 PDF로 정중히 드리겠습니다.', C.faint)],
-          [tk('~     그리고 ' + c + ' 에서 빠져나오는 건 또 다른 도전이죠.', C.faint)],
+          [tk('~     이력서는 PDF로 정중히 전해 드리겠습니다.', C.faint)],
+          [tk('~     그리고 ' + c + '에서 빠져나가는 일은 또 다른 도전입니다.', C.faint)],
           [tk('~', C.faint)], [tk('~', C.faint)],
-          [tk("-- INSERT --   (':q' 쳐도 못 나갑니다 ㅋㅋ)", C.gold)],
+          [tk("-- INSERT --   (':q'를 입력해도 나갈 수 없습니다)", C.gold)],
           [tk(' ')],
-          [tk('jk — ', C.dim), tk('탈출 성공.', C.foam), tk('  대신 ', C.dim), tk('open email', C.foam), tk(' 로 연락 주세요.', C.dim)],
+          [tk('jk — ', C.dim), tk('무사히 나오셨습니다.', C.foam), tk('  연락은 ', C.dim), tk('open email', C.foam), tk('로 부탁드립니다.', C.dim)],
         ]);
       }
-      case ':q': case ':q!': case ':wq': case ':x': case ':qa': case ':qa!': return rows([[tk('vim에서 살아 나왔습니다. 존경.', C.gold)]]);
+      case ':q': case ':q!': case ':wq': case ':x': case ':qa': case ':qa!': return rows([[tk('vim에서 살아 돌아오셨습니다. 존경합니다.', C.gold)]]);
       case 'echo': return rows([[tk(parts.slice(1).join(' ') || ' ', C.fg)]]);
       case 'pwd': return rows([[tk('/home/hwankee/portfolio', C.fg)]]);
       case 'date': return rows([[tk(new Date().toString(), C.fg)]]);
       case 'uname': return rows([[tk('Linux pulppixel 6.1.0-18-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux', C.fg)]]);
       case 'sudo': return rows([[tk('hwankee is not in the sudoers file. This incident will be reported.', C.love)]]);
-      case 'rm': return rows([[tk('rm: nice try :)', C.gold)]]);
+      case 'rm': return rows([[tk("rm: cannot remove 'portfolio': Permission denied", C.love), tk('  (nice try)', C.gold)]]);
       case 'exit': case 'logout': return rows([[tk('There is no exit — only ', C.dim), tk('pulppixel', C.foam), tk('.', C.dim)]]);
       case 'man': return rows([[tk('What manual page do you want? Try ', C.dim), tk("'help'", C.foam), tk('.', C.dim)]]);
       default: return rows([[tk('zsh: command not found: ' + c, C.love)], [tk('type ', C.dim), tk("'help'", C.foam), tk(' for a list of commands', C.dim)]]);
@@ -566,7 +566,7 @@ export class Terminal {
         </div>
       </div>
       ${this.state.isMobile ? `<div data-act="launch" style="margin-top:18px;display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:9px;background:#c4a7e7;color:#191724;font-size:13.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:transparent">❯ 탭하여 GUI 실행</div>
-      <div style="margin-top:9px;font-size:11px;color:#6e6a86">…또는 위 입력창을 탭해 명령어를 직접 칠 수 있어요.</div>` : ''}
+      <div style="margin-top:9px;font-size:11px;color:#6e6a86">…또는 위 입력창을 탭해 명령어를 직접 입력할 수 있습니다.</div>` : ''}
     </div>`;
   }
 
@@ -605,7 +605,7 @@ export class Terminal {
 
     const leftDesktop = `<div id="t-left" data-keepscroll style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
       ${desktopPanels}
-      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;navigate<br>1–5 &nbsp;jump · enter open · q shell</div>
+      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;이동<br>1–5 &nbsp;패널 · enter 열기 · q 셸</div>
     </div>`;
 
     const mobileSel = `<div id="t-mobile-panels" data-keepscroll style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -661,11 +661,11 @@ export class Terminal {
       </div>
       <div style="margin-top:30px;padding-top:18px;border-top:1px dashed #26233a;font-size:12.5px;color:#6e6a86;line-height:1.95">
         ${this.state.isMobile
-          ? `<div><span style="color:#9ccfd8">-</span> 위쪽 <span style="color:#e0def4">탭</span> 으로 패널을, 항목을 <span style="color:#e0def4">탭</span> 해서 봅니다.</div>
-        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 <span style="color:#e0def4">❯</span> 링크로.</div>`
-          : `<div><span style="color:#9ccfd8">-</span> 좌측 패널을 <span style="color:#e0def4">j k</span> 로 탐색하고 <span style="color:#e0def4">enter</span> 로 엽니다.</div>
-        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a> 는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로.</div>
-        <div><span style="color:#9ccfd8">-</span> <span style="color:#e0def4">q</span> 를 누르면 셸로 돌아갑니다.</div>`}
+          ? `<div><span style="color:#9ccfd8">-</span> 위쪽 <span style="color:#e0def4">탭</span>으로 패널을 고르고, 항목을 <span style="color:#e0def4">탭</span>해서 봅니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a>는 우상단 <span style="color:#e0def4">❯</span> 링크로 열 수 있습니다.</div>`
+          : `<div><span style="color:#9ccfd8">-</span> 좌측 패널을 <span style="color:#e0def4">j k</span>로 탐색하고 <span style="color:#e0def4">enter</span>로 엽니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a>는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로 열 수 있습니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <span style="color:#e0def4">q</span>를 누르면 셸로 돌아갑니다.</div>`}
       </div>`;
   }
 
@@ -685,7 +685,7 @@ export class Terminal {
       <div style="margin-top:11px;font-size:13.5px;color:#cdc9de;line-height:1.55">
         ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#c4a7e7;flex:none">+</span><span>${esc(p)}</span></div>`).join('')}
       </div>
-      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:30px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">open detail</div>`;
+      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:30px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">상세 보기</div>`;
   }
 
   private viewMainJob(it: JobItem): string {
@@ -716,7 +716,7 @@ export class Terminal {
   private viewStatusBar(): string {
     const hints = this.state.isMobile
       ? ''
-      : `<span><span style="color:#908caa">jk</span> nav</span><span><span style="color:#908caa">enter</span> open</span><span><span style="color:#908caa">q</span> shell</span>`;
+      : `<span><span style="color:#908caa">jk</span> 이동</span><span><span style="color:#908caa">enter</span> 열기</span><span><span style="color:#908caa">q</span> 셸</span>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:11.5px;overflow:hidden">
       <span style="background:#c4a7e7;color:#191724;height:100%;display:flex;align-items:center;padding:0 12px;font-weight:700;white-space:nowrap"> main</span>
       <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span>13 projects</span><span>6y</span></span>
@@ -778,7 +778,7 @@ export class Terminal {
     return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .3s ease both' : 'none'}">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 16px;background:#1f1d2e;border-bottom:1px solid #16141f;font-size:12px">
         <div style="color:#6e6a86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#9ccfd8">cat</span> ~/portfolio/projects/${esc(pg.label)}.md</div>
-        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">back (esc)</div>
+        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">뒤로 (esc)</div>
       </div>
       <div style="flex:1;min-height:0;overflow-y:auto">
         <div style="max-width:760px;margin:0 auto;padding:clamp(30px,5vw,64px) clamp(20px,5vw,40px) 90px">
@@ -793,7 +793,7 @@ export class Terminal {
           <div style="margin-top:30px;height:1px;background:#26233a"></div>
           ${bodyHtml}
           <div style="margin-top:46px;display:flex;gap:12px;flex-wrap:wrap">
-            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">back to gui</div>
+            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">GUI로 돌아가기</div>
           </div>
         </div>
       </div>

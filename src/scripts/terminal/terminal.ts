@@ -325,9 +325,9 @@ export class Terminal {
       case 'about': return rows([
         [tk('백환기 ', C.white), tk('/ Hwankee Baik', C.dim)],
         [tk('Software Engineer · ', C.iris), tk('Dongle Lab', C.rose)], [tk(' ')],
-        [tk('게임 클라이언트부터 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다.', C.fg)],
-        [tk('작명소, WebAR 등 여러 서비스를 직접 만들고 운영하며,', C.fg)],
-        [tk('아이디어를 제품으로 끝까지 가져가는 일에 집중합니다.', C.fg)],
+        [tk('게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다.', C.fg)],
+        [tk('지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며,', C.fg)],
+        [tk('아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.', C.fg)],
       ]);
       case 'whoami': return rows([[tk('hwankee', C.foam)]]);
       case 'contact': {
@@ -655,7 +655,7 @@ export class Terminal {
     return `<div style="font-size:11px;color:#9ccfd8;letter-spacing:.14em;margin-bottom:14px">$ whoami</div>
       <h1 style="font-size:clamp(1.7rem,4vw,2.7rem);color:#e0def4;line-height:1.08;letter-spacing:-.01em">백환기 <span style="color:#6e6a86;font-weight:400;font-size:.55em">/ Hwankee Baik</span></h1>
       <div style="margin-top:10px;color:#c4a7e7;font-size:13px">Software Engineer · 1인 스튜디오 <span style="color:#ebbcba">Dongle Lab</span> 운영</div>
-      <p style="margin-top:20px;max-width:60ch;color:#cdc9de;line-height:1.95;font-size:14px">게임 클라이언트부터 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 작명소, WebAR 등 여러 서비스를 직접 만들고 운영하며, 아이디어를 제품으로 끝까지 가져가는 일에 집중합니다.</p>
+      <p style="margin-top:20px;max-width:60ch;color:#cdc9de;line-height:1.95;font-size:14px">게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며, 아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;font-size:11.5px">
         ${chip('Unity', '#9ccfd8')}${chip('Unreal 5', '#c4a7e7')}${chip('Godot 4', '#ebbcba')}${chip('Flutter', '#f6c177')}${chip('Next.js', '#9ccfd8')}${chip('WebAR', '#eb6f92')}
       </div>

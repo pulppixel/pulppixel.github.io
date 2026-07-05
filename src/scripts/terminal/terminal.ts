@@ -500,7 +500,7 @@ export class Terminal {
     // 3d-world 링크: 모바일은 아이콘만(공간 확보), 데스크탑은 라벨 포함.
     const worldLink = m
       ? `<a href="/explore/" aria-label="3D 월드" style="flex:none;font-size:13px;color:#9ccfd8;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 10px" title="3D 월드">❯</a>`
-      : `<a href="/explore/" style="flex:none;font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 9px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world</a>`;
+      : `<a href="/explore/" style="flex:none;font-size:11px;color:#908caa;letter-spacing:.04em;white-space:nowrap;border:1px solid #403d52;border-radius:6px;padding:4px 10px" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world</a>`;
     return `<div style="flex:none;display:flex;align-items:center;gap:14px;padding:0 16px;height:42px;background:#1f1d2e;border-bottom:1px solid #16141f">
       <div style="display:flex;gap:8px;flex:none">
         <span style="width:12px;height:12px;border-radius:50%;background:#eb6f92"></span>
@@ -508,7 +508,7 @@ export class Terminal {
         <span style="width:12px;height:12px;border-radius:50%;background:#9ccfd8"></span>
       </div>
       <div style="flex:1;display:flex;justify-content:center;min-width:0">
-        <div style="display:flex;align-items:center;gap:9px;background:#191724;border:1px solid #403d52;border-radius:7px;padding:5px 16px;font-size:12px;color:#908caa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        <div style="display:flex;align-items:center;background:#191724;border:1px solid #403d52;border-radius:6px;padding:5px 16px;font-size:12px;color:#908caa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
           ${tab}
         </div>
       </div>
@@ -526,7 +526,7 @@ export class Terminal {
     const line = (k: string, v: string) => `<div><span style="color:#c4a7e7;font-weight:700">${k}</span>: ${esc(v)}</div>`;
     return `<div style="margin:6px 0 12px;display:flex;gap:clamp(16px,4vw,44px);flex-wrap:wrap;align-items:flex-start">
       <pre style="margin:0;white-space:pre;color:#eb6f92;font-size:clamp(7.5px,1.05vw,10.5px);line-height:1.16;flex:none;text-shadow:0 0 14px rgba(235,111,146,.28)">${esc(NEOFETCH_ART)}</pre>
-      <div style="font-size:12.5px;line-height:1.72;min-width:0;color:#cdc9de;white-space:nowrap">
+      <div style="font-size:13px;line-height:1.7;min-width:0;color:#cdc9de;white-space:nowrap">
         <div><span style="color:#9ccfd8;font-weight:700">hwankee</span><span style="color:#6e6a86">@</span><span style="color:#9ccfd8;font-weight:700">pulppixel</span></div>
         <div style="color:#403d52">-----------------------------</div>
         ${line('OS', sys.os + (sys.arch ? ' ' + sys.arch : ''))}
@@ -551,27 +551,27 @@ export class Terminal {
   private viewShell(): string {
     const blocksHtml = this.state.blocks.map((b) => {
       if ('isNeofetch' in b) return this.viewNeofetch();
-      if ('isCmd' in b) return `<div style="margin:11px 0 3px;white-space:pre-wrap;word-break:break-word"><span style="color:#9ccfd8">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#c4a7e7">~/portfolio</span> <span style="color:#c4a7e7">❯</span> <span style="color:#e0def4">${esc(b.text)}</span></div>`;
-      return `<div style="margin-bottom:6px">${b.rows.map((row) => `<div style="white-space:pre-wrap;word-break:break-word">${this.rowTokens(row)}</div>`).join('')}</div>`;
+      if ('isCmd' in b) return `<div style="margin:12px 0 4px;white-space:pre-wrap;word-break:break-word"><span style="color:#9ccfd8">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#c4a7e7">~/portfolio</span> <span style="color:#c4a7e7">❯</span> <span style="color:#e0def4">${esc(b.text)}</span></div>`;
+      return `<div style="margin-bottom:8px">${b.rows.map((row) => `<div style="white-space:pre-wrap;word-break:break-word">${this.rowTokens(row)}</div>`).join('')}</div>`;
     }).join('');
 
     return `<div id="t-term" data-act="focusInput" style="flex:1;min-height:0;overflow-y:auto;padding:clamp(18px,4vw,40px) clamp(20px,5vw,60px);font-size:13px;line-height:1.7;cursor:text">
       ${blocksHtml}
-      <div style="margin-top:10px;display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:12.5px"><span style="color:#9ccfd8">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#c4a7e7">~/portfolio</span><span style="color:#f6c177">git:(</span><span style="color:#eb6f92">main</span><span style="color:#f6c177">)</span></div>
-      <div style="margin-top:3px;display:flex;align-items:flex-start;position:relative;font-size:14px">
+      <div style="margin-top:12px;display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:13px"><span style="color:#9ccfd8">hwankee@pulppixel</span><span style="color:#6e6a86">:</span><span style="color:#c4a7e7">~/portfolio</span><span style="color:#f6c177">git:(</span><span style="color:#eb6f92">main</span><span style="color:#f6c177">)</span></div>
+      <div style="margin-top:4px;display:flex;align-items:flex-start;position:relative;font-size:13px">
         <span style="color:#c4a7e7;flex:none">❯&nbsp;</span>
         <div style="flex:1;min-width:0;position:relative;word-break:break-all">
           <span id="t-input-disp" style="color:#e0def4;white-space:pre-wrap">${esc(this.state.input)}</span><span class="cur"></span>
           <input id="t-input" autocomplete="off" autocapitalize="off" spellcheck="false" style="position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;border:none;outline:none;color:transparent;caret-color:transparent;font:inherit;padding:0;margin:0" />
         </div>
       </div>
-      ${this.state.isMobile ? `<div data-act="launch" style="margin-top:18px;display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:9px;background:#c4a7e7;color:#191724;font-size:13.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:transparent">❯ 탭하여 GUI 실행</div>
-      <div style="margin-top:9px;font-size:11px;color:#6e6a86">…또는 위 입력창을 탭해 명령어를 직접 입력할 수 있습니다.</div>` : ''}
+      ${this.state.isMobile ? `<div data-act="launch" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:8px;background:#c4a7e7;color:#191724;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent">❯ 탭하여 GUI 실행</div>
+      <div style="margin-top:8px;font-size:11px;color:#6e6a86">…또는 위 입력창을 탭해 명령어를 직접 입력할 수 있습니다.</div>` : ''}
     </div>`;
   }
 
   private viewBoot(): string {
-    return `<div style="flex:1;min-height:0;padding:clamp(28px,7vw,90px);font-size:13.5px;line-height:2.1;color:#908caa">
+    return `<div style="flex:1;min-height:0;padding:clamp(28px,7vw,90px);font-size:13px;line-height:2;color:#908caa">
       ${this.state.bootLines.map((l, i) => `<div style="display:flex;gap:12px;${i === this.state.bootLines.length - 1 ? 'animation:rise .16s ease both' : ''}"><span style="color:#524f67;flex:none">${esc(l.t)}</span><span style="color:${l.c}">${esc(l.m)}</span></div>`).join('')}
       <div class="cur" style="margin-top:2px"></div>
     </div>`;
@@ -586,40 +586,40 @@ export class Terminal {
         const sel = sels[pi] === ii; const activeSel = focused && sel;
         const bar = activeSel ? '▌' : ' ';
         const rowBg = activeSel ? 'rgba(156,207,216,.13)' : (sel ? 'rgba(110,106,134,.12)' : 'transparent');
-        const fg = activeSel ? '#e0def4' : (sel ? '#b5b1c8' : '#908caa');
+        const fg = activeSel ? '#e0def4' : (sel ? '#cdc9de' : '#908caa');
         const metaColor = activeSel ? '#9ccfd8' : '#524f67';
         const icon = (it as { icon?: string }).icon || '';
         const meta = (it as { meta?: string }).meta || '';
         const label = (it as { label: string }).label;
-        return `<div data-act="select" data-pi="${pi}" data-ii="${ii}" style="display:flex;align-items:center;gap:7px;padding:4px 11px;cursor:pointer;background:${rowBg}">
+        return `<div data-act="select" data-pi="${pi}" data-ii="${ii}" style="display:flex;align-items:center;gap:8px;padding:4px 12px;cursor:pointer;background:${rowBg}">
           <span style="flex:none;width:7px;color:#9ccfd8">${bar}</span>
           <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${fg};font-weight:${activeSel ? '700' : '400'};font-size:13px">${icon ? esc(icon) + ' ' : ''}${esc(label)}</span>
-          <span style="flex:none;white-space:nowrap;font-size:10.5px;color:${metaColor}">${esc(meta)}</span>
+          <span style="flex:none;white-space:nowrap;font-size:11px;color:${metaColor}">${esc(meta)}</span>
         </div>`;
       }).join('');
-      return `<div style="position:relative;flex:none;border:1px solid ${border};border-radius:7px;padding:15px 0 8px">
-        <div style="position:absolute;top:-9px;left:11px;background:#191724;padding:0 7px;font-size:11.5px;letter-spacing:.02em;white-space:nowrap;color:${titleColor}"><span style="color:${keyColor}">[${p.key}]</span> ${esc(p.title)}</div>
+      return `<div style="position:relative;flex:none;border:1px solid ${border};border-radius:8px;padding:16px 0 8px">
+        <div style="position:absolute;top:-8px;left:12px;background:#191724;padding:0 8px;font-size:11px;letter-spacing:.02em;white-space:nowrap;color:${titleColor}"><span style="color:${keyColor}">[${p.key}]</span> ${esc(p.title)}</div>
         ${items}
       </div>`;
     }).join('');
 
-    const leftDesktop = `<div id="t-left" data-keepscroll style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:0;padding-top:11px">
+    const leftDesktop = `<div id="t-left" data-keepscroll style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;padding-top:12px">
       ${desktopPanels}
-      <div style="flex:none;font-size:10.5px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;이동<br>1–5 &nbsp;패널 · enter 열기 · q 셸</div>
+      <div style="flex:none;font-size:11px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;이동<br>1–5 &nbsp;패널 · enter 열기 · q 셸</div>
     </div>`;
 
-    const mobileSel = `<div id="t-mobile-panels" data-keepscroll style="flex:none;display:flex;gap:7px;padding:10px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
-        ${DATA.map((p, pi) => { const f = pi === focus; return `<div data-act="focus" data-pi="${pi}" style="flex:none;white-space:nowrap;border:1px solid ${f ? '#c4a7e7' : '#403d52'};border-radius:7px;padding:9px 13px;font-size:12px;color:${f ? '#c4a7e7' : '#6e6a86'};-webkit-tap-highlight-color:transparent"><span style="opacity:.6">${p.key}</span> ${esc(p.title)}</div>`; }).join('')}
+    const mobileSel = `<div id="t-mobile-panels" data-keepscroll style="flex:none;display:flex;gap:8px;padding:12px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
+        ${DATA.map((p, pi) => { const f = pi === focus; return `<div data-act="focus" data-pi="${pi}" style="flex:none;white-space:nowrap;border:1px solid ${f ? '#c4a7e7' : '#403d52'};border-radius:6px;padding:10px 14px;font-size:12px;color:${f ? '#c4a7e7' : '#6e6a86'};-webkit-tap-highlight-color:transparent"><span style="opacity:.6">${p.key}</span> ${esc(p.title)}</div>`; }).join('')}
       </div>
-      <div id="t-mobile-items" data-keepscroll style="flex:none;display:flex;gap:7px;padding:9px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #26233a">
-        ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:9px 13px;font-size:12.5px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'};-webkit-tap-highlight-color:transparent">${esc(label)}</div>`; }).join('')}
+      <div id="t-mobile-items" data-keepscroll style="flex:none;display:flex;gap:8px;padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid #26233a">
+        ${DATA[focus].items.map((it, ii) => { const sel = sels[focus] === ii; const label = (it as { label: string }).label; return `<div data-act="select" data-pi="${focus}" data-ii="${ii}" style="flex:none;white-space:nowrap;border:1px solid ${sel ? '#c4a7e7' : '#403d52'};background:${sel ? '#c4a7e7' : '#1f1d2e'};border-radius:6px;padding:10px 14px;font-size:13px;color:${sel ? '#191724' : '#908caa'};font-weight:${sel ? '700' : '400'};-webkit-tap-highlight-color:transparent">${esc(label)}</div>`; }).join('')}
       </div>`;
 
     return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .32s ease both' : 'none'}">
       ${s.isMobile ? mobileSel : ''}
-      <div style="flex:1;min-height:0;display:flex;gap:11px;padding:12px">
+      <div style="flex:1;min-height:0;display:flex;gap:12px;padding:12px">
         ${s.isMobile ? '' : leftDesktop}
-        <div style="flex:3 1 440px;min-width:0;position:relative;border:1px solid #524f67;border-radius:7px;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:3 1 440px;min-width:0;position:relative;border:1px solid #524f67;border-radius:8px;display:flex;flex-direction:column;min-height:0">
           ${this.viewMain()}
         </div>
       </div>
@@ -643,28 +643,28 @@ export class Terminal {
     else if (kind === 'skill') inner = this.viewMainSkill(it as SkillItem);
     else if (kind === 'contact') inner = this.viewMainContact(it as ContactItem);
 
-    return `<div style="position:absolute;top:-8px;left:13px;background:#191724;padding:0 7px;font-size:11.5px;color:#9ccfd8">${esc(viewTitle)}</div>
-      <div style="flex:1;min-height:0;overflow-y:auto;padding:22px clamp(18px,3vw,34px)">
-        <div style="font-size:11.5px;color:#6e6a86;margin-bottom:20px">${esc(path)}</div>
+    return `<div style="position:absolute;top:-8px;left:12px;background:#191724;padding:0 8px;font-size:11px;color:#9ccfd8">${esc(viewTitle)}</div>
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:24px clamp(18px,3vw,34px)">
+        <div style="font-size:11px;color:#6e6a86;margin-bottom:20px">${esc(path)}</div>
         ${inner}
       </div>`;
   }
 
   private viewProfile(): string {
-    const chip = (t: string, c: string) => `<span style="border:1px solid #26233a;border-radius:5px;padding:4px 11px;color:${c}">${t}</span>`;
+    const chip = (t: string, c: string) => `<span style="border:1px solid #26233a;border-radius:6px;padding:4px 12px;color:${c}">${t}</span>`;
     return `<div style="font-size:11px;color:#9ccfd8;letter-spacing:.14em;margin-bottom:14px">$ whoami</div>
       <h1 style="font-size:clamp(1.7rem,4vw,2.7rem);color:#e0def4;line-height:1.08;letter-spacing:-.01em">백환기 <span style="color:#6e6a86;font-weight:400;font-size:.55em">/ Hwankee Baik</span></h1>
-      <div style="margin-top:10px;color:#c4a7e7;font-size:13px">Software Engineer · 1인 스튜디오 <span style="color:#ebbcba">Dongle Lab</span> 운영</div>
-      <p style="margin-top:20px;max-width:60ch;color:#cdc9de;line-height:1.95;font-size:14px">게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며, 아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;font-size:11.5px">
+      <div style="margin-top:8px;color:#c4a7e7;font-size:13px">Software Engineer · 1인 스튜디오 <span style="color:#ebbcba">Dongle Lab</span> 운영</div>
+      <p style="margin-top:20px;max-width:60ch;color:#cdc9de;line-height:1.9;font-size:14px">게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며, 아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;font-size:12px">
         ${chip('Unity', '#9ccfd8')}${chip('Unreal 5', '#c4a7e7')}${chip('Godot 4', '#ebbcba')}${chip('Flutter', '#f6c177')}${chip('Next.js', '#9ccfd8')}${chip('WebAR', '#eb6f92')}
       </div>
-      <div style="margin-top:30px;padding-top:18px;border-top:1px dashed #26233a;font-size:12.5px;color:#6e6a86;line-height:1.95">
+      <div style="margin-top:32px;padding-top:16px;border-top:1px dashed #26233a;font-size:12px;color:#6e6a86;line-height:1.9">
         ${this.state.isMobile
           ? `<div><span style="color:#9ccfd8">-</span> 위쪽 <span style="color:#e0def4">탭</span>으로 패널을 고르고, 항목을 <span style="color:#e0def4">탭</span>해서 봅니다.</div>
-        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a>는 우상단 <span style="color:#e0def4">❯</span> 링크로 열 수 있습니다.</div>`
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#403d52">3D 월드</a>는 우상단 <span style="color:#e0def4">❯</span> 링크로 열 수 있습니다.</div>`
           : `<div><span style="color:#9ccfd8">-</span> 좌측 패널을 <span style="color:#e0def4">j k</span>로 탐색하고 <span style="color:#e0def4">enter</span>로 엽니다.</div>
-        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8">3D 월드</a>는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로 열 수 있습니다.</div>
+        <div><span style="color:#9ccfd8">-</span> <a href="/explore/" style="color:#9ccfd8;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#403d52">3D 월드</a>는 우상단 링크 또는 <span style="color:#e0def4">explore</span> 명령으로 열 수 있습니다.</div>
         <div><span style="color:#9ccfd8">-</span> <span style="color:#e0def4">q</span>를 누르면 셸로 돌아갑니다.</div>`}
       </div>`;
   }
@@ -672,56 +672,56 @@ export class Terminal {
   private viewMainProject(it: ProjectItem): string {
     return `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <h1 style="font-size:clamp(1.5rem,3.4vw,2.3rem);color:#e0def4;line-height:1.1">${esc(it.name)}</h1>
-        <span style="white-space:nowrap;border:1px solid ${it.badgeColor};color:${it.badgeColor};padding:3px 10px;border-radius:5px;font-size:11px;letter-spacing:.08em">${esc(it.badge)}</span>
+        <span style="white-space:nowrap;border:1px solid ${it.badgeColor};color:${it.badgeColor};padding:3px 10px;border-radius:6px;font-size:11px;letter-spacing:.06em">${esc(it.badge)}</span>
       </div>
       <div style="margin-top:8px;color:#c4a7e7;font-size:14px">${esc(it.sub)}</div>
-      <div style="margin-top:6px;font-size:12px;color:#6e6a86">${esc(it.period)}</div>
-      <p style="margin-top:22px;max-width:64ch;color:#cdc9de;line-height:1.95;font-size:14px">${esc(it.desc)}</p>
-      <div style="margin-top:26px;font-size:11px;color:#9ccfd8;letter-spacing:.1em">STACK</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;font-size:11.5px">
-        ${it.stack.map((x) => `<span style="border:1px solid #26233a;border-radius:5px;padding:4px 11px;color:#908caa">${esc(x)}</span>`).join('')}
+      <div style="margin-top:4px;font-size:12px;color:#6e6a86">${esc(it.period)}</div>
+      <p style="margin-top:24px;max-width:64ch;color:#cdc9de;line-height:1.9;font-size:14px">${esc(it.desc)}</p>
+      <div style="margin-top:28px;font-size:11px;color:#9ccfd8;letter-spacing:.14em">STACK</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:12px">
+        ${it.stack.map((x) => `<span style="border:1px solid #26233a;border-radius:6px;padding:4px 12px;color:#908caa">${esc(x)}</span>`).join('')}
       </div>
-      <div style="margin-top:28px;font-size:11px;color:#9ccfd8;letter-spacing:.1em">HIGHLIGHTS</div>
-      <div style="margin-top:11px;font-size:13.5px;color:#cdc9de;line-height:1.55">
-        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#c4a7e7;flex:none">+</span><span>${esc(p)}</span></div>`).join('')}
+      <div style="margin-top:28px;font-size:11px;color:#9ccfd8;letter-spacing:.14em">HIGHLIGHTS</div>
+      <div style="margin-top:12px;font-size:13px;color:#cdc9de;line-height:1.7">
+        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:8px"><span style="color:#c4a7e7;flex:none">+</span><span>${esc(p)}</span></div>`).join('')}
       </div>
-      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:30px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">상세 보기</div>`;
+      <div data-act="openMain" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:28px;background:#c4a7e7;color:#191724;padding:10px 18px;border-radius:8px;font-size:12px;letter-spacing:.04em;font-weight:700">상세 보기</div>`;
   }
 
   private viewMainJob(it: JobItem): string {
     return `<h1 style="font-size:clamp(1.5rem,3.4vw,2.3rem);color:#e0def4;line-height:1.1">${esc(it.company)}</h1>
       <div style="margin-top:8px;color:#c4a7e7;font-size:14px">${esc(it.role)}</div>
-      <div style="margin-top:6px;font-size:12px;color:#6e6a86">${esc(it.period)} · ${esc(it.dur)}</div>
-      <p style="margin-top:22px;max-width:64ch;color:#cdc9de;line-height:1.95;font-size:14px">${esc(it.desc)}</p>
-      <div style="margin-top:26px;font-size:11px;color:#9ccfd8;letter-spacing:.1em">PROJECTS</div>
-      <div style="margin-top:11px;font-size:13.5px;color:#cdc9de;line-height:1.55">
-        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:7px"><span style="color:#f6c177;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
+      <div style="margin-top:4px;font-size:12px;color:#6e6a86">${esc(it.period)} · ${esc(it.dur)}</div>
+      <p style="margin-top:24px;max-width:64ch;color:#cdc9de;line-height:1.9;font-size:14px">${esc(it.desc)}</p>
+      <div style="margin-top:28px;font-size:11px;color:#9ccfd8;letter-spacing:.14em">PROJECTS</div>
+      <div style="margin-top:12px;font-size:13px;color:#cdc9de;line-height:1.7">
+        ${it.points.map((p) => `<div style="display:flex;gap:10px;margin-bottom:8px"><span style="color:#f6c177;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
       </div>`;
   }
 
   private viewMainSkill(it: SkillItem): string {
     return `<h1 style="font-size:clamp(1.4rem,3vw,2rem);color:#e0def4;line-height:1.1">${esc(it.title)}</h1>
-      <div style="margin-top:22px;display:flex;flex-direction:column;gap:0;border:1px solid #26233a;border-radius:7px;overflow:hidden">
-        ${it.rows.map((r) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #21202e;font-size:13px"><span style="color:#e0def4">${esc(r.k)}</span><span style="color:#6e6a86;white-space:nowrap">${esc(r.v)}</span></div>`).join('')}
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:0;border:1px solid #26233a;border-radius:8px;overflow:hidden">
+        ${it.rows.map((r) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid #26233a;font-size:13px"><span style="color:#e0def4">${esc(r.k)}</span><span style="color:#6e6a86;white-space:nowrap">${esc(r.v)}</span></div>`).join('')}
       </div>`;
   }
 
   private viewMainContact(it: ContactItem): string {
-    return `<h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);color:#e0def4;line-height:1.1">${esc(it.label)}</h1>
-      <div style="margin-top:14px;font-size:14px;color:#9ccfd8;word-break:break-all">${esc(it.value)}</div>
-      <p style="margin-top:18px;max-width:54ch;color:#cdc9de;line-height:1.9;font-size:13.5px">${esc(it.note)}</p>
-      <a href="${esc(it.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:26px;background:#9ccfd8;color:#191724;padding:10px 18px;border-radius:7px;font-size:12.5px;letter-spacing:.04em;font-weight:700">${esc(it.cta)}</a>`;
+    return `<h1 style="font-size:clamp(1.5rem,3.4vw,2.3rem);color:#e0def4;line-height:1.1">${esc(it.label)}</h1>
+      <div style="margin-top:12px;font-size:14px;color:#9ccfd8;word-break:break-all">${esc(it.value)}</div>
+      <p style="margin-top:16px;max-width:54ch;color:#cdc9de;line-height:1.9;font-size:14px">${esc(it.note)}</p>
+      <a href="${esc(it.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-top:28px;background:#9ccfd8;color:#191724;padding:10px 18px;border-radius:8px;font-size:12px;letter-spacing:.04em;font-weight:700">${esc(it.cta)}</a>`;
   }
 
   private viewStatusBar(): string {
     const hints = this.state.isMobile
       ? ''
       : `<span><span style="color:#908caa">jk</span> 이동</span><span><span style="color:#908caa">enter</span> 열기</span><span><span style="color:#908caa">q</span> 셸</span>`;
-    return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:11.5px;overflow:hidden">
+    return `<div style="flex:none;display:flex;align-items:center;gap:0;height:30px;background:#1f1d2e;border-top:1px solid #16141f;font-size:12px;overflow:hidden">
       <span style="background:#c4a7e7;color:#191724;height:100%;display:flex;align-items:center;padding:0 12px;font-weight:700;white-space:nowrap"> main</span>
-      <span style="color:#6e6a86;padding:0 14px;display:flex;align-items:center;gap:14px;white-space:nowrap"><span>13 projects</span><span>6y</span></span>
+      <span style="color:#6e6a86;padding:0 12px;display:flex;align-items:center;gap:12px;white-space:nowrap"><span>13 projects</span><span>6y</span></span>
       <span style="flex:1"></span>
-      <span style="color:#524f67;padding:0 14px;display:flex;align-items:center;gap:12px;white-space:nowrap">
+      <span style="color:#524f67;padding:0 12px;display:flex;align-items:center;gap:12px;white-space:nowrap">
         ${hints}
       </span>
     </div>`;
@@ -737,20 +737,20 @@ export class Terminal {
     const stack = L ? L.stack : pg.stack;
     const role = L ? L.role : '';
     const playUrl = L ? L.play : pg.play;
-    const imageEl = L && L.image ? `<img src="${esc(L.image)}" alt="preview" style="margin-top:20px;width:100%;border-radius:9px;border:1px solid #26233a;display:block" onerror="this.style.display='none'" />` : '';
+    const imageEl = L && L.image ? `<img src="${esc(L.image)}" alt="preview" style="margin-top:20px;width:100%;border-radius:8px;border:1px solid #26233a;display:block" onerror="this.style.display='none'" />` : '';
 
-    const sections = L ? L.sections.map((sec) => `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># ${esc(sec.title)}</div>
-      <div style="margin-top:14px;font-size:14.5px;color:#cdc9de;line-height:1.7">
-        ${sec.items.map((i) => `<div style="display:flex;gap:12px;margin-bottom:11px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(i)}</span></div>`).join('')}
+    const sections = L ? L.sections.map((sec) => `<div style="margin-top:32px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># ${esc(sec.title)}</div>
+      <div style="margin-top:14px;font-size:14px;color:#cdc9de;line-height:1.7">
+        ${sec.items.map((i) => `<div style="display:flex;gap:12px;margin-bottom:12px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(i)}</span></div>`).join('')}
       </div>`).join('') : '';
 
-    const progress = L ? `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># PROGRESS</div>
-      <div style="margin-top:14px;font-size:14px;color:#cdc9de;line-height:1.6">
-        ${L.progress.map((p) => { const col = p.done ? '#9ccfd8' : '#524f67'; const ic = p.done ? '[x]' : '[ ]'; return `<div style="display:flex;gap:12px;margin-bottom:9px"><span style="flex:none;color:${col}">${ic}</span><span style="color:${col}">${esc(p.t)}</span></div>`; }).join('')}
+    const progress = L ? `<div style="margin-top:32px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># PROGRESS</div>
+      <div style="margin-top:14px;font-size:14px;color:#cdc9de;line-height:1.7">
+        ${L.progress.map((p) => { const col = p.done ? '#9ccfd8' : '#524f67'; const ic = p.done ? '[x]' : '[ ]'; return `<div style="display:flex;gap:12px;margin-bottom:8px"><span style="flex:none;color:${col}">${ic}</span><span style="color:${col}">${esc(p.t)}</span></div>`; }).join('')}
       </div>` : '';
 
-    const highlights = !hasLong ? `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># HIGHLIGHTS</div>
-      <div style="margin-top:14px;font-size:14.5px;color:#cdc9de;line-height:1.7">
+    const highlights = !hasLong ? `<div style="margin-top:32px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># HIGHLIGHTS</div>
+      <div style="margin-top:14px;font-size:14px;color:#cdc9de;line-height:1.7">
         ${pg.points.map((p) => `<div style="display:flex;gap:12px;margin-bottom:12px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
       </div>` : '';
 
@@ -759,16 +759,16 @@ export class Terminal {
     const playChip = playUrl ? `<a href="${esc(playUrl)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#9ccfd8;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">미니게임 하러 가기</a>` : '';
     const metaRow = (roleChip || siteChip || playChip) ? `<div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">${roleChip}${siteChip}${playChip}</div>` : '';
 
-    const stackBlock = `<div style="margin-top:34px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># STACK</div>
-          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;font-size:12.5px">
-            ${stack.map((sx) => `<span style="border:1px solid #26233a;border-radius:6px;padding:6px 13px;color:#908caa">${esc(sx)}</span>`).join('')}
+    const stackBlock = `<div style="margin-top:32px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># STACK</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;font-size:12px">
+            ${stack.map((sx) => `<span style="border:1px solid #26233a;border-radius:6px;padding:6px 12px;color:#908caa">${esc(sx)}</span>`).join('')}
           </div>`;
 
     // 상세 .md 가 있으면 그 본문(글·이미지·영상)을 렌더, 없으면(이음/PEEKAR 등) 기존 요약 뷰.
     const bodyHtml = md
       ? `${stackBlock}<div style="margin-top:40px">${renderMd(md)}</div>`
-      : `<div style="margin-top:30px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># OVERVIEW</div>
-          <p style="margin-top:14px;color:#cdc9de;line-height:2.05;font-size:15px">${esc(overview)}</p>
+      : `<div style="margin-top:32px;font-size:12px;color:#9ccfd8;letter-spacing:.14em"># OVERVIEW</div>
+          <p style="margin-top:14px;color:#cdc9de;line-height:1.9;font-size:15px">${esc(overview)}</p>
           ${imageEl}
           ${sections}
           ${stackBlock}
@@ -776,24 +776,24 @@ export class Terminal {
           ${highlights}`;
 
     return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;animation:${this.anim ? 'pop .3s ease both' : 'none'}">
-      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 16px;background:#1f1d2e;border-bottom:1px solid #16141f;font-size:12px">
+      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;background:#1f1d2e;border-bottom:1px solid #16141f;font-size:12px">
         <div style="color:#6e6a86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#9ccfd8">cat</span> ~/portfolio/projects/${esc(pg.label)}.md</div>
-        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:5px 12px;border-radius:6px;white-space:nowrap">뒤로 (esc)</div>
+        <div data-act="back" style="flex:none;cursor:pointer;border:1px solid #403d52;color:#908caa;padding:6px 12px;border-radius:6px;white-space:nowrap">뒤로 (esc)</div>
       </div>
       <div style="flex:1;min-height:0;overflow-y:auto">
-        <div style="max-width:760px;margin:0 auto;padding:clamp(30px,5vw,64px) clamp(20px,5vw,40px) 90px">
-          <div style="font-size:11px;color:#9ccfd8;letter-spacing:.16em">PROJECT</div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px">
-            <h1 style="font-size:clamp(2rem,5vw,3.3rem);color:#e0def4;line-height:1.04;letter-spacing:-.01em">${esc(pg.name)}</h1>
-            <span style="white-space:nowrap;border:1px solid ${pg.badgeColor};color:${pg.badgeColor};padding:4px 13px;border-radius:6px;font-size:12px;letter-spacing:.06em">${esc(pg.badge)}</span>
+        <div style="max-width:760px;margin:0 auto;padding:clamp(28px,5vw,56px) clamp(20px,5vw,40px) 80px">
+          <div style="font-size:11px;color:#9ccfd8;letter-spacing:.14em">PROJECT</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px">
+            <h1 style="font-size:clamp(2rem,5vw,3rem);color:#e0def4;line-height:1.06;letter-spacing:-.01em">${esc(pg.name)}</h1>
+            <span style="white-space:nowrap;border:1px solid ${pg.badgeColor};color:${pg.badgeColor};padding:4px 12px;border-radius:6px;font-size:12px;letter-spacing:.06em">${esc(pg.badge)}</span>
           </div>
-          <div style="margin-top:14px;color:#c4a7e7;font-size:16px">${esc(pg.sub)}</div>
+          <div style="margin-top:14px;color:#c4a7e7;font-size:15px">${esc(pg.sub)}</div>
           <div style="margin-top:6px;color:#6e6a86;font-size:13px">${esc(pg.period)}</div>
           ${metaRow}
-          <div style="margin-top:30px;height:1px;background:#26233a"></div>
+          <div style="margin-top:32px;height:1px;background:#26233a"></div>
           ${bodyHtml}
-          <div style="margin-top:46px;display:flex;gap:12px;flex-wrap:wrap">
-            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:12px 22px;border-radius:8px;font-size:13px">GUI로 돌아가기</div>
+          <div style="margin-top:48px;display:flex;gap:12px;flex-wrap:wrap">
+            <div data-act="back" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;border:1px solid #403d52;color:#908caa;padding:10px 20px;border-radius:8px;font-size:12px">GUI로 돌아가기</div>
           </div>
         </div>
       </div>

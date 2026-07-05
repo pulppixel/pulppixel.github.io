@@ -72,10 +72,10 @@ const og = 'https://pulppixel.github.io/og.png';
 
         #start-overlay { position: fixed; inset: 0; z-index: 25; background: #191724; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; cursor: pointer; transition: opacity 0.4s ease; }
         #start-overlay.hidden { opacity: 0; pointer-events: none; }
-        #start-overlay h1 { font-size: 20px; color: #c4a7e7; letter-spacing: 0.15em; text-transform: uppercase; }
+        #start-overlay h1 { font-size: 20px; color: #c4a7e7; letter-spacing: 0.14em; text-transform: uppercase; }
         #start-overlay h1::before { content: '❯ '; color: #9ccfd8; }
-        #start-overlay .hint { font-size: 11px; color: #6e6a86; letter-spacing: 0.08em; }
-        #start-overlay .play-btn { font-family: inherit; font-size: 14px; color: #191724; letter-spacing: 0.1em; padding: 14px 32px; border: 1px solid #9ccfd8; border-radius: 7px; background: #9ccfd8; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        #start-overlay .hint { font-size: 11px; color: #6e6a86; letter-spacing: 0.06em; }
+        #start-overlay .play-btn { font-family: inherit; font-size: 14px; color: #191724; letter-spacing: 0.1em; padding: 14px 32px; border: 1px solid #9ccfd8; border-radius: 8px; background: #9ccfd8; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
         #start-overlay .play-btn:hover { opacity: 0.88; }
     </style>
 </head>
@@ -87,7 +87,7 @@ const og = 'https://pulppixel.github.io/og.png';
 
 <div id="start-overlay">
     <h1>{title}</h1>
-    <button class="play-btn" type="button">▶ START</button>
+    <button class="play-btn" type="button">START</button>
     <div class="hint">클릭해서 시작하세요</div>
 </div>
 

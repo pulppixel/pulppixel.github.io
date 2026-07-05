@@ -16,19 +16,20 @@ const escHtml = (s: string): string =>
 const inline = (s: string): string =>
   escHtml(s)
     .replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#e0def4;font-weight:700">$1</strong>')
-    .replace(/`([^`]+)`/g, '<code style="font-family:\'D2Coding\',\'JetBrains Mono\',monospace;font-size:12.5px;background:#21202e;border:1px solid #26233a;color:#ebbcba;padding:.1rem .42rem;border-radius:4px">$1</code>')
+    .replace(/`([^`]+)`/g, '<code style="font-family:\'D2Coding\',\'JetBrains Mono\',monospace;font-size:12px;background:#21202e;border:1px solid #26233a;color:#ebbcba;padding:.1rem .42rem;border-radius:4px">$1</code>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, t, u) => `<a href="${u}" target="_blank" rel="noopener" style="color:#9ccfd8;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#403d52">${t}</a>`);
 
 const ytEmbed = (id: string, title: string): string =>
   `<div style="position:relative;width:100%;padding-bottom:56.25%;margin:24px 0;border-radius:8px;overflow:hidden;border:1px solid #26233a;background:#1f1d2e">` +
+
   `<iframe src="https://www.youtube-nocookie.com/embed/${escHtml(id)}" title="${escHtml(title || '영상')}" frameborder="0" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%"></iframe>` +
   `</div>`;
 
-const HEAD2 = 'font-size:clamp(1rem,2.4vw,1.2rem);color:#9ccfd8;letter-spacing:.04em;font-weight:700;margin:42px 0 14px;line-height:1.4';
-const HEAD3 = 'font-size:13.5px;color:#c4a7e7;letter-spacing:.02em;font-weight:700;margin:28px 0 10px;line-height:1.4';
-const PARA = 'font-size:14px;color:#cdc9de;line-height:2.0;margin:0 0 16px;max-width:68ch';
-const LI = 'font-size:13.5px;color:#cdc9de;line-height:1.85;padding-left:1.4rem;position:relative;margin-bottom:.55rem;max-width:68ch';
-const IMG = 'display:block;width:100%;border-radius:9px;border:1px solid #26233a;margin:26px 0';
+const HEAD2 = 'font-size:clamp(1rem,2.4vw,1.2rem);color:#9ccfd8;letter-spacing:.04em;font-weight:700;margin:40px 0 16px;line-height:1.4';
+const HEAD3 = 'font-size:13px;color:#c4a7e7;letter-spacing:.02em;font-weight:700;margin:28px 0 8px;line-height:1.4';
+const PARA = 'font-size:14px;color:#cdc9de;line-height:1.9;margin:0 0 16px;max-width:68ch';
+const LI = 'font-size:13px;color:#cdc9de;line-height:1.8;padding-left:1.4rem;position:relative;margin-bottom:8px;max-width:68ch';
+const IMG = 'display:block;width:100%;border-radius:8px;border:1px solid #26233a;margin:24px 0';
 
 export function renderMd(src: string): string {
   const lines = (src || '').replace(/\r/g, '').split('\n');
@@ -67,7 +68,7 @@ export function renderMd(src: string): string {
     }
     if (/^>\s+/.test(t)) {
       flush();
-      out.push(`<blockquote style="margin:0 0 16px;padding:6px 0 6px 14px;border-left:2px solid #403d52;color:#908caa;font-size:13.5px;line-height:1.85">${inline(t.replace(/^>\s+/, ''))}</blockquote>`);
+      out.push(`<blockquote style="margin:0 0 16px;padding:6px 0 6px 16px;border-left:2px solid #403d52;color:#908caa;font-size:13px;line-height:1.8">${inline(t.replace(/^>\s+/, ''))}</blockquote>`);
       i++; continue;
     }
     para.push(t); i++;

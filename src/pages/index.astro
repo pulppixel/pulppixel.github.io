@@ -36,7 +36,8 @@ const og = 'https://pulppixel.github.io/og.png';
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/400.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/700.css" rel="stylesheet" />
-  <style>
+  <style is:global>
+    /* 터미널 DOM 은 JS(innerHTML) 로 주입되므로 스코프드 스타일이 닿지 않는다 — 전역으로 선언 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { background: #13111c; height: 100%; }
     a { color: inherit; text-decoration: none; }
@@ -44,7 +45,7 @@ const og = 'https://pulppixel.github.io/og.png';
     @keyframes blink { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
     @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pop { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: scale(1); } }
-    :global(.cur)::after { content: "\2585"; color: #c4a7e7; animation: blink 1.05s infinite; }
+    .cur::after { content: "\2585"; color: #c4a7e7; animation: blink 1.05s infinite; }
     ::-webkit-scrollbar { width: 9px; height: 9px; }
     ::-webkit-scrollbar-thumb { background: #403d52; border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
     ::-webkit-scrollbar-thumb:hover { background: #524f67; background-clip: padding-box; }

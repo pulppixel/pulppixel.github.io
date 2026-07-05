@@ -90,7 +90,9 @@ const pageTitle = `${title} — Pulppixel`;
         <span style="background:#9ccfd8"></span>
       </div>
       <div class="tab">
-        <span class="t-host">hwankee@pulppixel</span><span class="t-colon">:</span><span class="t-path">~/portfolio</span>
+        <div class="tab-chip">
+          <span class="t-host">hwankee@pulppixel</span><span class="t-colon">:</span><span class="t-path">~/portfolio</span>
+        </div>
       </div>
       <a href="/explore/" class="world-link" title="3D 월드"><span style="color:#9ccfd8">❯</span> 3d-world</a>
     </header>
@@ -176,10 +178,11 @@ const pageTitle = `${title} — Pulppixel`;
     color: #cdc9de;
     padding: clamp(0px, 4vw, 52px);
     min-height: 100vh;
+    /* index.astro #app 배경과 동일한 그라데이션 — 홈↔상세 전환 시 톤 유지 */
     background:
-      radial-gradient(60% 50% at 80% 8%, rgba(196,167,231,.30) 0%, rgba(196,167,231,0) 60%),
-      radial-gradient(55% 48% at 14% 90%, rgba(122,162,247,.18) 0%, rgba(122,162,247,0) 58%),
-      radial-gradient(46% 42% at 92% 95%, rgba(235,188,186,.12) 0%, rgba(235,188,186,0) 62%),
+      radial-gradient(60% 50% at 80% 8%, rgba(196,167,231,.32) 0%, rgba(196,167,231,0) 60%),
+      radial-gradient(55% 48% at 14% 90%, rgba(122,162,247,.20) 0%, rgba(122,162,247,0) 58%),
+      radial-gradient(46% 42% at 92% 95%, rgba(235,188,186,.13) 0%, rgba(235,188,186,0) 62%),
       linear-gradient(150deg, #241d3a 0%, #1a1626 46%, #100e18 100%);
     background-attachment: fixed;
   }
@@ -211,16 +214,18 @@ const pageTitle = `${title} — Pulppixel`;
   .tab {
     flex: 1; display: flex; justify-content: center; min-width: 0;
   }
-  .tab > :is(.t-host, .t-colon, .t-path) {
-    font-size: 12px; white-space: nowrap;
+  /* 홈(터미널) 타이틀바의 탭 칩과 동일 */
+  .tab-chip {
+    display: flex; align-items: center; background: #191724; border: 1px solid #403d52;
+    border-radius: 6px; padding: 5px 16px; font-size: 12px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
   }
-  .tab { gap: 0; }
   .t-host { color: #e0def4; }
   .t-colon { color: #6e6a86; }
   .t-path { color: #9ccfd8; }
   .world-link {
     flex: none; font-size: 11px; color: #908caa; letter-spacing: .04em; white-space: nowrap;
-    border: 1px solid #403d52; border-radius: 6px; padding: 4px 9px; transition: all .2s;
+    border: 1px solid #403d52; border-radius: 6px; padding: 4px 10px; transition: all .2s;
   }
   .world-link:hover { border-color: #9ccfd8; color: #e0def4; }
 
@@ -228,13 +233,13 @@ const pageTitle = `${title} — Pulppixel`;
   .catbar {
     position: sticky; top: 42px; z-index: 19;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 9px 16px; background: #1f1d2e; border-bottom: 1px solid #16141f; font-size: 12px;
+    padding: 8px 16px; background: #1f1d2e; border-bottom: 1px solid #16141f; font-size: 12px;
   }
   .catpath { color: #6e6a86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .catpath .cmd { color: #9ccfd8; }
   .back {
     flex: none; border: 1px solid #403d52; color: #908caa;
-    padding: 5px 12px; border-radius: 6px; white-space: nowrap; transition: all .2s;
+    padding: 6px 12px; border-radius: 6px; white-space: nowrap; transition: all .2s;
   }
   .back:hover { border-color: #9ccfd8; color: #e0def4; }
 
@@ -243,15 +248,15 @@ const pageTitle = `${title} — Pulppixel`;
     max-width: 760px; margin: 0 auto;
     padding: clamp(28px, 5vw, 56px) clamp(20px, 5vw, 40px) 80px;
   }
-  .eyebrow { font-size: 11px; color: #9ccfd8; letter-spacing: .16em; }
-  .title-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+  .eyebrow { font-size: 11px; color: #9ccfd8; letter-spacing: .14em; }
+  .title-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
   .title-row h1 {
-    font-size: clamp(1.9rem, 5vw, 3rem); color: #e0def4; line-height: 1.06;
+    font-size: clamp(2rem, 5vw, 3rem); color: #e0def4; line-height: 1.06;
     letter-spacing: -.01em; font-weight: 700;
   }
   .badge {
     white-space: nowrap; font-size: 12px; letter-spacing: .06em;
-    padding: 4px 13px; border-radius: 6px;
+    padding: 4px 12px; border-radius: 6px;
     border: 1px solid #c4a7e7; color: #c4a7e7;
   }
   .subtitle { margin-top: 14px; color: #c4a7e7; font-size: 15px; line-height: 1.7; max-width: 64ch; }
@@ -269,51 +274,51 @@ const pageTitle = `${title} — Pulppixel`;
     font-size: 12px; white-space: nowrap; font-weight: 700;
     background: #9ccfd8; color: #191724; border-radius: 6px; padding: 7px 14px; transition: all .2s;
   }
-  .cta-play:hover { filter: brightness(1.08); transform: translateX(2px); }
+  .cta-play:hover { filter: brightness(1.08); }
 
-  .rule { margin-top: 30px; height: 1px; background: #26233a; }
+  .rule { margin-top: 32px; height: 1px; background: #26233a; }
 
   /* ── 슬롯 콘텐츠 (마크다운형) ── */
-  .detail-content { margin-top: 30px; }
+  .detail-content { margin-top: 32px; }
   .detail-content :global(h2) {
     font-size: clamp(1rem, 2.4vw, 1.2rem); color: #9ccfd8; letter-spacing: .04em;
-    font-weight: 700; margin-top: 2.8rem; margin-bottom: 1rem; line-height: 1.4;
+    font-weight: 700; margin-top: 40px; margin-bottom: 16px; line-height: 1.4;
   }
   .detail-content :global(h2::before) { content: '# '; color: #c4a7e7; }
   .detail-content :global(h2:first-child) { margin-top: 0; }
   .detail-content :global(p) {
-    font-size: 14px; color: #cdc9de; line-height: 2.0; margin-bottom: 1rem; max-width: 68ch;
+    font-size: 14px; color: #cdc9de; line-height: 1.9; margin-bottom: 16px; max-width: 68ch;
   }
   .detail-content :global(strong) { color: #e0def4; font-weight: 700; }
   .detail-content :global(a) { color: #9ccfd8; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #403d52; }
   .detail-content :global(a:hover) { text-decoration-color: #9ccfd8; }
-  .detail-content :global(ul) { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+  .detail-content :global(ul) { list-style: none; padding: 0; margin: 0 0 24px; }
   .detail-content :global(li) {
-    font-size: 13.5px; color: #cdc9de; line-height: 1.85; padding-left: 1.4rem;
-    position: relative; margin-bottom: .55rem; max-width: 68ch;
+    font-size: 13px; color: #cdc9de; line-height: 1.8; padding-left: 1.4rem;
+    position: relative; margin-bottom: 8px; max-width: 68ch;
   }
   .detail-content :global(code) {
-    font-family: 'D2Coding', 'JetBrains Mono', monospace; font-size: 12.5px;
+    font-family: 'D2Coding', 'JetBrains Mono', monospace; font-size: 12px;
     background: #21202e; border: 1px solid #26233a; color: #ebbcba;
     padding: .1rem .42rem; border-radius: 4px;
   }
   .detail-content :global(img) {
-    display: block; width: 100%; border-radius: 9px;
-    border: 1px solid #26233a; margin: 1.6rem 0;
+    display: block; width: 100%; border-radius: 8px;
+    border: 1px solid #26233a; margin: 24px 0;
   }
   .detail-content :global(.media-placeholder) {
-    background: #1f1d2e; border: 1px dashed #403d52; border-radius: 9px;
-    padding: 3rem 2rem; text-align: center; color: #6e6a86; font-size: 13px; margin: 1.6rem 0;
+    background: #1f1d2e; border: 1px dashed #403d52; border-radius: 8px;
+    padding: 3rem 2rem; text-align: center; color: #6e6a86; font-size: 13px; margin: 24px 0;
   }
 
   /* ── prev / next ── */
   .proj-nav {
-    display: flex; justify-content: space-between; gap: 1rem;
-    margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid #26233a;
+    display: flex; justify-content: space-between; gap: 16px;
+    margin-top: 48px; padding-top: 32px; border-top: 1px solid #26233a;
   }
   .proj-nav a {
-    display: flex; flex-direction: column; gap: .3rem;
-    padding: .8rem 1.1rem; border: 1px solid #403d52; border-radius: 8px;
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 16px; border: 1px solid #403d52; border-radius: 8px;
     min-width: 150px; transition: all .2s;
   }
   .proj-nav a:hover { border-color: #9ccfd8; background: rgba(156,207,216,.06); }
@@ -324,7 +329,7 @@ const pageTitle = `${title} — Pulppixel`;
   .proj-nav a:hover .nav-title { color: #9ccfd8; }
 
   .foot {
-    margin-top: 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    margin-top: 40px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
     font-size: 12px;
   }
   .foot-back {

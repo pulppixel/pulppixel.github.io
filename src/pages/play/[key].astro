@@ -5,17 +5,25 @@
 
 export function getStaticPaths() {
     return [
-        { params: { key: 'maze' },      props: { slug: 'math-master',    title: 'Math Master Maze' } },
-        { params: { key: 'spody' },     props: { slug: 'spody',          title: 'SPODY' } },
-        { params: { key: 'ruby' },      props: { slug: 'ruby-adventure', title: '루비의 모험' } },
-        { params: { key: 'nomads' },    props: { slug: 'nomads-planet',  title: 'Nomads Planet' } },
-        { params: { key: 'ninetosix' }, props: { slug: 'frenzy-circle',  title: 'Nine to Six' } },
+        { params: { key: 'maze' },      props: { slug: 'math-master',    title: 'Math Master Maze',
+            desc: 'Math Master 프로젝트에서 이어진 미로 미니게임. 절차 생성된 미로를 제한된 시야 속에서 3스테이지에 걸쳐 탈출합니다. 브라우저에서 바로 플레이.' } },
+        { params: { key: 'spody' },     props: { slug: 'spody',          title: 'SPODY',
+            desc: 'SPODY 프로젝트에서 이어진 캐주얼 미니게임. 화면을 돌아다니는 타겟을 공으로 맞혀 터뜨립니다. 브라우저에서 바로 플레이.' } },
+        { params: { key: 'ruby' },      props: { slug: 'ruby-adventure', title: '루비의 모험',
+            desc: '루비의 모험 프로젝트에서 이어진 탑다운 액션 미니게임. 클릭 이동과 콤보 공격으로 적을 상대합니다. 브라우저에서 바로 플레이.' } },
+        { params: { key: 'nomads' },    props: { slug: 'nomads-planet',  title: 'Nomads Planet',
+            desc: 'Nomads Planet 프로젝트에서 이어진 범퍼카 아레나 미니게임. 코인을 모으고 상대를 들이받으며 3스테이지에서 살아남습니다. 브라우저에서 바로 플레이.' } },
+        { params: { key: 'ninetosix' }, props: { slug: 'frenzy-circle',  title: 'Nine to Six',
+            desc: 'Nine to Six 프로젝트에서 이어진 링 점프 미니게임. 회전하는 링의 안전한 구간을 노려 점프하며 버팁니다. 브라우저에서 바로 플레이.' } },
     ];
 }
 
 const { key } = Astro.params;
-const { slug, title } = Astro.props;
+const { slug, title, desc } = Astro.props;
 const projectUrl = `/projects/${slug}/`;
+const pageTitle = `${title} 미니게임 — Pulppixel`;
+const pageUrl = `https://pulppixel.github.io/play/${key}/`;
+const og = 'https://pulppixel.github.io/og.png';
 ---
 
 <!DOCTYPE html>
@@ -23,8 +31,25 @@ const projectUrl = `/projects/${slug}/`;
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>{title} - Pulppixel</title>
+    <meta name="description" content={desc} />
+    <title>{pageTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="author" content="Hwankee Baik" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={pageUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:image" content={og} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="Pulppixel" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={og} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />

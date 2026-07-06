@@ -451,10 +451,11 @@ export class Terminal {
     else if (s.phase === 'tui') body = this.viewTui();
     else if (s.phase === 'page') body = this.viewPage();
 
-    // 유리(backdrop-filter) 컨테이너는 한 번만 만들고 내부만 교체 — 매 렌더 재생성 시 블러 재합성으로 화면이 번쩍이던 문제 제거.
+    // 창 컨테이너는 한 번만 만들고 내부만 교체 — 매 렌더 재생성 시 화면이 번쩍이던 문제 제거.
+    // 재질은 ProjectLayout .frame 과 동일한 불투명 배경 (backdrop-filter 는 Chromium 페인트 버그로 미사용).
     if (!this.shellEl) {
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'position:relative;width:min(1340px,100%);height:min(900px,100%);display:flex;flex-direction:column;background:rgba(25,23,36,0.88);backdrop-filter:blur(26px) saturate(1.25);-webkit-backdrop-filter:blur(26px) saturate(1.25);border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden';
+      wrap.style.cssText = 'position:relative;width:min(1340px,100%);height:min(900px,100%);display:flex;flex-direction:column;background:#1a1826;border:1px solid #524f67;border-radius:12px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(196,167,231,.06);overflow:hidden';
       this.root.appendChild(wrap);
       this.shellEl = wrap;
     }

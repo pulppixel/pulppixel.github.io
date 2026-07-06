@@ -1,6 +1,6 @@
 ## 배경
 
-2023 K-메타버스 경진대회 출품을 위해 3개월간 1인 개발한 프로젝트입니다. "차량을 타고 떠도는 유목민(Nomad)의 행성"이라는 콘셉은 대회 주제에서 역산해 설계했습니다.
+2023 K-메타버스 경진대회 출품을 위해 3개월간 1인 개발한 프로젝트입니다. 차량을 타고 돌아다니는 메타버스라는 콘셉은 대회 주제에서 역산해 잡았습니다.
 
 기술 목표는 처음부터 분명했습니다. Relay나 Host 방식으로 간단히 끝낼 수도 있었지만, 매치메이킹부터 Linux Dedicated Server까지 상용 수준의 멀티플레이 인프라를 끝까지 직접 구축해 보기로 했습니다. 학습 목표이자 심사에서의 차별화 포인트였고, 네트워크 역량을 증명하는 포트폴리오이기도 했습니다.
 
@@ -14,14 +14,14 @@
 
 ## 네트워크 - 가장 오래 붙잡은 구간
 
-3개월 중 가장 애먹은 구간은 Unity Matchmaker / Multiplay 연동이었습니다. 참고할 사례가 많지 않아 티켓 생성부터 서버 할당까지 케이스별로 직접 검증하며 붙였습니다.
+3개월 중 가장 어려웠던 구간은 Unity Matchmaker / Multiplay 연동이었습니다. 참고할 사례가 많지 않아 티켓 생성부터 서버 할당까지 케이스별로 직접 검증하며 연동했습니다.
 
 - `NetworkServer` - ConnectionApproval에서 UserData payload를 파싱하고, 인증 ID 매핑(`_clientIdToAuth`, `_authIdToUserData`)을 관리. 접속 후 3초 지연 스폰으로 씬 로딩 타이밍 보정
 - `MatchplayMatchmaker` - Unity Matchmaker 티켓 생성 -> 폴링 -> 매칭 결과 처리. 취소/에러/타임아웃 케이스 전부 핸들링
 - `MatchplayBackfiller` - Backfill 티켓으로 빈 자리를 자동 충원. 플레이어 추가/제거 시 티켓 업데이트, 풀방이면 Backfill 중단
 - `MultiplayAllocationService` - Multiplay 서버 할당 구독 + SQP(Server Query Protocol) 핸들링. 서버 상태를 주기적으로 보고
 
-물리 기반 차량 움직임의 동기화도 만만치 않았습니다. 서버 권위로 보정하기보다 조작감을 우선해, `ClientNetworkTransform`으로 client-authoritative 방식(`OnIsServerAuthoritative() -> false`)을 택했습니다.
+물리 기반 차량 움직임의 동기화도 또 하나의 난관이었습니다. 서버 권위로 보정하기보다 조작감을 우선해, `ClientNetworkTransform`으로 client-authoritative 방식(`OnIsServerAuthoritative() -> false`)을 택했습니다.
 
 ## 게임플레이 시스템
 

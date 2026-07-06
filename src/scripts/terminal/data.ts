@@ -58,9 +58,9 @@ export const DATA: Panel[] = [
       url: '/projects/eterna/' },
 
     { label: 'ieum', meta: '26.03', name: '이음작명소', sub: '신생아 작명 웹서비스', period: '2026.03 — 현재', badge: 'LIVE', badgeColor: F,
-      desc: '훈민정음 해례본의 원리에 근거해 이름을 짓는 신생아 작명 웹서비스. 같은 정보를 넣으면 언제나 같은 결과가 나오도록 설계해, 작명의 근거를 투명하게 보여줍니다. 기획부터 운영까지 동글랩에서 직접 맡고 있습니다.',
+      desc: '훈민정음 해례본의 원리에 근거해 이름을 짓는 신생아 작명 웹서비스. 같은 정보를 넣으면 언제나 같은 결과가 나오도록 설계해, 작명의 근거를 투명하게 보여줍니다. 기획부터 운영까지 동글랩에서 맡고 있습니다.',
       stack: ['Next.js', 'React', '.NET', 'TypeScript', 'PostgreSQL'],
-      points: ['훈민정음 해례본 기반 작명 로직', '같은 정보 → 동일 결과 보장', '결제 · 온보딩 · 운영까지 직접 담당'],
+      points: ['훈민정음 해례본 기반 작명 로직', '같은 정보 → 동일 결과 보장', '결제 · 온보딩 · 운영까지 담당'],
       url: 'https://ieum-name.kr' },
 
     { label: 'peekar', meta: '26.04', name: 'PEEKAR', sub: 'WebAR 갤러리 플랫폼 (B2B)', period: '2026.04 — 현재', badge: 'B2B', badgeColor: L,
@@ -106,7 +106,7 @@ export const DATA: Panel[] = [
       url: '/projects/nomads-planet/', play: '/play/nomads/' },
 
     { label: 'math-master', meta: '21.06', name: 'Math Master', sub: '초등 수학 라이브 서비스', period: '2021.06 — 2022.06', badge: 'LIVE', badgeColor: F,
-      desc: 'SKT ZEM 기본앱에 선정된 초등 수학 라이브 서비스. 분수 도메인 타입과 미로 생성·탐색 알고리즘, 자체 Tween 라이브러리를 직접 설계했습니다.',
+      desc: 'SKT ZEM 기본앱에 선정된 초등 수학 라이브 서비스. 분수 도메인 타입과 미로 생성·탐색 알고리즘, 자체 Tween 라이브러리를 설계했습니다.',
       stack: ['Unity', 'C#', 'UGUI', 'UniRx'],
       points: ['분수(Fraction) 도메인 타입 설계 — 연산 · 약분 · 채점', 'Recursive Backtracker 미로 생성 + A* 탐색', '자체 Tween 라이브러리(BTweener)'],
       url: '/projects/math-master/', play: '/play/maze/' },

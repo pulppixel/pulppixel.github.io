@@ -12,7 +12,7 @@
 
 서버와 클라이언트가 한 코드베이스에 섞이면 뒤로 갈수록 책임이 흐려지기 때문에, 실행 모드를 코드 레벨에서 분리하는 것부터 시작했습니다. `ApplicationController`가 실행 모드를 판별하고, `ClientSingleton` / `HostSingleton` / `ServerSingleton` 각각이 자기 GameManager를 소유하는 구조입니다. `#if UNITY_SERVER` 전처리기로 Dedicated Server 빌드를 분리했습니다.
 
-## 네트워크 - 가장 오래 붙잡은 구간
+## 네트워크
 
 3개월 중 가장 어려웠던 구간은 Unity Matchmaker / Multiplay 연동이었습니다. 참고할 사례가 많지 않아 티켓 생성부터 서버 할당까지 케이스별로 직접 검증하며 연동했습니다.
 

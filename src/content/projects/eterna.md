@@ -2,11 +2,13 @@
 
 ETERNA는 유료 구독(하이퍼 이더) 전용 실시간 커뮤니티 플랫폼입니다. "아고라"는 디스코드의 서버와 유사한 개념으로, 다수의 채널을 묶는 그룹 단위입니다. 각 채널에는 실제 필드(씬)가 존재하며 최대 16명(인간 8 + AI Mirror 8)이 참여할 수 있습니다.
 
+소프트런칭 일정이 정해져 있었고, 아고라 — 생성·가입·초대, 채널 관리, 실시간 알림, 검색, 권한까지 소셜 기능 전체 — 는 6개월간 제가 단독으로 맡았습니다. 혼자 전담하는 기능은 구조가 한 번 어긋나도 바로잡아줄 사람이 없기 때문에, 기능을 쌓기 전에 아키텍처부터 확정하기로 했습니다.
+
 ![ETERNA 인게임 - 아고라 채널 내부 필드에서 다수 캐릭터가 활동하는 모습](/images/et_scene1.png)
 
-## 설계 - Service / Repository / State 3계층
+## 설계 판단 - Service / Repository / State 3계층
 
-REIW에서 VContainer 기반 DI + MVVM을 실제로 적용해봤지만, Unity 환경에서의 DI 컨테이너 학습 비용과 의존 그래프의 가독성 문제를 경험했습니다. 같은 문제를 더 얇은 레이어로 풀기 위해 3계층으로 재설계했습니다.
+직전 프로젝트 REIW에서 VContainer 기반 DI + MVVM을 실제로 적용해봤지만, Unity 환경에서의 DI 컨테이너 학습 비용과 의존 그래프의 가독성 문제를 경험했습니다. 같은 문제를 더 얇은 레이어로 풀기 위해 3계층으로 재설계했습니다.
 
 - **Repository** - Tencent IM SDK 같은 외부 의존성을 이 계층에서만 참조. 콜백 기반 SDK 호출을 `UniTask`와 `R3.Subject<T>`로 래핑해서, 바깥에서는 async / Observable로만 다룸. ACK 핸들러 등록/해제도 Repository 라이프사이클에 묶음
 - **Service** - 비즈니스 로직 + Repository 이벤트 → State 반영을 조율. UI는 이쪽의 Observable만 구독, Repository는 직접 참조하지 않음
@@ -17,18 +19,25 @@ SDK를 Repository에 가둔 덕분에, 이후 SDK 버전 업데이트나 다른 
 
 ![아고라 채널 기록 UI - 다수 아고라 가입, 채널 히스토리 조회 화면](/images/et_agora2.png)
 
-## 구현
+## 소셜 기능 구현
 
-- 아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리 전체 구현
-- 크로스플랫폼 STT 직접 구현 - Windows: Whisper, 모바일: 네이티브(Java/ObjC). 음성 스트리밍, 녹음도 별도 라이브러리 없이 제작
-- 한글 조합 문자(Composition) 입력에서 발생하는 런타임 이슈를 분석하고, 이를 해결한 커스텀 InputField를 개발해 입력 경험을 개선
-- UaaL(Unity as a Library) 양방향 통신 적용 가능성 검증
+이 구조 위에 아고라 생성, 가입, 초대, 채널 관리, 실시간 알림, 검색, 권한 관리를 순서대로 쌓았습니다. 아래는 채널 접속과 삭제에 실시간으로 대응하는 모습입니다.
+
+::youtube NqkNEjDdxw0 ETERNA - 채널 접속 및 삭제 대응
+
+아고라 가입 신청이 들어오면 실시간 알림을 띄우고, 관리자가 그 자리에서 승인/거절할 수 있는 UI를 구현했습니다.
+
+![알림 관리 - 아고라 가입 신청 승인/거절 UI](/images/et_agora3.png)
+
+## STT - 직접 구현을 택한 이유
+
+NPC 대화에 음성 입력이 필요했는데, Windows·Android·iOS를 한 번에 덮는 SDK가 마땅치 않았고 유료 솔루션은 비용과 라이선스가 걸렸습니다. 외부 의존을 Repository 한 곳으로 최소화한다는 설계 방침과도 맞아 직접 구현을 택했습니다 — Windows는 Whisper, 모바일은 네이티브(Java/ObjC)로 처리하고, 음성 스트리밍과 녹음도 별도 라이브러리 없이 만들었습니다.
 
 ![NPC 대화 시스템 - STT 입력과 토픽 선택 UI](/images/et_dialog3.png)
 
-아래는 채널 접속과 삭제에 실시간으로 대응하는 모습입니다.
+## 한글 입력 - 커스텀 InputField
 
-::youtube NqkNEjDdxw0 ETERNA - 채널 접속 및 삭제 대응
+채팅 입력에서 한글 조합 문자(Composition) 특유의 이슈가 이어졌습니다. 조합 중이던 글자가 전송 시 잘리거나 중복되고 캐럿 위치가 어긋나는 증상으로, 추적해 보니 TMP InputField의 IME 처리 자체가 원인이었습니다. 런타임 동작을 분석한 뒤 조합 상태를 직접 관리하는 커스텀 InputField를 개발해 입력 경험을 바로잡았습니다.
 
 ## 모바일 이동 로직 개선
 
@@ -36,15 +45,9 @@ SDK를 Repository에 가둔 덕분에, 이후 SDK 버전 업데이트나 다른 
 
 ::youtube CYy0mqAkOOM ETERNA - 모바일 이동 로직 개선
 
-## 알림 관리
-
-아고라 가입 신청이 들어오면 실시간 알림을 띄우고, 관리자가 그 자리에서 승인/거절할 수 있는 UI를 구현했습니다.
-
-![알림 관리 - 아고라 가입 신청 승인/거절 UI](/images/et_agora3.png)
-
 ## UaaL 양방향 통신 검증
 
-Android Kotlin + Jetpack Compose 호스트 앱을 만들어 `AndroidView`로 Unity Player를 임베드, 호스트 앱과 Unity 사이를 실제 메시지가 오가도록 연결했습니다. 전체 앱을 Unity로 개발하는 방식이 비효율적이라고 판단해, 네이티브 앱에 Unity를 라이브러리로 삽입하는 UaaL 구조의 적용 가능성을 POC로 확인했습니다.
+전체 앱을 Unity로 개발하는 방식이 비효율적이라고 판단해, 네이티브 앱에 Unity를 라이브러리로 삽입하는 UaaL(Unity as a Library) 구조의 적용 가능성을 POC로 확인했습니다. Android Kotlin + Jetpack Compose 호스트 앱을 만들어 `AndroidView`로 Unity Player를 임베드, 호스트 앱과 Unity 사이를 실제 메시지가 오가도록 연결했습니다.
 
 - **Compose → Unity** - `UnityPlayer.UnitySendMessage(gameObject, method, message)`로 캐릭터 애니메이션 트리거 등 호출
 - **Unity → Compose** - `AndroidJavaClass("com.eterna.kee.UnityBridge").CallStatic("receiveFromUnity", ...)`로 Kotlin 쪽 `@JvmStatic` 메서드 직접 호출 → Compose 쪽 람다로 전달
@@ -53,6 +56,6 @@ Android Kotlin + Jetpack Compose 호스트 앱을 만들어 `AndroidView`로 Uni
 
 ::youtube DW-QP3Gskfw UaaL(Unity as a Library) 양방향 통신 POC
 
-## 문서화
+## 결과
 
-InputField 사용법, 아고라 작업 가이드 등 후속 작업자용 문서를 작성해, 다음 담당자가 바로 투입될 수 있도록 정리했습니다.
+소프트런칭 일정 안에 소셜 기능 전체를 완성해 출시까지 진행했고, 이후 회사가 문을 닫으면서 서비스는 중단되었습니다. InputField 사용법, 아고라 작업 가이드 등 후속 작업자용 문서를 남겨, 다음 담당자가 바로 투입될 수 있는 상태로 마무리했습니다.

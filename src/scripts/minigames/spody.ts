@@ -250,7 +250,7 @@ class SpodyGame extends MinigameBase {
     const { cx } = this;
     cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e0def4'; cx.fillText(`${this.score}`, bx, by - 40);
     cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('POINTS', bx, by - 24);
-    cx.fillText(`${this.hits}/${this.totalTgt} HITS · ×${this.maxCombo} COMBO`, bx, by - 8);
+    cx.fillText(`${this.hits}/${this.totalTgt} HITS  ×${this.maxCombo} COMBO`, bx, by - 8);
 
     this.drawResultBtns(bx, by + 36);
   }

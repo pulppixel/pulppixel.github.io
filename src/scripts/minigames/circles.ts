@@ -577,7 +577,7 @@ class NineToSixGame extends MinigameBase {
         c.fillStyle = '#6e6a86';
         c.fillText('POINTS', bx, by - 24);
         const ts = `${Math.floor(this.elapsed / 60)}:${String(Math.floor(this.elapsed % 60)).padStart(2, '0')}`;
-        c.fillText(`${ts} · ${this.jumps} jumps · ×${this.maxCombo}`, bx, by - 8);
+        c.fillText(`${ts}  ${this.jumps} jumps  ×${this.maxCombo}`, bx, by - 8);
 
         this.drawResultBtns(bx, by + 36);
     }

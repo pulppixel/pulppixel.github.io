@@ -1,8 +1,8 @@
 ---
 // 터미널 스타일 홈. claude.ai/design "Pulppixel LazyGit" 안을 바닐라로 포팅(src/scripts/terminal/).
 // 풀스크린 자기완결형이라 BaseLayout 미사용 (explore.astro 와 동일 패턴).
-const title = 'pulppixel — 백환기(Hwankee Baik) · Software Engineer';
-const description = '백환기(Hwankee Baik) · Software Engineer. 게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 다루며, 1인 스튜디오 동글랩(Dongle Lab)을 운영합니다. 프로젝트 기록과 3D 월드, 미니게임을 담은 터미널 스타일 포트폴리오.';
+const title = 'pulppixel — 백환기(Hwankee Baik), Software Engineer';
+const description = '백환기(Hwankee Baik), Software Engineer. 게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 다루며, 1인 스튜디오 동글랩(Dongle Lab)을 운영합니다. 프로젝트 기록과 3D 월드, 미니게임을 담은 터미널 스타일 포트폴리오.';
 const og = 'https://pulppixel.github.io/og.png';
 ---
 
@@ -33,7 +33,7 @@ const og = 'https://pulppixel.github.io/og.png';
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/d2coding@1.3.2/d2coding-subset.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/400.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fontsource/cascadia-code/700.css" rel="stylesheet" />
   <style is:global>
@@ -55,7 +55,7 @@ const og = 'https://pulppixel.github.io/og.png';
       height: 100vh; height: 100dvh; width: 100%;
       display: flex; align-items: center; justify-content: center;
       padding: max(var(--pad), env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) max(var(--pad), env(safe-area-inset-bottom)) max(var(--pad), env(safe-area-inset-left));
-      font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'D2Coding', 'Nanum Gothic Coding', 'JetBrains Mono', monospace;
+      font-family: 'CaskaydiaCove Nerd Font', 'Cascadia Code', 'D2Coding', 'JetBrains Mono', monospace;
       -webkit-font-smoothing: antialiased;
       background:
         radial-gradient(60% 50% at 80% 8%, rgba(196,167,231,.32) 0%, rgba(196,167,231,0) 60%),
@@ -76,16 +76,16 @@ const og = 'https://pulppixel.github.io/og.png';
   <noscript>
     <div class="noscript-fallback">
       <h1>백환기 / Hwankee Baik</h1>
-      <p class="muted">Software Engineer · 1인 스튜디오 Dongle Lab</p>
+      <p class="muted">Software Engineer, 1인 스튜디오 Dongle Lab</p>
       <p>게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 신생아 작명 서비스 이음작명소와 WebAR 갤러리 플랫폼 PEEKAR를 직접 만들어 운영합니다.</p>
       <p>
-        <a href="/projects/eterna/">ETERNA</a> ·
-        <a href="/projects/reiw/">REIW</a> · <a href="/projects/stelsi-wallet/">STELSI Wallet</a> ·
+        <a href="/projects/eterna/">ETERNA</a> /
+        <a href="/projects/reiw/">REIW</a> / <a href="/projects/stelsi-wallet/">STELSI Wallet</a> /
         <a href="/explore/">3D 월드</a>
       </p>
       <p class="muted">
-        <a href="mailto:devenvy100@gmail.com">Email</a> ·
-        <a href="https://github.com/pulppixel">GitHub</a> ·
+        <a href="mailto:devenvy100@gmail.com">Email</a> /
+        <a href="https://github.com/pulppixel">GitHub</a> /
         <a href="https://www.linkedin.com/in/hwankee-baik-272948266/">LinkedIn</a>
       </p>
     </div>

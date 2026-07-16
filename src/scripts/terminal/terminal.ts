@@ -201,9 +201,9 @@ export class Terminal {
       sys.gpu = gpu;
       sys.uptime = Math.floor(mm / 60) + ' hours, ' + (mm % 60) + ' mins';
       sys.res = Math.round(screen.width * dpr) + 'x' + Math.round(screen.height * dpr);
-      sys.cpu = (sys.arch ? sys.arch + ' · ' : '') + cores + ' threads';
+      sys.cpu = (sys.arch ? sys.arch + ', ' : '') + cores + ' threads';
       sys.mem = Math.floor(total * 0.41) + 'MiB / ' + total + 'MiB';
-      sys.locale = (navigator.language || 'en-US') + ' · ' + (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+      sys.locale = (navigator.language || 'en-US') + ', ' + (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     } catch { /* noop */ }
 
     const d = new Date();
@@ -225,7 +225,7 @@ export class Terminal {
         else if (family === 'macOS') ver = ver.split('.').slice(0, 2).join('.');
         const arch = this.archLabel(hv.architecture || '', hv.bitness || '');
         const cores = navigator.hardwareConcurrency || 8;
-        this.state.sys = { ...this.state.sys, ...this.osProfile(family, ver, hv.model || ''), arch, cpu: (arch ? arch + ' · ' : '') + cores + ' threads' };
+        this.state.sys = { ...this.state.sys, ...this.osProfile(family, ver, hv.model || ''), arch, cpu: (arch ? arch + ', ' : '') + cores + ' threads' };
         if (this.state.phase === 'shell') this.render();
       }).catch(() => { /* noop */ });
     }
@@ -319,12 +319,12 @@ export class Terminal {
       }
       case 'skills': case 'stack': {
         const r: Token[][] = [[tk('skills/', C.foam)], [tk(' ')]];
-        S.forEach((s) => { r.push([tk('  ' + s.title, C.iris)]); r.push([tk('    ' + s.rows.map((x) => x.k).join(' · '), C.dim)]); r.push([tk(' ')]); });
+        S.forEach((s) => { r.push([tk('  ' + s.title, C.iris)]); r.push([tk('    ' + s.rows.map((x) => x.k).join(', '), C.dim)]); r.push([tk(' ')]); });
         return rows(r);
       }
       case 'about': return rows([
         [tk('백환기 ', C.white), tk('/ Hwankee Baik', C.dim)],
-        [tk('Software Engineer · ', C.iris), tk('Dongle Lab', C.rose)], [tk(' ')],
+        [tk('Software Engineer @ ', C.iris), tk('Dongle Lab', C.rose)], [tk(' ')],
         [tk('게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다.', C.fg)],
         [tk('지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며,', C.fg)],
         [tk('아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.', C.fg)],
@@ -333,7 +333,7 @@ export class Terminal {
       case 'contact': {
         const r: Token[][] = [[tk('contact/', C.foam)], [tk(' ')]];
         K.forEach((k) => r.push([tk('  ' + pad(k.label, 10), C.iris), tk(k.value, C.dim)]));
-        r.push([tk(' ')]); r.push([tk('open with: ', C.dim), tk('open github', C.foam), tk('  ·  ', C.faint), tk('open email', C.foam)]);
+        r.push([tk(' ')]); r.push([tk('open with: ', C.dim), tk('open github', C.foam), tk('  /  ', C.faint), tk('open email', C.foam)]);
         return rows(r);
       }
       case 'neofetch': case 'fetch': return { isNeofetch: true };
@@ -367,7 +367,7 @@ export class Terminal {
     const P = DATA[1].items as ProjectItem[];
     const r: Token[][] = [[tk('projects/', C.foam)], [tk(' ')]];
     P.forEach((p) => r.push([tk('  ' + pad(p.label, 16), C.foam), tk(pad(p.badge, 13), p.badgeColor), tk(p.period, C.dim)]));
-    r.push([tk(' ')]); r.push([tk('details: ', C.dim), tk('cat eterna', C.foam), tk('   ·   open: ', C.dim), tk('open eterna', C.foam)]);
+    r.push([tk(' ')]); r.push([tk('details: ', C.dim), tk('cat eterna', C.foam), tk('   open: ', C.dim), tk('open eterna', C.foam)]);
     return rows(r);
   }
 
@@ -380,8 +380,8 @@ export class Terminal {
       r.push([tk('Author: ', C.dim), tk('Hwankee Baik <devenvy100@gmail.com>', C.fg)]);
       r.push([tk('Date:   ', C.dim), tk(j.period, C.fg)]);
       r.push([tk(' ')]);
-      r.push([tk('    ' + j.company + ' · ' + j.role, C.white)]);
-      r.push([tk('    ' + j.points.join(' · '), C.dim)]);
+      r.push([tk('    ' + j.company + ' — ' + j.role, C.white)]);
+      r.push([tk('    ' + j.points.join(', '), C.dim)]);
       r.push([tk(' ')]);
     });
     return rows(r);
@@ -606,7 +606,7 @@ export class Terminal {
 
     const leftDesktop = `<div id="t-left" data-keepscroll style="flex:1 1 270px;min-width:240px;max-width:340px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;padding-top:12px">
       ${desktopPanels}
-      <div style="flex:none;font-size:11px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;이동<br>1–5 &nbsp;패널 · enter 열기 · q 셸</div>
+      <div style="flex:none;font-size:11px;color:#524f67;padding:2px 6px;line-height:1.7">j k &nbsp;이동<br>1–5 &nbsp;패널 &nbsp; enter 열기 &nbsp; q 셸</div>
     </div>`;
 
     const mobileSel = `<div id="t-mobile-panels" data-keepscroll style="flex:none;display:flex;gap:8px;padding:12px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -655,7 +655,7 @@ export class Terminal {
     const chip = (t: string, c: string) => `<span style="border:1px solid #26233a;border-radius:6px;padding:4px 12px;color:${c}">${t}</span>`;
     return `<div style="font-size:11px;color:#9ccfd8;letter-spacing:.14em;margin-bottom:14px">$ whoami</div>
       <h1 style="font-size:clamp(1.7rem,4vw,2.7rem);color:#e0def4;line-height:1.08;letter-spacing:-.01em">백환기 <span style="color:#6e6a86;font-weight:400;font-size:.55em">/ Hwankee Baik</span></h1>
-      <div style="margin-top:8px;color:#c4a7e7;font-size:13px">Software Engineer · 1인 스튜디오 <span style="color:#ebbcba">Dongle Lab</span> 운영</div>
+      <div style="margin-top:8px;color:#c4a7e7;font-size:13px">Software Engineer, 1인 스튜디오 <span style="color:#ebbcba">Dongle Lab</span> 운영</div>
       <p style="margin-top:20px;max-width:60ch;color:#cdc9de;line-height:1.9;font-size:14px">게임 클라이언트를 중심으로 모바일·웹·실시간 네트워크까지 폭넓게 다룹니다. 지금은 신생아 작명 서비스와 WebAR 갤러리 플랫폼을 직접 만들어 운영하며, 아이디어를 제품으로 완성해 끝까지 책임지는 일에 집중합니다.</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;font-size:12px">
         ${chip('Unity', '#9ccfd8')}${chip('Unreal 5', '#c4a7e7')}${chip('Godot 4', '#ebbcba')}${chip('Flutter', '#f6c177')}${chip('Next.js', '#9ccfd8')}${chip('WebAR', '#eb6f92')}
@@ -692,7 +692,7 @@ export class Terminal {
   private viewMainJob(it: JobItem): string {
     return `<h1 style="font-size:clamp(1.5rem,3.4vw,2.3rem);color:#e0def4;line-height:1.1">${esc(it.company)}</h1>
       <div style="margin-top:8px;color:#c4a7e7;font-size:14px">${esc(it.role)}</div>
-      <div style="margin-top:4px;font-size:12px;color:#6e6a86">${esc(it.period)} · ${esc(it.dur)}</div>
+      <div style="margin-top:4px;font-size:12px;color:#6e6a86">${esc(it.period)} (${esc(it.dur)})</div>
       <p style="margin-top:24px;max-width:64ch;color:#cdc9de;line-height:1.9;font-size:14px">${esc(it.desc)}</p>
       <div style="margin-top:28px;font-size:11px;color:#9ccfd8;letter-spacing:.14em">PROJECTS</div>
       <div style="margin-top:12px;font-size:13px;color:#cdc9de;line-height:1.7">
@@ -755,7 +755,7 @@ export class Terminal {
         ${pg.points.map((p) => `<div style="display:flex;gap:12px;margin-bottom:12px"><span style="color:#c4a7e7;flex:none">-</span><span>${esc(p)}</span></div>`).join('')}
       </div>` : '';
 
-    const roleChip = role ? `<span style="font-size:12px;color:#908caa;border:1px solid #26233a;border-radius:6px;padding:6px 12px"><span style="color:#9ccfd8">역할</span> · ${esc(role)}</span>` : '';
+    const roleChip = role ? `<span style="font-size:12px;color:#908caa;border:1px solid #26233a;border-radius:6px;padding:6px 12px"><span style="color:#9ccfd8">역할</span>: ${esc(role)}</span>` : '';
     const siteChip = (pg.url && /^https?:/.test(pg.url)) ? `<a href="${esc(pg.url)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#c4a7e7;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">사이트 방문</a>` : '';
     const playChip = playUrl ? `<a href="${esc(playUrl)}" target="_blank" rel="noopener" style="font-size:12px;white-space:nowrap;background:#9ccfd8;color:#191724;border-radius:6px;padding:7px 14px;font-weight:700">미니게임 하러 가기</a>` : '';
     const metaRow = (roleChip || siteChip || playChip) ? `<div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">${roleChip}${siteChip}${playChip}</div>` : '';

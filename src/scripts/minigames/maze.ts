@@ -534,7 +534,7 @@ class MazeGame extends MinigameBase {
         this.drawHudLine(`TIME  ${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}.${ms}`, 46);
         const gc = this.gems.filter(g => g.collected).length;
         cx.fillStyle = C.cyan; cx.fillText(`◇ ${gc}/${this.gems.length}`, 130, 46);
-        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}${fog > 0 ? ' · FOG' : ''}`, 62, '#403d52');
+        this.drawHudLine(`STAGE ${this.stage + 1}/${STAGES.length}${fog > 0 ? '  FOG' : ''}`, 62, '#403d52');
 
         // Time-left countdown (center top)
         const tFlash = this.timeLeft < 10 && Math.sin(now * 8) > 0;
@@ -558,7 +558,7 @@ class MazeGame extends MinigameBase {
         // Phase overlays
         if (this.phase === 'intro') {
             this.drawIntro(this.phaseT, `STAGE ${this.stage + 1}`,
-                `${mW}×${mH} · ${STAGES[this.stage].time}s${fog > 0 ? ' · FOG' : ''}`,
+                `${mW}×${mH}  ${STAGES[this.stage].time}s${fog > 0 ? '  FOG' : ''}`,
                 '★ 위에서 잠시 멈춰야 클리어');
         }
         if (this.phase === 'clear') this.renderClearOverlay();
@@ -643,7 +643,7 @@ class MazeGame extends MinigameBase {
         cx.fillText(`${score}`, bx, by - 40);
         cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86';
         cx.fillText('SCORE', bx, by - 24);
-        cx.fillText(`${allGems} GEMS · ${this.fmtTime(total)}`, bx, by - 8);
+        cx.fillText(`${allGems} GEMS  ${this.fmtTime(total)}`, bx, by - 8);
 
         this.drawResultBtns(bx, by + 36);
     }

@@ -45,9 +45,9 @@
   <g font-family="Menlo, monospace" font-size="16.5">
     <text x="408" y="236"><tspan fill="#c4a7e7" font-weight="bold">Name</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Hwankee Baik</tspan></text>
     <text x="408" y="265"><tspan fill="#c4a7e7" font-weight="bold">Role</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Software Engineer</tspan></text>
-    <text x="408" y="294"><tspan fill="#c4a7e7" font-weight="bold">Studio</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Dongle Lab · 1인 스튜디오</tspan></text>
-    <text x="408" y="323"><tspan fill="#c4a7e7" font-weight="bold">Stack</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Unity · C# · Next.js · TS</tspan></text>
-    <text x="408" y="352"><tspan fill="#c4a7e7" font-weight="bold">Focus</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Game Client · Web · WebAR</tspan></text>
+    <text x="408" y="294"><tspan fill="#c4a7e7" font-weight="bold">Studio</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Dongle Lab (1인 스튜디오)</tspan></text>
+    <text x="408" y="323"><tspan fill="#c4a7e7" font-weight="bold">Stack</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Unity, C#, Next.js, TS</tspan></text>
+    <text x="408" y="352"><tspan fill="#c4a7e7" font-weight="bold">Focus</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">Game Client, Web, WebAR</tspan></text>
     <text x="408" y="381"><tspan fill="#c4a7e7" font-weight="bold">Projects</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#cdc9de">13 shipped</tspan></text>
     <text x="408" y="410"><tspan fill="#c4a7e7" font-weight="bold">Contact</tspan><tspan fill="#6e6a86">: </tspan><tspan fill="#9ccfd8">devenvy100@gmail.com</tspan></text>
   </g>
@@ -69,5 +69,5 @@
   <rect x="458" y="495" width="11" height="20" fill="#c4a7e7"/>
 
   <!-- footer hint -->
-  <text x="96" y="556" font-family="Menlo, monospace" font-size="14.5" xml:space="preserve"><tspan fill="#6e6a86">type </tspan><tspan fill="#908caa">help</tspan><tspan fill="#6e6a86"> · </tspan><tspan fill="#908caa">projects</tspan><tspan fill="#6e6a86"> · </tspan><tspan fill="#908caa">explore</tspan><tspan fill="#6e6a86">   —   pulppixel.github.io</tspan></text>
+  <text x="96" y="556" font-family="Menlo, monospace" font-size="14.5" xml:space="preserve"><tspan fill="#6e6a86">type </tspan><tspan fill="#908caa">help</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">projects</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">explore</tspan><tspan fill="#6e6a86">   —   pulppixel.github.io</tspan></text>
 </svg>

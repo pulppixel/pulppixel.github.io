@@ -380,7 +380,7 @@ function createBubble(): HTMLDivElement {
     border:1px solid #403d52;
     border-radius:7px; padding:8px 14px;
     backdrop-filter:blur(8px);
-    font-family:'Cascadia Code','D2Coding','Nanum Gothic Coding','JetBrains Mono',monospace;
+    font-family:'Cascadia Code','D2Coding','JetBrains Mono',monospace;
     max-width:220px; text-align:center;
     opacity:0;
     transform:translate(-50%,-100%);

@@ -653,7 +653,7 @@ class NomadsGame extends MinigameBase {
                 if (playerRank < this.maxRank) this.maxRank = playerRank;
                 const bonus = playerRank === 1 ? 500 : playerRank === 2 ? 250 : 100;
                 this.score += bonus + this.cars[0].coins * 30;
-                this.addPop(this.W / 2, this.H / 2, `${playerRank}ST · +${bonus}`, true, 1.8);
+                this.addPop(this.W / 2, this.H / 2, `${playerRank}ST +${bonus}`, true, 1.8);
             }
             this.audio?.mgWaveClear();
             this.phase = 'clear'; this.phaseT = 1.6;
@@ -917,8 +917,8 @@ class NomadsGame extends MinigameBase {
         if (this.phase === 'intro') {
             const s = STAGES[this.stage];
             this.drawIntro(this.phaseT, `STAGE ${this.stage + 1}`,
-                `${s.time}s · ${NPC_COUNT} OPPONENTS`,
-                this.mob ? 'Drag to move · Ram to steal coins' : 'WASD · Ram to steal · Yellow = boost');
+                `${s.time}s  ${NPC_COUNT} OPPONENTS`,
+                this.mob ? 'Drag to move / Ram to steal coins' : 'WASD / Ram to steal / Yellow = boost');
         }
         if (this.phase === 'clear') {
             const fade = Math.min(1, (1.6 - this.phaseT) / 0.5);
@@ -992,7 +992,7 @@ class NomadsGame extends MinigameBase {
         cx.font = '400 9px "JetBrains Mono"'; cx.fillStyle = '#6e6a86';
         cx.fillText('POINTS', bx, by - 24);
         const rankStr = this.maxRank === 99 ? 'NO RANK' : `BEST RANK #${this.maxRank}`;
-        cx.fillText(`${rankStr} · ◆${this.cars[0].coins}`, bx, by - 8);
+        cx.fillText(`${rankStr}  ◆${this.cars[0].coins}`, bx, by - 8);
 
         this.drawResultBtns(bx, by + 36);
     }

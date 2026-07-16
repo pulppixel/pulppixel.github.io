@@ -329,7 +329,7 @@ class RubyGame extends MinigameBase {
         if (this.phase === 'intro') {
             const enemies = WAVES[this.wave].filter((_, i) => i % 2 === 1).length;
             this.drawIntro(this.phaseT, `WAVE ${this.wave + 1}`,
-                this.mob ? '빈 곳 탭 = 이동 · 적 탭 = 공격' : 'WASD 이동 · 적 클릭 = 공격',
+                this.mob ? '빈 곳 탭 = 이동 / 적 탭 = 공격' : 'WASD 이동 / 적 클릭 = 공격',
                 `${enemies} ENEMIES`);
         }
         if (this.phase === 'result' || this.phase === 'dead') this.renderResult();
@@ -351,7 +351,7 @@ class RubyGame extends MinigameBase {
         const { cx } = this;
         cx.font = '700 32px "JetBrains Mono",monospace'; cx.fillStyle = '#e0def4'; cx.fillText(`${this.score}`, bx, by - 40);
         cx.font = '400 9px "JetBrains Mono",monospace'; cx.fillStyle = '#6e6a86'; cx.fillText('POINTS', bx, by - 24);
-        cx.fillText(`${this.kills} KILLS · ×${this.maxCombo} COMBO`, bx, by - 8);
+        cx.fillText(`${this.kills} KILLS  ×${this.maxCombo} COMBO`, bx, by - 8);
 
         this.drawResultBtns(bx, by + 36);
     }

@@ -526,7 +526,7 @@ export class Terminal {
     const sw = (hex: string) => `<span style="width:15px;height:15px;background:${hex}"></span>`;
     const line = (k: string, v: string) => `<div><span style="color:#c4a7e7;font-weight:700">${k}</span>: ${esc(v)}</div>`;
     return `<div style="margin:6px 0 12px;display:flex;gap:clamp(16px,4vw,44px);flex-wrap:wrap;align-items:flex-start">
-      <pre style="margin:0;white-space:pre;color:#eb6f92;font-size:clamp(7.5px,1.05vw,10.5px);line-height:1.16;flex:none;text-shadow:0 0 14px rgba(235,111,146,.28)">${esc(NEOFETCH_ART)}</pre>
+      <pre style="margin:0;white-space:pre;color:#eb6f92;font-family:inherit;font-size:clamp(9px,1.6vw,16px);line-height:1.32;flex:none;text-shadow:0 0 14px rgba(235,111,146,.28)">${esc(NEOFETCH_ART)}</pre>
       <div style="font-size:13px;line-height:1.7;min-width:0;color:#cdc9de;white-space:nowrap">
         <div><span style="color:#9ccfd8;font-weight:700">hwankee</span><span style="color:#6e6a86">@</span><span style="color:#9ccfd8;font-weight:700">pulppixel</span></div>
         <div style="color:#403d52">-----------------------------</div>

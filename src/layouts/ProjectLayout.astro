@@ -15,7 +15,7 @@ const { title, subtitle, period, role, team, tags, links, badge, ogImage } = Ast
 
 const resolvedOg = ogImage
     ? (ogImage.startsWith('http') ? ogImage : `https://pulppixel.github.io${ogImage}`)
-    : 'https://pulppixel.github.io/og.png';
+    : 'https://pulppixel.github.io/og.png?v=2';
 
 // 프로젝트 순서 (터미널 data.ts 프로젝트 순서와 동일한 흐름)
 const projectOrder = [

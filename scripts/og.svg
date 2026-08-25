@@ -33,8 +33,10 @@
   <line x1="56" y1="95" x2="1144" y2="95" stroke="#26233a" stroke-width="1"/>
 
   <!-- prompt: neofetch -->
-  <text x="96" y="142" font-family="Menlo, monospace" font-size="18.5" xml:space="preserve"><tspan fill="#9ccfd8">hwankee@pulppixel</tspan><tspan fill="#6e6a86">:</tspan><tspan fill="#c4a7e7">~/portfolio</tspan><tspan fill="#c4a7e7"> ❯ </tspan><tspan fill="#e0def4">neofetch</tspan></text>
+  <text x="96" y="140" font-family="Menlo, monospace" font-size="21" xml:space="preserve"><tspan fill="#9ccfd8">hwankee@pulppixel</tspan><tspan fill="#6e6a86">:</tspan><tspan fill="#c4a7e7">~/portfolio</tspan><tspan fill="#c4a7e7"> ❯ </tspan><tspan fill="#e0def4">neofetch</tspan></text>
 
+  <!-- neofetch body: 1.22x 확대, 창 중앙 정렬 -->
+  <g transform="translate(112 -47.4) scale(1.22)">
   <!-- neofetch: debian swirl -->
   <text x="100" y="182" font-family="Menlo, monospace" font-size="12.5" fill="#eb6f92" xml:space="preserve"><tspan x="100" dy="0">       _,met$$$$$gg.</tspan><tspan x="100" dy="15.5">    ,g$$$$$$$$$$$$$$$P.</tspan><tspan x="100" dy="15.5">  ,g$$P"        """Y$$.".</tspan><tspan x="100" dy="15.5"> ,$$P'              `$$$.</tspan><tspan x="100" dy="15.5">',$$P       ,ggs.     `$$b:</tspan><tspan x="100" dy="15.5">`d$$'     ,$P"'   .    $$$</tspan><tspan x="100" dy="15.5"> $$P      d$'     ,    $$P</tspan><tspan x="100" dy="15.5"> $$:      $$.   -    ,d$$'</tspan><tspan x="100" dy="15.5"> $$;      Y$b._   _,d$P'</tspan><tspan x="100" dy="15.5"> Y$$.    `.`"Y$$$$P"'</tspan><tspan x="100" dy="15.5"> `$$b      "-.__</tspan><tspan x="100" dy="15.5">  `Y$$</tspan><tspan x="100" dy="15.5">   `Y$$.</tspan><tspan x="100" dy="15.5">     `$$b.</tspan><tspan x="100" dy="15.5">       `Y$$b.</tspan><tspan x="100" dy="15.5">          `"Y$b._</tspan><tspan x="100" dy="15.5">              `"""</tspan></text>
 
@@ -64,10 +66,12 @@
     <rect x="548" y="432" width="16" height="16" fill="#e0def4"/>
   </g>
 
+  </g>
+
   <!-- ready prompt + block cursor -->
-  <text x="96" y="510" font-family="Menlo, monospace" font-size="18.5" xml:space="preserve"><tspan fill="#9ccfd8">hwankee@pulppixel</tspan><tspan fill="#6e6a86">:</tspan><tspan fill="#c4a7e7">~/portfolio</tspan><tspan fill="#c4a7e7"> ❯ </tspan></text>
-  <rect x="458" y="495" width="11" height="20" fill="#c4a7e7"/>
+  <text x="96" y="540" font-family="Menlo, monospace" font-size="21" xml:space="preserve"><tspan fill="#9ccfd8">hwankee@pulppixel</tspan><tspan fill="#6e6a86">:</tspan><tspan fill="#c4a7e7">~/portfolio</tspan><tspan fill="#c4a7e7"> ❯ </tspan></text>
+  <rect x="507" y="523" width="12" height="22" fill="#c4a7e7"/>
 
   <!-- footer hint -->
-  <text x="96" y="556" font-family="Menlo, monospace" font-size="14.5" xml:space="preserve"><tspan fill="#6e6a86">type </tspan><tspan fill="#908caa">help</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">projects</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">explore</tspan><tspan fill="#6e6a86">   —   pulppixel.github.io</tspan></text>
+  <text x="96" y="571" font-family="Menlo, monospace" font-size="15" xml:space="preserve"><tspan fill="#6e6a86">type </tspan><tspan fill="#908caa">help</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">projects</tspan><tspan fill="#6e6a86"> / </tspan><tspan fill="#908caa">explore</tspan><tspan fill="#6e6a86">   —   pulppixel.github.io</tspan></text>
 </svg>
